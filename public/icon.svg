@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f0f12"/>
+  <g fill="#d4a64a" stroke="#d4a64a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Scissors -->
+    <circle cx="170" cy="170" r="44" fill="none" stroke-width="22"/>
+    <circle cx="170" cy="342" r="44" fill="none" stroke-width="22"/>
+    <line x1="210" y1="200" x2="400" y2="380" stroke-width="22"/>
+    <line x1="210" y1="312" x2="400" y2="132" stroke-width="22"/>
+  </g>
+</svg>
