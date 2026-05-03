@@ -23,6 +23,10 @@ export default function SettingsPage() {
   const [logoUrl, setLogoUrl] = useState('');
   const [bitPhone, setBitPhone] = useState('');
   const [payboxPhone, setPayboxPhone] = useState('');
+  const [bitLink, setBitLink] = useState('');
+  const [payboxLink, setPayboxLink] = useState('');
+  const [paypalUsername, setPaypalUsername] = useState('');
+  const [showPayHelp, setShowPayHelp] = useState(false);
   const [hours, setHours] = useState(defaultWorkingHours());
   const [services, setServices] = useState([]);
   const [addons, setAddons] = useState([]);
@@ -41,6 +45,9 @@ export default function SettingsPage() {
         setLogoUrl(data.logoUrl || '');
         setBitPhone(data.bitPhone || '');
         setPayboxPhone(data.payboxPhone || '');
+        setBitLink(data.bitLink || '');
+        setPayboxLink(data.payboxLink || '');
+        setPaypalUsername(data.paypalUsername || '');
         setHours({ ...defaultWorkingHours(), ...(data.workingHours || {}) });
         setServices(Array.isArray(data.services) ? data.services : []);
         setAddons(Array.isArray(data.addons) ? data.addons : []);
@@ -102,6 +109,9 @@ export default function SettingsPage() {
         logoUrl: logoUrl || '',
         bitPhone: (bitPhone || '').replace(/[^\d]/g, '') || '',
         payboxPhone: (payboxPhone || '').replace(/[^\d]/g, '') || '',
+        bitLink: (bitLink || '').trim(),
+        payboxLink: (payboxLink || '').trim(),
+        paypalUsername: (paypalUsername || '').trim().replace(/^.*paypal\.me\//i, ''),
         workingHours: hours,
         services: cleanedServices,
         addons: cleanedAddons,
@@ -137,30 +147,99 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>💸 אפשרויות תשלום</h3>
+        <h3 style={{ marginTop: 0 }}>💸 קבלת תשלום מהלקוח (אופציונלי)</h3>
         <p className="muted" style={{ marginTop: -6 }}>
-          כשהלקוח יסיים להזמין, יראה כפתורי תשלום לפי המספרים שתמלא כאן.
-          השאר ריק כדי לא להציג.
+          אחרי הזמנת תור, הלקוח יראה כפתורי תשלום לפי מה שתמלא כאן.
+          ככל שתמלא יותר, כך תהיה ללקוח יותר אפשרות.
         </p>
+
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => setShowPayHelp((s) => !s)}
+          style={{ width: '100%', marginBottom: 12, fontSize: '0.9rem' }}
+        >
+          {showPayHelp ? '▲ הסתר הוראות' : '💡 איך משיגים את הלינקים? — הוראות'}
+        </button>
+
+        {showPayHelp && (
+          <div className="card-inset" style={{ marginBottom: 16, fontSize: '0.9rem', lineHeight: 1.6 }}>
+            <strong>🅿️ PayPal (התשלום הכי חלק — סכום אוטומטי, ללא הקלדה)</strong>
+            <ol style={{ paddingInlineStart: 20, marginTop: 4, marginBottom: 12 }}>
+              <li>היכנס ל-<a href="https://www.paypal.com/il" target="_blank" rel="noopener">paypal.com/il</a> ופתח חשבון (חינם)</li>
+              <li>לך ל-<a href="https://www.paypal.com/paypalme/" target="_blank" rel="noopener">paypal.me</a> ובחר שם משתמש</li>
+              <li>הדבק את ה-username בלבד (למשל <code>danibarber</code>) — לא את ה-URL המלא</li>
+            </ol>
+
+            <strong>🔵 Bit לעסק</strong>
+            <ol style={{ paddingInlineStart: 20, marginTop: 4, marginBottom: 12 }}>
+              <li>פתח אפליקציית Bit → תפריט עליון → "Bit לעסק"</li>
+              <li>אם אין לך — לחץ "פתיחת חשבון עסקי" (חינם, דרך הבנק)</li>
+              <li>במסך עסק לחץ "קישור לתשלום" → "צור קישור" → העתק</li>
+              <li>הדבק כאן (URL מלא שמתחיל ב-https://)</li>
+              <li>אם אין לך עסקי — מלא רק את שדה "מספר Bit (גיבוי)" למטה</li>
+            </ol>
+
+            <strong>🟣 PayBox</strong>
+            <ol style={{ paddingInlineStart: 20, marginTop: 4, marginBottom: 0 }}>
+              <li>פתח אפליקציית PayBox → "עסקים"</li>
+              <li>הירשם כעסק (חינם, דרך דיסקונט/פפר)</li>
+              <li>בעמוד העסק → "קישור לתשלום" → העתק</li>
+              <li>הדבק כאן</li>
+            </ol>
+          </div>
+        )}
+
         <div className="field">
-          <label>🔵 מספר Bit</label>
+          <label>🅿️ PayPal — שם משתמש (Best!)</label>
           <input
-            type="tel"
-            inputMode="numeric"
-            value={bitPhone}
-            onChange={(e) => setBitPhone(e.target.value)}
-            placeholder="050-1234567"
+            value={paypalUsername}
+            onChange={(e) => setPaypalUsername(e.target.value)}
+            placeholder="danibarber"
+            dir="ltr"
+            style={{ direction: 'ltr', textAlign: 'left' }}
+          />
+          {paypalUsername && (
+            <p className="muted" style={{ fontSize: '0.75rem', marginTop: 4, direction: 'ltr', textAlign: 'left' }}>
+              paypal.me/{paypalUsername.replace(/^.*paypal\.me\//i, '')}/AMOUNT/ILS
+            </p>
+          )}
+        </div>
+
+        <div className="field">
+          <label>🔵 Bit — לינק עסקי לתשלום</label>
+          <input
+            value={bitLink}
+            onChange={(e) => setBitLink(e.target.value)}
+            placeholder="https://www.bitpay.co.il/..."
+            dir="ltr"
+            style={{ direction: 'ltr', textAlign: 'left' }}
           />
         </div>
+
         <div className="field">
-          <label>🟣 מספר PayBox</label>
+          <label>🟣 PayBox — לינק עסקי לתשלום</label>
           <input
-            type="tel"
-            inputMode="numeric"
-            value={payboxPhone}
-            onChange={(e) => setPayboxPhone(e.target.value)}
-            placeholder="050-1234567"
+            value={payboxLink}
+            onChange={(e) => setPayboxLink(e.target.value)}
+            placeholder="https://payboxapp.com/..."
+            dir="ltr"
+            style={{ direction: 'ltr', textAlign: 'left' }}
           />
+        </div>
+
+        <div className="card-inset">
+          <p className="muted" style={{ fontSize: '0.85rem', margin: '0 0 8px' }}>
+            <strong>גיבוי:</strong> אם אין לך לינק עסקי, מלא רק את מספרי הטלפון. הלקוח יראה את המספר ויוכל להעתיק אותו ולשלם ידנית באפליקציה.
+          </p>
+          <div className="field" style={{ marginBottom: 8 }}>
+            <label className="muted">📞 מספר Bit (אם אין לינק)</label>
+            <input type="tel" inputMode="numeric" value={bitPhone} onChange={(e) => setBitPhone(e.target.value)} placeholder="050-1234567" />
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label className="muted">📞 מספר PayBox (אם אין לינק)</label>
+            <input type="tel" inputMode="numeric" value={payboxPhone} onChange={(e) => setPayboxPhone(e.target.value)} placeholder="050-1234567" />
+          </div>
         </div>
       </div>
 
