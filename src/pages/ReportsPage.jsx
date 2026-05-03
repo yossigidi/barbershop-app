@@ -113,9 +113,34 @@ export default function ReportsPage() {
     // All-time totals
     const total = bucket(bookings, '0000-00-00', '9999-99-99');
 
+    // Top customers (last 6 months)
+    const sixMonthsAgo = dateToISO(addMonths(today, -6));
+    const byClient = new Map();
+    for (const b of bookings) {
+      if (b.status !== 'booked' && b.status !== 'completed') continue;
+      if (b.date < sixMonthsAgo) continue;
+      const key = b.clientPhone;
+      const existing = byClient.get(key) || { name: b.clientName, phone: key, count: 0, revenue: 0 };
+      existing.count++;
+      existing.revenue += Number(b.price) || 0;
+      byClient.set(key, existing);
+    }
+    const topCustomers = [...byClient.values()].sort((a, b) => b.count - a.count).slice(0, 5);
+
+    // Busy hours (which hour-of-day has most bookings)
+    const hourCount = Array(24).fill(0);
+    for (const b of bookings) {
+      if (b.status !== 'booked' && b.status !== 'completed') continue;
+      if (b.date < sixMonthsAgo) continue;
+      const h = Number(b.time.split(':')[0]);
+      if (h >= 0 && h < 24) hourCount[h]++;
+    }
+    const maxHour = Math.max(1, ...hourCount);
+
     return {
       day, yesterday, week, lastWeek, month, lastMonth,
       dowCount, dowRev, last7, max7, holidays, total,
+      topCustomers, hourCount, maxHour,
     };
   }, [bookings]);
 
@@ -165,6 +190,43 @@ export default function ReportsPage() {
                 <div className="dow-stats">
                   {data.dowCount[i]} • ₪{data.dowRev[i]}
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>🏆 לקוחות מובילים (6 חודשים)</h3>
+        {data.topCustomers.length === 0 ? (
+          <div className="empty">אין מספיק נתונים</div>
+        ) : (
+          data.topCustomers.map((c, i) => (
+            <div key={c.phone} className="timeline-row">
+              <span className="timeline-time">{i + 1}.</span>
+              <span style={{ flex: 1 }}>
+                <strong>{c.name}</strong>
+                <a href={`tel:${c.phone}`} className="muted" style={{ marginRight: 8, fontSize: '0.85rem' }}>{c.phone}</a>
+              </span>
+              <span className="text-dim">{c.count} תורים{c.revenue ? ` • ₪${c.revenue}` : ''}</span>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>⏰ שעות עמוסות (6 חודשים)</h3>
+        <div className="bars" style={{ height: 120 }}>
+          {data.hourCount.map((c, h) => {
+            // Only show hours that have any data, or default range 7-22
+            if (c === 0 && (h < 7 || h > 22)) return null;
+            return (
+              <div key={h} className="bar-col">
+                <div className="bar-num">{c || ''}</div>
+                <div className="bar-track">
+                  <div className="bar-fill" style={{ height: `${(c / data.maxHour) * 100}%` }} />
+                </div>
+                <div className="bar-label" style={{ fontSize: '0.65rem' }}>{h}:00</div>
               </div>
             );
           })}

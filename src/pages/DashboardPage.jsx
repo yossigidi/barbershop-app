@@ -15,6 +15,7 @@ import { whatsappUrl, shareLinkText } from '../utils/whatsapp';
 import { upcomingHolidays } from '../utils/holidays';
 import Calendar from '../components/Calendar.jsx';
 import StatsCard from '../components/StatsCard.jsx';
+import SmartTipsCard from '../components/SmartTipsCard.jsx';
 import RescheduleModal from '../components/RescheduleModal.jsx';
 import VacationModal from '../components/VacationModal.jsx';
 import QrModal from '../components/QrModal.jsx';
@@ -321,6 +322,12 @@ export default function DashboardPage() {
       )}
 
       <StatsCard bookings={bookings} />
+
+      <SmartTipsCard
+        workingHours={barber.workingHours}
+        bookings={bookings}
+        blocks={blocks}
+      />
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>📅 תורים — {upcomingCount} צפויים</h3>

@@ -291,6 +291,23 @@ export default function BookingPage() {
     }
   }
 
+  async function joinWaitlist() {
+    if (!client) return;
+    try {
+      const iso = dateToISO(selectedDate);
+      await addDoc(collection(db, 'barbers', barberId, 'waitlist'), {
+        clientName: `${client.firstName} ${client.lastName}`,
+        clientPhone: client.phone,
+        fromDate: iso,
+        toDate: iso,
+        createdAt: serverTimestamp(),
+      });
+      alert('נרשמת לרשימת ההמתנה. הספר ייצור איתך קשר אם יתפנה משהו.');
+    } catch (e) {
+      alert('שגיאה: ' + e.message);
+    }
+  }
+
   function downloadCalendarInvite() {
     if (!success) return;
     const summary = `${barber.businessName} — ${pickedService?.name || 'תור'}`;
@@ -480,7 +497,18 @@ export default function BookingPage() {
         {slots.length === 0 ? (
           <div className="empty">סגור ביום זה</div>
         ) : slots.every((s) => !s.available) ? (
-          <div className="empty">אין שעות פנויות בתאריך זה</div>
+          <>
+            <div className="empty">אין שעות פנויות בתאריך זה</div>
+            {client && (
+              <button
+                className="btn-primary"
+                onClick={joinWaitlist}
+                style={{ width: '100%', marginTop: 8 }}
+              >
+                🔔 הצטרף לרשימת המתנה — נודיע אם יתפנה
+              </button>
+            )}
+          </>
         ) : (
           <div className="slots">
             {slots.map((s) => (
