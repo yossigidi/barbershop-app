@@ -479,6 +479,151 @@ input:focus { border-color: var(--accent); }
   padding: 12px;
 }
 
+/* Day timeline (visual blocks) */
+.day-timeline {
+  position: relative;
+  margin: 12px 0 4px;
+  padding-inline-start: 60px;
+  padding-inline-end: 4px;
+}
+.dt-hour {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.dt-hour-label {
+  position: absolute;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  inset-inline-start: 0;
+  top: -8px;
+  width: 50px;
+  text-align: center;
+}
+.dt-hour-line {
+  border-top: 1px dashed rgba(255,255,255,0.05);
+  margin-inline-start: 56px;
+  position: absolute;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  top: 0;
+}
+.dt-booking,
+.dt-block,
+.dt-break,
+.dt-free {
+  position: absolute;
+  inset-inline-start: 56px;
+  inset-inline-end: 4px;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  overflow: hidden;
+  z-index: 2;
+}
+.dt-booking {
+  background: var(--accent);
+  color: #1a1a20;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.dt-booking:hover { filter: brightness(1.1); }
+.dt-booking.in-progress {
+  background: var(--success);
+  animation: pulse-bg 2s infinite;
+}
+.dt-booking.completed {
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  text-decoration: line-through;
+}
+.dt-time { font-weight: 700; font-size: 0.78rem; display: flex; gap: 4px; align-items: center; }
+.dt-name { font-weight: 600; line-height: 1.15; }
+.dt-svc { font-size: 0.7rem; opacity: 0.85; line-height: 1.15; }
+.dt-badge { font-size: 0.7rem; }
+
+.dt-free {
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+  background: rgba(255,255,255,0.015);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.dt-free:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(232, 90, 90, 0.05);
+}
+.dt-free-label { font-size: 0.75rem; }
+
+.dt-block {
+  background: rgba(232, 90, 90, 0.12);
+  border: 1px dashed rgba(232, 90, 90, 0.5);
+  color: #ffb1b1;
+  cursor: pointer;
+}
+.dt-block.whole-day { cursor: default; }
+.dt-block-meta { font-size: 0.7rem; opacity: 0.8; }
+
+.dt-break {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255,255,255,0.04),
+    rgba(255,255,255,0.04) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Live status banner */
+.live-status {
+  border: 1px solid var(--accent);
+  background: linear-gradient(180deg, rgba(212, 166, 74, 0.1), transparent);
+}
+.live-main { font-size: 1.1rem; font-weight: 700; }
+.live-sub { margin-top: 2px; }
+
+/* Onboarding cards */
+.onb-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.onb-card.active {
+  border-color: var(--accent);
+  background: rgba(212, 166, 74, 0.06);
+}
+.onb-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.onb-toggle input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.onb-name { font-weight: 600; flex: 1; }
+
 .copy-link {
   background: var(--surface-2);
   border: 1px dashed var(--accent);

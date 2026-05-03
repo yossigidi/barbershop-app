@@ -28,11 +28,7 @@ export default function HomePage() {
             workingHours: defaultWorkingHours(),
             fcmTokens: [],
             services: [],
-            addons: [
-              { id: 'beard', name: 'עיצוב זקן', duration: 10, price: 0 },
-              { id: 'nose', name: 'שעווה באף', duration: 5, price: 0 },
-              { id: 'ears', name: 'שעווה באוזניים', duration: 5, price: 0 },
-            ],
+            addons: [],
             defaultDuration: 20,
             defaultPrice: 0,
             onboarded: false,

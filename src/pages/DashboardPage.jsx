@@ -8,7 +8,6 @@ import {
 } from 'firebase/firestore';
 import {
   dateToISO, formatDateHe, nextNDays, DAY_LABELS_HE, dayKeyFromDate,
-  listAllSlotsForDate, addMinToTime,
 } from '../utils/slots';
 import { registerFcmToken, requestPushPermission } from '../utils/push';
 import { whatsappUrl, shareLinkText } from '../utils/whatsapp';
@@ -19,6 +18,9 @@ import SmartTipsCard from '../components/SmartTipsCard.jsx';
 import RescheduleModal from '../components/RescheduleModal.jsx';
 import VacationModal from '../components/VacationModal.jsx';
 import QrModal from '../components/QrModal.jsx';
+import DayTimeline from '../components/DayTimeline.jsx';
+import BookingActionSheet from '../components/BookingActionSheet.jsx';
+import TomorrowReminders from '../components/TomorrowReminders.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -35,6 +37,8 @@ export default function DashboardPage() {
   const [showVacation, setShowVacation] = useState(false);
   const [vacationSaved, setVacationSaved] = useState(null); // {from,to,reason}
   const [showQr, setShowQr] = useState(false);
+  const [showTomorrow, setShowTomorrow] = useState(false);
+  const [actionFor, setActionFor] = useState(null);
 
   // Upcoming holiday in next 14 days → trigger reminder banner
   const nextHoliday = useMemo(() => {
@@ -87,39 +91,6 @@ export default function DashboardPage() {
     return map;
   }, [bookings]);
 
-  // Day timeline: combine bookings + blocks + free slots
-  const allSlotsForDay = useMemo(
-    () => listAllSlotsForDate(selectedDate, barber?.workingHours),
-    [selectedDate, barber],
-  );
-  const timeline = useMemo(() => {
-    const items = [];
-    const occupiedTimes = new Map();
-    for (const b of dayBookings) {
-      const dur = b.duration || 20;
-      // Mark every 20-min step in [time, time+duration) as occupied by this booking
-      let t = b.time;
-      for (let elapsed = 0; elapsed < dur; elapsed += 20) {
-        occupiedTimes.set(t, { type: 'booked', booking: b, isStart: elapsed === 0 });
-        t = addMinToTime(t, 20);
-      }
-    }
-    for (const bl of dayBlocks) {
-      const dur = bl.duration || 20;
-      let t = bl.time;
-      for (let elapsed = 0; elapsed < dur; elapsed += 20) {
-        occupiedTimes.set(t, { type: 'blocked', block: bl, isStart: elapsed === 0 });
-        t = addMinToTime(t, 20);
-      }
-    }
-    for (const s of allSlotsForDay) {
-      const occ = occupiedTimes.get(s.time);
-      if (s.inBreak) items.push({ type: 'break', time: s.time });
-      else if (occ) items.push({ ...occ, time: s.time });
-      else items.push({ type: 'free', time: s.time });
-    }
-    return items;
-  }, [allSlotsForDay, dayBookings, dayBlocks]);
 
   const shortLink = barber?.shortCode
     ? `${window.location.origin}/b/${barber.shortCode}`
@@ -341,87 +312,28 @@ export default function DashboardPage() {
           {DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}
         </div>
 
-        {timeline.length === 0 ? (
-          <div className="empty">סגור ביום זה</div>
-        ) : (
-          <div>
-            {timeline.map((it, i) => {
-              if (it.type === 'free') {
-                return (
-                  <div key={i} className="timeline-row free">
-                    <span className="timeline-time">{it.time}</span>
-                    <span className="muted" style={{ flex: 1 }}>פנוי</span>
-                    <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.85rem' }} onClick={() => blockSlot(it.time)}>
-                      🚫 חסום
-                    </button>
-                  </div>
-                );
-              }
-              if (it.type === 'break') {
-                return <div key={i} className="timeline-row break"><span className="timeline-time">{it.time}</span><span className="muted">הפסקה</span></div>;
-              }
-              if (it.type === 'blocked' && !it.isStart) return null;
-              if (it.type === 'blocked') {
-                return (
-                  <div key={i} className="timeline-row blocked">
-                    <span className="timeline-time">{it.time}</span>
-                    <span style={{ flex: 1 }}>🚫 {it.block.reason || 'חסום'} {it.block.duration > 60 && `(${Math.round(it.block.duration / 60)} שעות)`}</span>
-                    {!it.block.wholeDay && (
-                      <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.85rem' }} onClick={() => unblockSlot(it.block.id)}>
-                        בטל
-                      </button>
-                    )}
-                  </div>
-                );
-              }
-              if (it.type === 'booked' && !it.isStart) return null;
-              if (it.type === 'booked') {
-                const b = it.booking;
-                const inProgress = b.status === 'inProgress';
-                const completed = b.status === 'completed';
-                return (
-                  <div key={i} className={`booking-item ${inProgress ? 'in-progress' : ''} ${completed ? 'completed' : ''}`}>
-                    <div style={{ flex: 1 }}>
-                      <div className="time">
-                        {b.time}{b.duration ? ` • ${b.duration} דק׳` : ''}
-                        {inProgress && <span className="status-pill in-progress"> בטיפול</span>}
-                        {completed && <span className="status-pill completed"> הסתיים</span>}
-                        {b.recurringId && <span className="status-pill recurring"> 🔁</span>}
-                      </div>
-                      <div className="name">{b.clientName}</div>
-                      <div className="phone">
-                        <a href={`tel:${b.clientPhone}`} style={{ color: 'inherit' }}>{b.clientPhone}</a>
-                      </div>
-                      {(b.serviceName || b.addons?.length) && (
-                        <div className="muted" style={{ fontSize: '0.85rem', marginTop: 4 }}>
-                          {b.serviceName}
-                          {b.addons?.length > 0 && ` + ${b.addons.map((a) => a.name).join(', ')}`}
-                          {b.price > 0 && ` • ₪${b.price}`}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {!completed && !inProgress && (
-                        <button className="btn-primary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => startBooking(b)}>▶ התחל</button>
-                      )}
-                      {inProgress && (
-                        <button className="btn-primary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => completeBooking(b)}>✓ סיים</button>
-                      )}
-                      {!completed && (
-                        <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => setRescheduling(b)}>✏️ ערוך</button>
-                      )}
-                      {!completed && (
-                        <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => cancelBooking(b)}>בטל</button>
-                      )}
-                    </div>
-                  </div>
-                );
-              }
-              return null;
-            })}
-          </div>
-        )}
+        <DayTimeline
+          date={selectedDate}
+          workingHours={barber.workingHours}
+          bookings={dayBookings}
+          blocks={dayBlocks}
+          onBookingTap={(b) => setActionFor(b)}
+          onFreeSlotTap={(time) => {
+            if (confirm(`לחסום את השעה ${time}?`)) blockSlot(time);
+          }}
+          onBlockTap={(b) => {
+            if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id);
+          }}
+        />
       </div>
+
+      <button
+        className="btn-secondary"
+        onClick={() => setShowTomorrow(true)}
+        style={{ width: '100%', marginBottom: 12 }}
+      >
+        📋 תזכורות WhatsApp ללקוחות מחר
+      </button>
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>🌴 חופשים</h3>
@@ -496,6 +408,25 @@ export default function DashboardPage() {
           link={shortLink}
           businessName={barber.businessName || 'הספרות שלי'}
           onClose={() => setShowQr(false)}
+        />
+      )}
+
+      {showTomorrow && (
+        <TomorrowReminders
+          bookings={bookings}
+          businessName={barber.businessName || 'הספרות שלי'}
+          onClose={() => setShowTomorrow(false)}
+        />
+      )}
+
+      {actionFor && (
+        <BookingActionSheet
+          booking={actionFor}
+          onClose={() => setActionFor(null)}
+          onStart={() => startBooking(actionFor)}
+          onComplete={() => completeBooking(actionFor)}
+          onEdit={() => setRescheduling(actionFor)}
+          onCancel={() => cancelBooking(actionFor)}
         />
       )}
 

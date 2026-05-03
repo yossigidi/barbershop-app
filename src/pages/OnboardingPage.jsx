@@ -4,12 +4,67 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
+// Suggested catalog of services and add-ons. Barber toggles which apply
+// and sets prices. Durations are pre-set but editable.
+const SERVICE_DURATIONS = [20, 40, 60, 80, 100, 120];
+const ADDON_DURATIONS = [0, 5, 10, 15, 20, 30];
+
+const STANDARD_SERVICES = [
+  { id: 'haircut', name: 'תספורת רגילה', duration: 20 },
+  { id: 'haircut_beard', name: 'תספורת + זקן', duration: 40 },
+  { id: 'kids', name: 'תספורת ילדים', duration: 20 },
+  { id: 'premium', name: 'שירות פרימיום', duration: 60 },
+  { id: 'laser', name: 'טיפולי לייזר', duration: 60 },
+];
+const STANDARD_ADDONS = [
+  { id: 'beard', name: 'עיצוב זקן', duration: 10 },
+  { id: 'nose', name: 'שעווה באף', duration: 5 },
+  { id: 'ears', name: 'שעווה באוזניים', duration: 5 },
+  { id: 'eyebrows', name: 'עיצוב גבות', duration: 10 },
+];
+
+function ServiceCard({ item, options, onToggle, onPrice, onDuration }) {
+  return (
+    <div className={`onb-card ${item.offered ? 'active' : ''}`}>
+      <label className="onb-toggle">
+        <input type="checkbox" checked={item.offered} onChange={() => onToggle(item.id)} />
+        <span className="onb-name">{item.name}</span>
+      </label>
+      {item.offered && (
+        <div className="row" style={{ marginTop: 10 }}>
+          <div>
+            <label className="muted" style={{ fontSize: '0.85rem' }}>אורך</label>
+            <select value={item.duration} onChange={(e) => onDuration(item.id, e.target.value)}>
+              {options.map((d) => <option key={d} value={d}>{d === 0 ? 'ללא' : `${d} דק׳`}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="muted" style={{ fontSize: '0.85rem' }}>מחיר ₪</label>
+            <input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              value={item.price || ''}
+              onChange={(e) => onPrice(item.id, e.target.value)}
+              placeholder="₪"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function OnboardingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState('');
-  const [haircutPrice, setHaircutPrice] = useState('');
-  const [addons, setAddons] = useState([]);
+  const [services, setServices] = useState(
+    STANDARD_SERVICES.map((s) => ({ ...s, offered: false, price: 0 })),
+  );
+  const [addons, setAddons] = useState(
+    STANDARD_ADDONS.map((a) => ({ ...a, offered: false, price: 0 })),
+  );
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -24,24 +79,66 @@ export default function OnboardingPage() {
           return;
         }
         setBusinessName(data.businessName || '');
-        setHaircutPrice(String(data.defaultPrice || ''));
-        setAddons(Array.isArray(data.addons) ? data.addons : []);
+        // Hydrate from any pre-seeded services/addons (carry-over from old signup)
+        if (Array.isArray(data.services) && data.services.length) {
+          setServices((cur) =>
+            cur.map((c) => {
+              const m = data.services.find((s) => s.id === c.id);
+              return m ? { ...c, offered: true, price: m.price || 0, duration: m.duration || c.duration } : c;
+            }),
+          );
+        }
+        if (Array.isArray(data.addons) && data.addons.length) {
+          setAddons((cur) =>
+            cur.map((c) => {
+              const m = data.addons.find((a) => a.id === c.id);
+              return m ? { ...c, offered: true, price: m.price || 0, duration: m.duration || c.duration } : c;
+            }),
+          );
+        }
       }
       setLoaded(true);
     })();
   }, [user, navigate]);
 
-  function setAddonPrice(id, price) {
-    setAddons((list) => list.map((a) => (a.id === id ? { ...a, price: Number(price) || 0 } : a)));
+  function toggleSvc(id) {
+    setServices((list) => list.map((s) => (s.id === id ? { ...s, offered: !s.offered } : s)));
+  }
+  function priceSvc(id, p) {
+    setServices((list) => list.map((s) => (s.id === id ? { ...s, price: Number(p) || 0 } : s)));
+  }
+  function durationSvc(id, d) {
+    setServices((list) => list.map((s) => (s.id === id ? { ...s, duration: Number(d) || 20 } : s)));
+  }
+  function toggleAdd(id) {
+    setAddons((list) => list.map((a) => (a.id === id ? { ...a, offered: !a.offered } : a)));
+  }
+  function priceAdd(id, p) {
+    setAddons((list) => list.map((a) => (a.id === id ? { ...a, price: Number(p) || 0 } : a)));
+  }
+  function durationAdd(id, d) {
+    setAddons((list) => list.map((a) => (a.id === id ? { ...a, duration: Number(d) || 0 } : a)));
   }
 
   async function finish() {
+    const offeredSvc = services
+      .filter((s) => s.offered)
+      .map((s) => ({ id: s.id, name: s.name, duration: s.duration, price: s.price }));
+    const offeredAdd = addons
+      .filter((a) => a.offered)
+      .map((a) => ({ id: a.id, name: a.name, duration: a.duration, price: a.price }));
+
+    if (offeredSvc.length === 0) {
+      if (!confirm('לא הגדרת אף שירות. תוכל להוסיף אחר כך בהגדרות. להמשיך?')) return;
+    }
     setSaving(true);
     try {
       await updateDoc(doc(db, 'barbers', user.uid), {
         businessName: businessName.trim() || 'הספרות שלי',
-        defaultPrice: Number(haircutPrice) || 0,
-        addons,
+        services: offeredSvc,
+        addons: offeredAdd,
+        defaultDuration: 20,
+        defaultPrice: offeredSvc[0]?.price || 0,
         onboarded: true,
       });
       navigate('/dashboard', { replace: true });
@@ -53,6 +150,8 @@ export default function OnboardingPage() {
   }
 
   if (!loaded) return <div className="loading">טוען…</div>;
+
+  const offeredCount = services.filter((s) => s.offered).length;
 
   return (
     <div className="app">
@@ -70,54 +169,45 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 2 — מחיר תספורת</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 2 — שירותים שאתה מציע</h3>
         <p className="muted" style={{ marginTop: -6 }}>
-          המחיר ברירת המחדל לתספורת רגילה (20 דק׳). אפשר תמיד להוסיף שירותים נוספים בהגדרות.
+          סמן ✓ כל שירות שאתה מציע, ועדכן מחיר ואורך. לקוחות יראו רק את אלה שתסמן.
         </p>
-        <div className="field">
-          <label>מחיר ₪</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            min="0"
-            value={haircutPrice}
-            onChange={(e) => setHaircutPrice(e.target.value)}
-            placeholder="60"
+        {services.map((s) => (
+          <ServiceCard
+            key={s.id}
+            item={s}
+            options={SERVICE_DURATIONS}
+            onToggle={toggleSvc}
+            onPrice={priceSvc}
+            onDuration={durationSvc}
           />
-        </div>
+        ))}
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 3 — מחירי תוספות</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 3 — תוספות שאתה מציע</h3>
         <p className="muted" style={{ marginTop: -6 }}>
-          הלקוח יוכל להוסיף תוספות אלה על התור שלו. אם לא רלוונטי — השאר ריק (₪0) ואפשר למחוק בהגדרות.
+          תוספות שלקוח יכול להוסיף על השירות שלו (זקן, שעווה וכו׳).
         </p>
         {addons.map((a) => (
-          <div key={a.id} className="field">
-            <label>
-              {a.name}
-              <span className="muted" style={{ fontSize: '0.85rem', marginRight: 6 }}>
-                (+{a.duration} דק׳)
-              </span>
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              min="0"
-              value={a.price || ''}
-              onChange={(e) => setAddonPrice(a.id, e.target.value)}
-              placeholder="₪"
-            />
-          </div>
+          <ServiceCard
+            key={a.id}
+            item={a}
+            options={ADDON_DURATIONS}
+            onToggle={toggleAdd}
+            onPrice={priceAdd}
+            onDuration={durationAdd}
+          />
         ))}
       </div>
 
       <button className="btn-primary" onClick={finish} disabled={saving} style={{ width: '100%' }}>
-        {saving ? 'שומר…' : '✓ סיום והתחלה'}
+        {saving ? 'שומר…' : `✓ סיום והתחלה (${offeredCount} שירותים)`}
       </button>
       <div className="spacer" />
       <p className="muted text-center" style={{ fontSize: '0.85rem' }}>
-        תוכל לערוך כל הגדרה גם אחר כך מהדשבורד.
+        תוכל לערוך/להוסיף שירותים מותאמים אישית גם אחר כך מהגדרות.
       </p>
     </div>
   );

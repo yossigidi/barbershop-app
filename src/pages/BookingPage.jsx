@@ -10,6 +10,7 @@ import {
   DAY_LABELS_HE, dayKeyFromDate, addMinToTime, timeToMin,
 } from '../utils/slots';
 import Calendar from '../components/Calendar.jsx';
+import LiveStatusBanner from '../components/LiveStatusBanner.jsx';
 import { buildIcs, downloadIcs } from '../utils/ics';
 
 const PHONE_KEY = 'bs_phone';
@@ -373,6 +374,8 @@ export default function BookingPage() {
   return (
     <div className="app">
       <div className="header"><h1>{barber.businessName}</h1></div>
+
+      <LiveStatusBanner barberId={barberId} barberName={barber.businessName} />
 
       {client && (
         <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
