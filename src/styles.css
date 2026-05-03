@@ -624,6 +624,109 @@ input:focus { border-color: var(--accent); }
 }
 .onb-name { font-weight: 600; flex: 1; }
 
+/* Dashboard with bottom navigation */
+.app.dashboard {
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+}
+.dashboard-header {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  background: var(--bg);
+  z-index: 10;
+  padding: 12px 0 12px;
+  margin: 0 -16px 12px;
+  padding-inline-start: 16px;
+  padding-inline-end: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.dashboard-header h1 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+.tab-content {
+  /* room above bottom nav already handled by .app.dashboard */
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.nav-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px 4px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  border-radius: 0;
+}
+.nav-tab.active {
+  color: var(--accent);
+}
+.nav-icon { font-size: 1.4rem; line-height: 1; }
+.nav-label { font-size: 0.72rem; }
+.nav-badge {
+  position: absolute;
+  top: 4px;
+  inset-inline-end: 18%;
+  background: var(--danger);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 999px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Today summary header */
+.today-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+.today-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.chip {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.push-card {
+  border-color: var(--accent);
+}
+
 .copy-link {
   background: var(--surface-2);
   border: 1px dashed var(--accent);
