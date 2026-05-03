@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
+import LogoUploader from '../components/LogoUploader.jsx';
 
 // Suggested catalog of services and add-ons. Barber toggles which apply
 // and sets prices. Durations are pre-set but editable.
@@ -60,6 +61,7 @@ export default function OnboardingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   const [hours, setHours] = useState(defaultWorkingHours());
   const [services, setServices] = useState(
     STANDARD_SERVICES.map((s) => ({ ...s, offered: false, price: 0 })),
@@ -80,6 +82,7 @@ export default function OnboardingPage() {
         const data = snap.data();
         if (data.onboarded === true) setIsReturning(true);
         setBusinessName(data.businessName || '');
+        setLogoUrl(data.logoUrl || '');
         if (data.workingHours) {
           setHours({ ...defaultWorkingHours(), ...data.workingHours });
         }
@@ -216,6 +219,7 @@ export default function OnboardingPage() {
     try {
       await updateDoc(doc(db, 'barbers', user.uid), {
         businessName: businessName.trim() || 'הספרות שלי',
+        logoUrl: logoUrl || '',
         workingHours: hours,
         services: allServices,
         addons: offeredAdd,
@@ -245,12 +249,22 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 1 — שם העסק</h3>
-        <input
-          value={businessName}
-          onChange={(e) => setBusinessName(e.target.value)}
-          placeholder="הספרות של דני"
-        />
+        <h3 style={{ marginTop: 0 }}>שלב 1 — שם ולוגו של העסק</h3>
+        <div className="field">
+          <label>שם העסק</label>
+          <input
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            placeholder="הספרות של דני"
+          />
+        </div>
+        <div className="field">
+          <label>לוגו (אופציונלי)</label>
+          <p className="muted" style={{ fontSize: '0.85rem', marginTop: -4, marginBottom: 8 }}>
+            יופיע בלינק הציבורי שלך וכן בדשבורד.
+          </p>
+          <LogoUploader uid={user.uid} currentUrl={logoUrl} onChange={setLogoUrl} />
+        </div>
       </div>
 
       <div className="card">

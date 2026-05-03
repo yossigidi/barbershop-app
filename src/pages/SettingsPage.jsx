@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
+import LogoUploader from '../components/LogoUploader.jsx';
 
 const DURATION_OPTIONS = [20, 40, 60, 80, 100, 120];
 
@@ -19,6 +20,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   const [hours, setHours] = useState(defaultWorkingHours());
   const [services, setServices] = useState([]);
   const [addons, setAddons] = useState([]);
@@ -34,6 +36,7 @@ export default function SettingsPage() {
       if (snap.exists()) {
         const data = snap.data();
         setBusinessName(data.businessName || '');
+        setLogoUrl(data.logoUrl || '');
         setHours({ ...defaultWorkingHours(), ...(data.workingHours || {}) });
         setServices(Array.isArray(data.services) ? data.services : []);
         setAddons(Array.isArray(data.addons) ? data.addons : []);
@@ -92,6 +95,7 @@ export default function SettingsPage() {
         .filter((a) => a.name.length > 0);
       await updateDoc(doc(db, 'barbers', user.uid), {
         businessName: businessName.trim() || 'הספרות שלי',
+        logoUrl: logoUrl || '',
         workingHours: hours,
         services: cleanedServices,
         addons: cleanedAddons,
@@ -119,6 +123,10 @@ export default function SettingsPage() {
         <div className="field">
           <label>שם העסק</label>
           <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="הספרות של דני" />
+        </div>
+        <div className="field">
+          <label>לוגו</label>
+          <LogoUploader uid={user.uid} currentUrl={logoUrl} onChange={setLogoUrl} />
         </div>
       </div>
 

@@ -338,7 +338,12 @@ export default function BookingPage() {
   if (success) {
     return (
       <div className="app">
-        <div className="header"><h1>{barber.businessName}</h1></div>
+        <div className="brand-header">
+          {barber.logoUrl && (
+            <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
+          )}
+          <h1 className="brand-title">{barber.businessName}</h1>
+        </div>
         <div className="card text-center">
           <div style={{ fontSize: '3rem' }}>✅</div>
           <h2>{success.createdCount > 1 ? `${success.createdCount} תורים נקבעו!` : 'התור נקבע!'}</h2>
@@ -375,7 +380,12 @@ export default function BookingPage() {
 
   return (
     <div className="app">
-      <div className="header"><h1>{barber.businessName}</h1></div>
+      <div className="brand-header">
+        {barber.logoUrl && (
+          <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
+        )}
+        <h1 className="brand-title">{barber.businessName}</h1>
+      </div>
 
       <LiveStatusBanner barberId={barberId} barberName={barber.businessName} />
 

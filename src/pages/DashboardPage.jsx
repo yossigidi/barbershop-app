@@ -389,6 +389,9 @@ export default function DashboardPage() {
   return (
     <div className="app dashboard">
       <div className="header dashboard-header">
+        {barber.logoUrl && (
+          <img src={barber.logoUrl} alt="logo" className="dashboard-logo" />
+        )}
         <h1>{barber.businessName || 'הספרות שלי'}</h1>
       </div>
 

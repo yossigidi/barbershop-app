@@ -415,6 +415,68 @@ input:focus { border-color: var(--accent); }
   font-size: 0.9rem;
 }
 
+/* Branded header for the public booking page */
+.brand-header {
+  text-align: center;
+  padding: 24px 16px 12px;
+  margin: -16px -16px 16px;
+  background: linear-gradient(180deg, var(--surface), var(--bg));
+  border-bottom: 1px solid var(--border);
+}
+.brand-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold);
+  box-shadow: var(--shadow);
+  display: block;
+  margin: 0 auto 8px;
+  background: white;
+}
+.brand-title {
+  margin: 4px 0 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Dashboard small logo */
+.dashboard-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: white;
+  flex: none;
+  margin-inline-end: 10px;
+}
+
+/* Logo uploader */
+.logo-uploader { }
+.logo-preview-wrap {
+  display: flex;
+  justify-content: center;
+}
+.logo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  background: white;
+  box-shadow: var(--shadow);
+}
+.logo-empty {
+  text-align: center;
+  padding: 32px;
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -704,6 +766,10 @@ input:focus { border-color: var(--accent); }
   padding-inline-start: 16px;
   padding-inline-end: 16px;
   border-bottom: 1px solid var(--border);
+}
+.dashboard-header {
+  display: flex;
+  align-items: center;
 }
 .dashboard-header h1 {
   font-size: 1.2rem;
