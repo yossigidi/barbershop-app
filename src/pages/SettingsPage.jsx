@@ -21,6 +21,8 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [bitPhone, setBitPhone] = useState('');
+  const [payboxPhone, setPayboxPhone] = useState('');
   const [hours, setHours] = useState(defaultWorkingHours());
   const [services, setServices] = useState([]);
   const [addons, setAddons] = useState([]);
@@ -37,6 +39,8 @@ export default function SettingsPage() {
         const data = snap.data();
         setBusinessName(data.businessName || '');
         setLogoUrl(data.logoUrl || '');
+        setBitPhone(data.bitPhone || '');
+        setPayboxPhone(data.payboxPhone || '');
         setHours({ ...defaultWorkingHours(), ...(data.workingHours || {}) });
         setServices(Array.isArray(data.services) ? data.services : []);
         setAddons(Array.isArray(data.addons) ? data.addons : []);
@@ -96,6 +100,8 @@ export default function SettingsPage() {
       await updateDoc(doc(db, 'barbers', user.uid), {
         businessName: businessName.trim() || 'הספרות שלי',
         logoUrl: logoUrl || '',
+        bitPhone: (bitPhone || '').replace(/[^\d]/g, '') || '',
+        payboxPhone: (payboxPhone || '').replace(/[^\d]/g, '') || '',
         workingHours: hours,
         services: cleanedServices,
         addons: cleanedAddons,
@@ -127,6 +133,34 @@ export default function SettingsPage() {
         <div className="field">
           <label>לוגו</label>
           <LogoUploader uid={user.uid} currentUrl={logoUrl} onChange={setLogoUrl} />
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>💸 אפשרויות תשלום</h3>
+        <p className="muted" style={{ marginTop: -6 }}>
+          כשהלקוח יסיים להזמין, יראה כפתורי תשלום לפי המספרים שתמלא כאן.
+          השאר ריק כדי לא להציג.
+        </p>
+        <div className="field">
+          <label>🔵 מספר Bit</label>
+          <input
+            type="tel"
+            inputMode="numeric"
+            value={bitPhone}
+            onChange={(e) => setBitPhone(e.target.value)}
+            placeholder="050-1234567"
+          />
+        </div>
+        <div className="field">
+          <label>🟣 מספר PayBox</label>
+          <input
+            type="tel"
+            inputMode="numeric"
+            value={payboxPhone}
+            onChange={(e) => setPayboxPhone(e.target.value)}
+            placeholder="050-1234567"
+          />
         </div>
       </div>
 

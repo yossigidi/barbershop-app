@@ -311,6 +311,31 @@ export default function BookingPage() {
     }
   }
 
+  function openPay(kind, phone, amount, businessName) {
+    const cleanPhone = (phone || '').replace(/[^\d]/g, '');
+    if (!cleanPhone) return;
+    // Copy phone immediately so the user can paste in the app
+    try { navigator.clipboard.writeText(cleanPhone); } catch {}
+    // Show the user the info AND attempt to open the app via deep link.
+    const message = `📋 המספר הועתק: ${cleanPhone}\n💰 סכום: ₪${amount}\n\nפותח את ${kind === 'bit' ? 'Bit' : 'PayBox'}…`;
+    alert(message);
+    // Best-effort deep link / fallback. There's no fully-public payment URL
+    // scheme for either app, so we just try opening the app's site/scheme;
+    // if it doesn't work, the user already has phone+amount copied.
+    const url = kind === 'bit'
+      ? `bit://send?phone=${cleanPhone}&amount=${amount}`
+      : `paybox://send?phone=${cleanPhone}&amount=${amount}`;
+    const fallback = kind === 'bit'
+      ? 'https://www.bitpay.co.il'
+      : 'https://www.payboxapp.com';
+    const w = window.open(url, '_blank');
+    setTimeout(() => {
+      if (!w || w.closed || typeof w.closed === 'undefined') {
+        window.open(fallback, '_blank');
+      }
+    }, 500);
+  }
+
   function downloadCalendarInvite() {
     if (!success) return;
     const summary = `${barber.businessName} — ${pickedService?.name || 'תור'}`;
@@ -371,6 +396,35 @@ export default function BookingPage() {
             הזמנת תור נוסף
           </button>
         </div>
+
+        {totalPrice > 0 && (barber.bitPhone || barber.payboxPhone) && (
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>💸 שלם עכשיו ₪{totalPrice}</h3>
+            <p className="muted" style={{ marginTop: -6 }}>
+              לחץ על אחת האופציות → המספר יועתק ויפתח את האפליקציה.
+            </p>
+            <div className="row">
+              {barber.bitPhone && (
+                <button
+                  className="btn-primary"
+                  style={{ flex: 1, background: '#0066ff', color: 'white' }}
+                  onClick={() => openPay('bit', barber.bitPhone, totalPrice, barber.businessName)}
+                >
+                  🔵 שלם ב-Bit
+                </button>
+              )}
+              {barber.payboxPhone && (
+                <button
+                  className="btn-primary"
+                  style={{ flex: 1, background: '#7C3AED', color: 'white' }}
+                  onClick={() => openPay('paybox', barber.payboxPhone, totalPrice, barber.businessName)}
+                >
+                  🟣 שלם ב-PayBox
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
