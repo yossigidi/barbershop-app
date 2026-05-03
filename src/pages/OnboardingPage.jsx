@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
 
 // Suggested catalog of services and add-ons. Barber toggles which apply
 // and sets prices. Durations are pre-set but editable.
@@ -59,6 +60,7 @@ export default function OnboardingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState('');
+  const [hours, setHours] = useState(defaultWorkingHours());
   const [services, setServices] = useState(
     STANDARD_SERVICES.map((s) => ({ ...s, offered: false, price: 0 })),
   );
@@ -79,6 +81,9 @@ export default function OnboardingPage() {
           return;
         }
         setBusinessName(data.businessName || '');
+        if (data.workingHours) {
+          setHours({ ...defaultWorkingHours(), ...data.workingHours });
+        }
         // Hydrate from any pre-seeded services/addons (carry-over from old signup)
         if (Array.isArray(data.services) && data.services.length) {
           setServices((cur) =>
@@ -100,6 +105,13 @@ export default function OnboardingPage() {
       setLoaded(true);
     })();
   }, [user, navigate]);
+
+  function toggleDay(day) {
+    setHours((h) => ({ ...h, [day]: { ...h[day], active: !h[day].active } }));
+  }
+  function setDayTime(day, key, val) {
+    setHours((h) => ({ ...h, [day]: { ...h[day], [key]: val } }));
+  }
 
   function toggleSvc(id) {
     setServices((list) => list.map((s) => (s.id === id ? { ...s, offered: !s.offered } : s)));
@@ -135,6 +147,7 @@ export default function OnboardingPage() {
     try {
       await updateDoc(doc(db, 'barbers', user.uid), {
         businessName: businessName.trim() || 'הספרות שלי',
+        workingHours: hours,
         services: offeredSvc,
         addons: offeredAdd,
         defaultDuration: 20,
@@ -169,7 +182,38 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 2 — שירותים שאתה מציע</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 2 — ימים ושעות עבודה</h3>
+        <p className="muted" style={{ marginTop: -6 }}>
+          סמן ✓ כל יום שאתה עובד והגדר את שעות הפתיחה והסגירה. הפסקת צהריים אפשר להוסיף אחר כך בהגדרות.
+        </p>
+        {DAYS_OF_WEEK.map((day) => {
+          const cfg = hours[day];
+          return (
+            <div key={day} className={`onb-card ${cfg.active ? 'active' : ''}`}>
+              <label className="onb-toggle">
+                <input type="checkbox" checked={cfg.active} onChange={() => toggleDay(day)} />
+                <span className="onb-name">{DAY_LABELS_HE[day]}</span>
+                {!cfg.active && <span className="muted" style={{ fontSize: '0.85rem' }}>סגור</span>}
+              </label>
+              {cfg.active && (
+                <div className="row" style={{ marginTop: 10 }}>
+                  <div>
+                    <label className="muted" style={{ fontSize: '0.85rem' }}>פתיחה</label>
+                    <input type="time" value={cfg.start} onChange={(e) => setDayTime(day, 'start', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="muted" style={{ fontSize: '0.85rem' }}>סגירה</label>
+                    <input type="time" value={cfg.end} onChange={(e) => setDayTime(day, 'end', e.target.value)} />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>שלב 3 — שירותים שאתה מציע</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           סמן ✓ כל שירות שאתה מציע, ועדכן מחיר ואורך. לקוחות יראו רק את אלה שתסמן.
         </p>
@@ -186,9 +230,9 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 3 — תוספות שאתה מציע</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 4 — תוספות שאתה מציע</h3>
         <p className="muted" style={{ marginTop: -6 }}>
-          תוספות שלקוח יכול להוסיף על השירות שלו (זקן, שעווה וכו׳).
+          תוספות שלקוח יכול להוסיף על השירות שלו (זקן, שעווה, גבות וכו׳). הלקוח רואה אותן כ-checkboxes ויכול לבחור כמה שירצה.
         </p>
         {addons.map((a) => (
           <ServiceCard
@@ -200,6 +244,14 @@ export default function OnboardingPage() {
             onDuration={durationAdd}
           />
         ))}
+      </div>
+
+      <div className="card" style={{ background: 'rgba(212, 166, 74, 0.06)', borderColor: 'var(--accent)' }}>
+        <strong>💡 איך זה עובד ללקוח</strong>
+        <p className="muted" style={{ fontSize: '0.85rem', marginTop: 6, marginBottom: 0 }}>
+          הלקוח בוחר <strong>שירות אחד ראשי</strong> (תספורת/לייזר/פרימיום) ואז יכול לסמן <strong>כמה תוספות שירצה</strong>
+          (זקן + שעווה באף). המחיר והזמן מתחברים אוטומטית — והסלוטים שמוצגים מתאימים בדיוק לאורך הכולל.
+        </p>
       </div>
 
       <button className="btn-primary" onClick={finish} disabled={saving} style={{ width: '100%' }}>

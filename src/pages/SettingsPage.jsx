@@ -8,7 +8,7 @@ import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots
 const DURATION_OPTIONS = [20, 40, 60, 80, 100, 120];
 
 function emptyService() {
-  return { id: Math.random().toString(36).slice(2, 9), name: '', duration: 20, price: 0 };
+  return { id: Math.random().toString(36).slice(2, 9), name: '', description: '', duration: 20, price: 0 };
 }
 function emptyAddon() {
   return { id: Math.random().toString(36).slice(2, 9), name: '', duration: 0, price: 0 };
@@ -77,6 +77,7 @@ export default function SettingsPage() {
         .map((s) => ({
           id: s.id,
           name: (s.name || '').trim(),
+          description: (s.description || '').trim(),
           duration: Number(s.duration) || 20,
           price: Number(s.price) || 0,
         }))

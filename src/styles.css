@@ -1,14 +1,14 @@
 :root {
-  --bg: #0f0f12;
-  --surface: #1a1a20;
-  --surface-2: #25252e;
-  --border: #2e2e38;
-  --text: #ececf1;
-  --text-dim: #9b9ba8;
-  --accent: #d4a64a;
-  --accent-2: #b8893a;
-  --danger: #e85a5a;
-  --success: #4ade80;
+  --bg: #1d1a17;            /* warm charcoal — not pure black */
+  --surface: #2a2620;        /* coffee */
+  --surface-2: #36312a;      /* lighter wood */
+  --border: #4a4338;
+  --text: #f5ede0;           /* warm cream */
+  --text-dim: #b3a796;
+  --accent: #e2b066;         /* warmer gold */
+  --accent-2: #c89548;
+  --danger: #ef6f6f;
+  --success: #5fd991;
   --radius: 14px;
   color-scheme: dark;
 }
@@ -47,7 +47,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-primary {
   background: var(--accent);
-  color: #1a1a20;
+  color: #2a2620;
 }
 .btn-primary:hover { background: var(--accent-2); }
 
@@ -161,7 +161,7 @@ input:focus { border-color: var(--accent); }
 }
 .calendar-cell.active {
   background: var(--accent);
-  color: #1a1a20;
+  color: #2a2620;
   border-color: var(--accent);
 }
 .calendar-cell.closed {
@@ -209,7 +209,7 @@ input:focus { border-color: var(--accent); }
 }
 .slot.selected {
   background: var(--accent);
-  color: #1a1a20;
+  color: #2a2620;
   border-color: var(--accent);
 }
 
@@ -285,7 +285,7 @@ input:focus { border-color: var(--accent); }
 }
 .toggle.on { background: var(--accent); }
 .toggle.on::after {
-  background: #1a1a20;
+  background: #2a2620;
   transform: translateX(-18px);
 }
 
@@ -317,7 +317,7 @@ input:focus { border-color: var(--accent); }
 .service-card:active { transform: scale(0.98); }
 .service-card.active {
   background: var(--accent);
-  color: #1a1a20;
+  color: #2a2620;
   border-color: var(--accent);
 }
 .service-card-name { font-size: 1rem; }
@@ -526,7 +526,7 @@ input:focus { border-color: var(--accent); }
 }
 .dt-booking {
   background: var(--accent);
-  color: #1a1a20;
+  color: #2a2620;
   cursor: pointer;
   transition: filter 0.15s;
 }
