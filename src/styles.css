@@ -1,16 +1,19 @@
 :root {
-  --bg: #34291c;            /* clearly warm brown, NOT black */
-  --surface: #44382a;        /* lighter brown card */
-  --surface-2: #574836;      /* lightest tone for inputs */
-  --border: #6b5b46;
-  --text: #f7ecd9;           /* warm cream */
-  --text-dim: #c4b39a;
-  --accent: #e8b96d;         /* warm gold */
-  --accent-2: #c89548;
-  --danger: #ef6f6f;
-  --success: #5fd991;
-  --radius: 14px;
-  color-scheme: dark;
+  /* Modern, clean, light — Linear / Notion vibe */
+  --bg: #fafaf7;             /* warm off-white */
+  --surface: #ffffff;         /* pure white cards */
+  --surface-2: #f4f2ec;       /* soft cream input bg */
+  --border: #e8e4da;
+  --text: #18181b;            /* near-black */
+  --text-dim: #71717a;
+  --accent: #18181b;          /* dark — modern primary action */
+  --accent-2: #2c2c30;
+  --gold: #b8893a;            /* gold reserved for premium highlights */
+  --danger: #dc2626;
+  --success: #16a34a;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -47,7 +50,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-primary {
   background: var(--accent);
-  color: #1f1812;
+  color: #ffffff;
 }
 .btn-primary:hover { background: var(--accent-2); }
 
@@ -100,6 +103,7 @@ input:focus { border-color: var(--accent); }
   border-radius: var(--radius);
   padding: 16px;
   margin-bottom: 12px;
+  box-shadow: var(--shadow);
 }
 
 .field { margin-bottom: 14px; }
@@ -161,7 +165,7 @@ input:focus { border-color: var(--accent); }
 }
 .calendar-cell.active {
   background: var(--accent);
-  color: #1f1812;
+  color: #ffffff;
   border-color: var(--accent);
 }
 .calendar-cell.closed {
@@ -209,7 +213,7 @@ input:focus { border-color: var(--accent); }
 }
 .slot.selected {
   background: var(--accent);
-  color: #1f1812;
+  color: #ffffff;
   border-color: var(--accent);
 }
 
@@ -285,7 +289,7 @@ input:focus { border-color: var(--accent); }
 }
 .toggle.on { background: var(--accent); }
 .toggle.on::after {
-  background: #1f1812;
+  background: #ffffff;
   transform: translateX(-18px);
 }
 
@@ -317,7 +321,7 @@ input:focus { border-color: var(--accent); }
 .service-card:active { transform: scale(0.98); }
 .service-card.active {
   background: var(--accent);
-  color: #1f1812;
+  color: #ffffff;
   border-color: var(--accent);
 }
 .service-card-name { font-size: 1rem; }
@@ -337,7 +341,7 @@ input:focus { border-color: var(--accent); }
 }
 .addon-row.active {
   border-color: var(--accent);
-  background: rgba(212, 166, 74, 0.08);
+  background: var(--surface-2);
 }
 .addon-row input[type="checkbox"] {
   width: 22px;
@@ -377,7 +381,7 @@ input:focus { border-color: var(--accent); }
 }
 .timeline-row.free { opacity: 0.7; }
 .timeline-row.break { opacity: 0.5; font-style: italic; }
-.timeline-row.blocked { background: rgba(232, 90, 90, 0.06); border-color: rgba(232, 90, 90, 0.4); }
+.timeline-row.blocked { background: rgba(220, 38, 38, 0.06); border-color: rgba(220, 38, 38, 0.3); color: #b91c1c; }
 .timeline-time {
   font-weight: 700;
   color: var(--accent);
@@ -504,7 +508,7 @@ input:focus { border-color: var(--accent); }
   text-align: center;
 }
 .dt-hour-line {
-  border-top: 1px dashed rgba(255,255,255,0.05);
+  border-top: 1px dashed rgba(0,0,0,0.06);
   margin-inline-start: 56px;
   position: absolute;
   inset-inline-start: 0;
@@ -526,7 +530,7 @@ input:focus { border-color: var(--accent); }
 }
 .dt-booking {
   background: var(--accent);
-  color: #1f1812;
+  color: #ffffff;
   cursor: pointer;
   transition: filter 0.15s;
 }
@@ -549,7 +553,7 @@ input:focus { border-color: var(--accent); }
 .dt-free {
   border: 1px dashed var(--border);
   color: var(--text-dim);
-  background: rgba(255,255,255,0.015);
+  background: var(--surface-2);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -559,14 +563,14 @@ input:focus { border-color: var(--accent); }
 .dt-free:hover {
   border-color: var(--danger);
   color: var(--danger);
-  background: rgba(232, 90, 90, 0.05);
+  background: rgba(220, 38, 38, 0.05);
 }
 .dt-free-label { font-size: 0.75rem; }
 
 .dt-block {
-  background: rgba(232, 90, 90, 0.12);
-  border: 1px dashed rgba(232, 90, 90, 0.5);
-  color: #ffb1b1;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px dashed rgba(220, 38, 38, 0.4);
+  color: #b91c1c;
   cursor: pointer;
 }
 .dt-block.whole-day { cursor: default; }
@@ -575,8 +579,8 @@ input:focus { border-color: var(--accent); }
 .dt-break {
   background: repeating-linear-gradient(
     45deg,
-    rgba(255,255,255,0.04),
-    rgba(255,255,255,0.04) 6px,
+    rgba(0,0,0,0.04),
+    rgba(0,0,0,0.04) 6px,
     transparent 6px,
     transparent 12px
   );
@@ -590,8 +594,8 @@ input:focus { border-color: var(--accent); }
 
 /* Live status banner */
 .live-status {
-  border: 1px solid var(--accent);
-  background: linear-gradient(180deg, rgba(212, 166, 74, 0.1), transparent);
+  border: 1px solid var(--gold);
+  background: linear-gradient(180deg, rgba(184, 137, 58, 0.08), transparent);
 }
 .live-main { font-size: 1.1rem; font-weight: 700; }
 .live-sub { margin-top: 2px; }
@@ -607,7 +611,7 @@ input:focus { border-color: var(--accent); }
 }
 .onb-card.active {
   border-color: var(--accent);
-  background: rgba(212, 166, 74, 0.06);
+  background: var(--surface-2);
 }
 .onb-toggle {
   display: flex;
@@ -729,7 +733,7 @@ input:focus { border-color: var(--accent); }
 
 .copy-link {
   background: var(--surface-2);
-  border: 1px dashed var(--accent);
+  border: 1px dashed var(--gold);
   border-radius: 10px;
   padding: 12px;
   font-family: ui-monospace, SFMono-Regular, monospace;
@@ -737,6 +741,7 @@ input:focus { border-color: var(--accent); }
   font-size: 0.9rem;
   cursor: pointer;
   text-align: center;
+  color: var(--accent);
 }
 
 .loading {
