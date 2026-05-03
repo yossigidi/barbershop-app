@@ -69,6 +69,7 @@ export default function OnboardingPage() {
   );
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -76,10 +77,7 @@ export default function OnboardingPage() {
       const snap = await getDoc(doc(db, 'barbers', user.uid));
       if (snap.exists()) {
         const data = snap.data();
-        if (data.onboarded === true) {
-          navigate('/dashboard', { replace: true });
-          return;
-        }
+        if (data.onboarded === true) setIsReturning(true);
         setBusinessName(data.businessName || '');
         if (data.workingHours) {
           setHours({ ...defaultWorkingHours(), ...data.workingHours });
@@ -169,7 +167,10 @@ export default function OnboardingPage() {
   return (
     <div className="app">
       <div className="header">
-        <h1>👋 ברוך הבא!</h1>
+        <h1>{isReturning ? '🪒 קטלוג שירותים' : '👋 ברוך הבא!'}</h1>
+        {isReturning && (
+          <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate('/dashboard')}>חזור</button>
+        )}
       </div>
 
       <div className="card">
@@ -255,7 +256,7 @@ export default function OnboardingPage() {
       </div>
 
       <button className="btn-primary" onClick={finish} disabled={saving} style={{ width: '100%' }}>
-        {saving ? 'שומר…' : `✓ סיום והתחלה (${offeredCount} שירותים)`}
+        {saving ? 'שומר…' : isReturning ? `💾 שמור (${offeredCount} שירותים)` : `✓ סיום והתחלה (${offeredCount} שירותים)`}
       </button>
       <div className="spacer" />
       <p className="muted text-center" style={{ fontSize: '0.85rem' }}>

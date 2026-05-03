@@ -343,8 +343,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        <Link to="/onboarding">
+          <button className="btn-primary" style={{ width: '100%', marginBottom: 8 }}>🪒 קטלוג מהיר — שירותים, מחירים, ימים</button>
+        </Link>
         <Link to="/settings">
-          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}>⚙️ הגדרות שעות / שירותים</button>
+          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}>⚙️ הגדרות מתקדמות</button>
         </Link>
         <Link to="/reports">
           <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}>📊 דוחות מלאים</button>
