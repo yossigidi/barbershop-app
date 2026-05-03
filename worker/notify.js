@@ -1,11 +1,9 @@
-// Cloudflare Pages Function — POST /api/notify
+// FCM push handler — POST /api/notify
 // Body: { barberId, title, body }
-// Looks up the barber's fcmTokens and sends a push to each via FCM HTTP v1 API.
-// Uses a service account JSON stored in env.FIREBASE_SERVICE_ACCOUNT_JSON.
+// Reads barber's fcmTokens from Firestore (REST + service account OAuth)
+// and sends a push to each via FCM HTTP v1 API.
 
-export async function onRequestPost(context) {
-  const { request, env } = context;
-
+export async function handleNotify(request, env) {
   let payload;
   try {
     payload = await request.json();
@@ -19,7 +17,7 @@ export async function onRequestPost(context) {
   }
 
   if (!env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    return new Response('Server not configured', { status: 500 });
+    return new Response('Server not configured (missing FIREBASE_SERVICE_ACCOUNT_JSON)', { status: 500 });
   }
 
   let svc;
@@ -29,9 +27,9 @@ export async function onRequestPost(context) {
     return new Response('Bad service account', { status: 500 });
   }
 
-  // 1. Fetch barber's FCM tokens from Firestore REST API (using OAuth access token)
   const accessToken = await getAccessToken(svc);
 
+  // Read barber doc from Firestore REST
   const docUrl = `https://firestore.googleapis.com/v1/projects/${svc.project_id}/databases/(default)/documents/barbers/${encodeURIComponent(barberId)}`;
   const docRes = await fetch(docUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -50,7 +48,6 @@ export async function onRequestPost(context) {
     });
   }
 
-  // 2. Send to each token via FCM HTTP v1
   const results = await Promise.all(
     tokens.map((token) => sendFcm(svc.project_id, accessToken, token, title, body || '')),
   );
@@ -84,8 +81,6 @@ async function sendFcm(projectId, accessToken, token, title, body) {
   });
   return { ok: res.ok, status: res.status };
 }
-
-// --- OAuth: build a Google JWT and exchange for an access token ---
 
 async function getAccessToken(svc) {
   const now = Math.floor(Date.now() / 1000);
