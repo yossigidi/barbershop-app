@@ -9,6 +9,7 @@ import {
   computeSlotsForDate, dateToISO, formatDateHe, nextNDays,
   DAY_LABELS_HE, dayKeyFromDate,
 } from '../utils/slots';
+import Calendar from '../components/Calendar.jsx';
 
 const PHONE_KEY = 'bs_phone';
 
@@ -235,25 +236,14 @@ export default function BookingPage() {
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>בחר יום</h3>
-        <div className="day-strip">
-          {days.map((d) => {
-            const iso = dateToISO(d);
-            const active = iso === dateToISO(selectedDate);
-            const dayKey = dayKeyFromDate(d);
-            const dayCfg = barber.workingHours?.[dayKey];
-            const closed = !dayCfg?.active;
-            return (
-              <div
-                key={iso}
-                className={`day-pill ${active ? 'active' : ''}`}
-                onClick={() => !closed && setSelectedDate(d)}
-                style={closed ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
-              >
-                <div className="day-name">{DAY_LABELS_HE[dayKey].slice(0, 3)}</div>
-                <div className="day-num">{formatDateHe(d)}</div>
-              </div>
-            );
-          })}
+        <Calendar
+          days={days}
+          selectedDate={selectedDate}
+          onSelect={setSelectedDate}
+          workingHours={barber.workingHours}
+        />
+        <div className="muted text-center" style={{ marginBottom: 12 }}>
+          {DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}
         </div>
 
         <h3>בחר שעה</h3>

@@ -113,33 +113,79 @@ input:focus { border-color: var(--accent); }
 .row { display: flex; gap: 8px; align-items: center; }
 .row > * { flex: 1; }
 
-.day-strip {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 8px;
+.calendar {
   margin-bottom: 16px;
-  scrollbar-width: none;
 }
-.day-strip::-webkit-scrollbar { display: none; }
-.day-pill {
-  flex: 0 0 auto;
+.calendar-row,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.calendar-headers {
+  margin-bottom: 6px;
+}
+.calendar-head {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  padding: 2px 0;
+}
+.calendar-cell {
+  position: relative;
+  aspect-ratio: 1;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 14px;
-  text-align: center;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  min-width: 64px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0;
+  transition: transform 0.05s, background 0.15s;
 }
-.day-pill.active {
+.calendar-cell:active { transform: scale(0.95); }
+.calendar-cell.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+  pointer-events: none;
+}
+.calendar-cell.today:not(.active) {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+.calendar-cell.active {
   background: var(--accent);
   color: #1a1a20;
   border-color: var(--accent);
 }
-.day-pill .day-name { font-size: 0.8rem; color: var(--text-dim); }
-.day-pill.active .day-name { color: #1a1a20; opacity: 0.8; }
-.day-pill .day-num { font-size: 1.2rem; font-weight: 700; margin-top: 2px; }
+.calendar-cell.closed {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.calendar-num { font-size: 1rem; }
+.calendar-badge {
+  position: absolute;
+  top: -4px;
+  inset-inline-start: -4px;
+  background: var(--danger);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--surface);
+}
 
 .slots {
   display: grid;

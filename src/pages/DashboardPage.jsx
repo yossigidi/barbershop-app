@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { collection, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { dateToISO, formatDateHe, nextNDays, DAY_LABELS_HE, dayKeyFromDate } from '../utils/slots';
 import { registerFcmToken, requestPushPermission } from '../utils/push';
+import Calendar from '../components/Calendar.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -38,6 +39,11 @@ export default function DashboardPage() {
   const selectedISO = dateToISO(selectedDate);
   const dayBookings = bookings.filter((b) => b.date === selectedISO);
   const upcomingCount = bookings.filter((b) => b.date >= dateToISO(new Date())).length;
+  const bookingsByDate = useMemo(() => {
+    const map = {};
+    for (const b of bookings) map[b.date] = (map[b.date] || 0) + 1;
+    return map;
+  }, [bookings]);
 
   const shortLink = barber?.shortCode
     ? `${window.location.origin}/b/${barber.shortCode}`
@@ -117,19 +123,14 @@ export default function DashboardPage() {
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>📅 תורים — {upcomingCount} צפויים</h3>
-        <div className="day-strip">
-          {days.map((d) => {
-            const iso = dateToISO(d);
-            const count = bookings.filter((b) => b.date === iso).length;
-            const active = iso === selectedISO;
-            return (
-              <div key={iso} className={`day-pill ${active ? 'active' : ''}`} onClick={() => setSelectedDate(d)}>
-                <div className="day-name">{DAY_LABELS_HE[dayKeyFromDate(d)].slice(0, 3)}</div>
-                <div className="day-num">{formatDateHe(d)}</div>
-                {count > 0 && <div style={{ fontSize: '0.75rem', marginTop: 4 }}>{count} תורים</div>}
-              </div>
-            );
-          })}
+        <Calendar
+          days={days}
+          selectedDate={selectedDate}
+          onSelect={setSelectedDate}
+          bookingsByDate={bookingsByDate}
+        />
+        <div className="muted text-center" style={{ marginBottom: 12 }}>
+          {DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}
         </div>
 
         {dayBookings.length === 0 ? (
