@@ -24,7 +24,7 @@ import TomorrowReminders from '../components/TomorrowReminders.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
-  const [tab, setTab] = useState('today');
+  const [tab, setTab] = useState('calendar');
   const [barber, setBarber] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [blocks, setBlocks] = useState([]);
@@ -381,14 +381,14 @@ export default function DashboardPage() {
       </div>
 
       <nav className="bottom-nav">
+        <button className={`nav-tab ${tab === 'calendar' ? 'active' : ''}`} onClick={() => setTab('calendar')}>
+          <span className="nav-icon">📅</span>
+          <span className="nav-label">יומן</span>
+        </button>
         <button className={`nav-tab ${tab === 'today' ? 'active' : ''}`} onClick={() => setTab('today')}>
           <span className="nav-icon">🏠</span>
           <span className="nav-label">היום</span>
           {todayBookings.length > 0 && <span className="nav-badge">{todayBookings.length}</span>}
-        </button>
-        <button className={`nav-tab ${tab === 'calendar' ? 'active' : ''}`} onClick={() => setTab('calendar')}>
-          <span className="nav-icon">📅</span>
-          <span className="nav-label">יומן</span>
         </button>
         <button className={`nav-tab ${tab === 'reports' ? 'active' : ''}`} onClick={() => setTab('reports')}>
           <span className="nav-icon">📊</span>
