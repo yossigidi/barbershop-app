@@ -41,6 +41,7 @@ export default function BookingPage() {
   const [lastName, setLastName] = useState('');
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [recurring, setRecurring] = useState(false);
   const [recurEvery, setRecurEvery] = useState(3); // weeks
   const [recurTimes, setRecurTimes] = useState(8);
@@ -136,7 +137,7 @@ export default function BookingPage() {
 
   function pickSlot(time) {
     setPickedTime(time);
-    if (client) confirmBooking(time, client);
+    if (client) setShowConfirm(true);
     else setShowLogin(true);
   }
 
@@ -155,7 +156,7 @@ export default function BookingPage() {
         setClient(data);
         localStorage.setItem(`${PHONE_KEY}_${barberId}`, phone);
         setShowLogin(false);
-        if (pickedTime) confirmBooking(pickedTime, data);
+        if (pickedTime) setShowConfirm(true);
       } else {
         setShowLogin(false);
         setShowSignup(true);
@@ -184,7 +185,7 @@ export default function BookingPage() {
       setClient(data);
       localStorage.setItem(`${PHONE_KEY}_${barberId}`, phone);
       setShowSignup(false);
-      if (pickedTime) confirmBooking(pickedTime, data);
+      if (pickedTime) setShowConfirm(true);
     } catch (e) {
       alert('שגיאה: ' + e.message);
     } finally {
@@ -551,6 +552,77 @@ export default function BookingPage() {
             </div>
             <button className="btn-primary" onClick={loginByPhone} disabled={busy} style={{ width: '100%' }}>
               {busy ? 'בודק…' : 'המשך'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showConfirm && client && pickedTime && (
+        <div className="modal-backdrop" onClick={() => !busy && setShowConfirm(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>אישור הזמנה</h2>
+            <p className="muted" style={{ marginTop: -6 }}>בדוק שכל הפרטים נכונים לפני שתאשר.</p>
+
+            <div className="confirm-row">
+              <span className="confirm-label">📅 תאריך</span>
+              <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
+            </div>
+            <div className="confirm-row">
+              <span className="confirm-label">🕒 שעה</span>
+              <strong>{pickedTime}–{addMinToTime(pickedTime, totalDuration)}</strong>
+            </div>
+            <div className="confirm-row">
+              <span className="confirm-label">⏱ אורך</span>
+              <strong>{totalDuration} דקות</strong>
+            </div>
+            <div className="confirm-row">
+              <span className="confirm-label">💈 שירות</span>
+              <strong>{pickedService?.name}</strong>
+            </div>
+            {pickedAddonIds.length > 0 && (
+              <div className="confirm-row">
+                <span className="confirm-label">✨ תוספות</span>
+                <strong>
+                  {(barber.addons || [])
+                    .filter((a) => pickedAddonIds.includes(a.id))
+                    .map((a) => a.name)
+                    .join(', ')}
+                </strong>
+              </div>
+            )}
+            {totalPrice > 0 && (
+              <div className="confirm-row">
+                <span className="confirm-label">💰 מחיר</span>
+                <strong>₪{totalPrice}</strong>
+              </div>
+            )}
+            <div className="confirm-row">
+              <span className="confirm-label">👤 על שם</span>
+              <strong>{client.firstName} {client.lastName}</strong>
+            </div>
+            {recurring && (
+              <div className="confirm-row" style={{ borderTop: '1px dashed var(--gold)', paddingTop: 8, marginTop: 8 }}>
+                <span className="confirm-label">🔁 חוזר</span>
+                <strong>כל {recurEvery} שבועות, {recurTimes} פעמים</strong>
+              </div>
+            )}
+
+            <div className="spacer" />
+            <button
+              className="btn-primary"
+              onClick={() => { setShowConfirm(false); confirmBooking(pickedTime, client); }}
+              disabled={busy}
+              style={{ width: '100%', marginBottom: 8 }}
+            >
+              ✓ אשר וקבע תור
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => { setShowConfirm(false); setPickedTime(null); }}
+              disabled={busy}
+              style={{ width: '100%' }}
+            >
+              חזור לבחור שעה אחרת
             </button>
           </div>
         </div>

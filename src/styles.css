@@ -401,6 +401,20 @@ input:focus { border-color: var(--accent); }
   cursor: pointer;
 }
 
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 1rem;
+}
+.confirm-row:last-child { border-bottom: none; }
+.confirm-label {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
