@@ -11,7 +11,7 @@ export async function handleNotify(request, env) {
     return new Response('Invalid JSON', { status: 400 });
   }
 
-  const { barberId, title, body } = payload || {};
+  const { barberId, bookingId, title, body } = payload || {};
   if (!barberId || !title) {
     return new Response('Missing fields', { status: 400 });
   }
@@ -66,7 +66,7 @@ export async function handleNotify(request, env) {
   }
 
   const results = await Promise.all(
-    tokens.map((token) => sendFcm(svc.project_id, accessToken, token, title, body || '')),
+    tokens.map((token) => sendFcm(svc.project_id, accessToken, token, title, body || '', bookingId || '')),
   );
   const sent = results.filter((r) => r.ok).length;
 
@@ -76,16 +76,19 @@ export async function handleNotify(request, env) {
   });
 }
 
-async function sendFcm(projectId, accessToken, token, title, body) {
+async function sendFcm(projectId, accessToken, token, title, body, bookingId) {
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+  const link = bookingId ? `/dashboard?booking=${bookingId}` : '/dashboard';
   const message = {
     message: {
       token,
       notification: { title, body },
       webpush: {
         notification: { title, body, icon: '/icon-192.png', badge: '/icon-192.png' },
-        fcm_options: { link: '/dashboard' },
+        fcm_options: { link },
+        data: { link, bookingId: bookingId || '' },
       },
+      data: { link, bookingId: bookingId || '' },
     },
   };
   const res = await fetch(url, {

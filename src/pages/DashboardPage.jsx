@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import {
@@ -24,6 +24,7 @@ import TomorrowReminders from '../components/TomorrowReminders.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState('calendar');
   const [barber, setBarber] = useState(null);
   const [bookings, setBookings] = useState([]);
@@ -61,6 +62,24 @@ export default function DashboardPage() {
     });
     return () => { unsubBarber(); unsubBookings(); unsubBlocks(); };
   }, [user]);
+
+  // Notification deep-link handler — when ?booking=<id> is in the URL,
+  // open the action sheet for that booking (and clean the URL).
+  useEffect(() => {
+    const id = searchParams.get('booking');
+    if (!id || bookings.length === 0) return;
+    const b = bookings.find((x) => x.id === id);
+    if (b) {
+      setActionFor(b);
+      // Jump to today tab so the booking is contextually visible
+      const todayISO = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10); })();
+      if (b.date === todayISO) setTab('today');
+      // Remove the param so reload doesn't re-open the sheet
+      const next = new URLSearchParams(searchParams);
+      next.delete('booking');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, bookings, setSearchParams]);
 
   const today = useMemo(() => {
     const d = new Date(); d.setHours(0, 0, 0, 0); return d;

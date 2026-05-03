@@ -264,6 +264,7 @@ export default function BookingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           barberId,
+          bookingId: created[0]?.id,
           title: created.length > 1 ? `${created.length} תורים חדשים!` : 'תור חדש!',
           body: `${c.firstName} ${c.lastName} — ${formatDateHe(selectedDate)} ב-${time}${created.length > 1 ? ` + ${created.length - 1} תורים נוספים` : ''}`,
         }),
