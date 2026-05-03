@@ -7,7 +7,7 @@ import {
 } from 'firebase/firestore';
 import {
   computeSlotsForDate, dateToISO, formatDateHe, nextNDays,
-  DAY_LABELS_HE, dayKeyFromDate, addMinToTime,
+  DAY_LABELS_HE, dayKeyFromDate, addMinToTime, timeToMin,
 } from '../utils/slots';
 import Calendar from '../components/Calendar.jsx';
 import { buildIcs, downloadIcs } from '../utils/ics';
@@ -40,6 +40,9 @@ export default function BookingPage() {
   const [lastName, setLastName] = useState('');
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState(null);
+  const [recurring, setRecurring] = useState(false);
+  const [recurEvery, setRecurEvery] = useState(3); // weeks
+  const [recurTimes, setRecurTimes] = useState(8);
 
   // Resolve short code → barber
   useEffect(() => {
@@ -195,8 +198,8 @@ export default function BookingPage() {
       const selectedAddons = (barber?.addons || [])
         .filter((a) => pickedAddonIds.includes(a.id))
         .map((a) => ({ id: a.id, name: a.name, duration: a.duration || 0, price: a.price || 0 }));
-      const ref = await addDoc(collection(db, 'barbers', barberId, 'bookings'), {
-        date: iso,
+
+      const baseDoc = {
         time,
         duration: totalDuration,
         price: totalPrice,
@@ -206,22 +209,81 @@ export default function BookingPage() {
         clientName: `${c.firstName} ${c.lastName}`,
         clientPhone: c.phone,
         status: 'booked',
-        createdAt: serverTimestamp(),
-      });
+      };
+
+      // Build dates: first one + optional recurring
+      const dates = [iso];
+      let recurringId = null;
+      if (recurring && recurEvery > 0 && recurTimes > 1) {
+        recurringId = `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+        for (let i = 1; i < recurTimes; i++) {
+          const d = new Date(selectedDate);
+          d.setDate(d.getDate() + i * 7 * recurEvery);
+          dates.push(dateToISO(d));
+        }
+      }
+
+      // Check conflicts in advance for each date (single doc query each).
+      const created = [];
+      const skipped = [];
+      for (const d of dates) {
+        const conflictQ = query(
+          collection(db, 'barbers', barberId, 'bookings'),
+          where('date', '==', d),
+          where('status', '==', 'booked'),
+        );
+        const blockQ = query(
+          collection(db, 'barbers', barberId, 'blocks'),
+          where('date', '==', d),
+        );
+        const [bSnap, blSnap] = await Promise.all([getDocs(conflictQ), getDocs(blockQ)]);
+        const occ = [
+          ...bSnap.docs.map((x) => ({ time: x.data().time, duration: x.data().duration || 20 })),
+          ...blSnap.docs.map((x) => ({ time: x.data().time, duration: x.data().duration || 20 })),
+        ];
+        const slotMin = timeToMin(time);
+        const slotEnd = slotMin + totalDuration;
+        const conflict = occ.some((o) => {
+          const oS = timeToMin(o.time), oE = oS + o.duration;
+          return slotMin < oE && slotEnd > oS;
+        });
+        if (conflict) { skipped.push(d); continue; }
+
+        const ref = await addDoc(collection(db, 'barbers', barberId, 'bookings'), {
+          ...baseDoc,
+          date: d,
+          recurringId: recurringId || null,
+          createdAt: serverTimestamp(),
+        });
+        created.push({ id: ref.id, date: d });
+      }
 
       fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           barberId,
-          title: 'תור חדש!',
-          body: `${c.firstName} ${c.lastName} — ${formatDateHe(selectedDate)} ב-${time}`,
+          title: created.length > 1 ? `${created.length} תורים חדשים!` : 'תור חדש!',
+          body: `${c.firstName} ${c.lastName} — ${formatDateHe(selectedDate)} ב-${time}${created.length > 1 ? ` + ${created.length - 1} תורים נוספים` : ''}`,
         }),
       }).catch(() => {});
 
-      setSuccess({ id: ref.id, time, date: iso, addons: selectedAddons });
+      // Save first booking id for client revisit
+      if (created.length > 0) {
+        try { localStorage.setItem(`bs_lastBooking_${barberId}`, created[0].id); } catch {}
+      }
+
+      setSuccess({
+        id: created[0]?.id,
+        time,
+        date: iso,
+        addons: selectedAddons,
+        createdCount: created.length,
+        skipped: skipped.length,
+      });
       setPickedTime(null);
       setPickedAddonIds([]);
+      setRecurring(false);
     } catch (e) {
       alert('שגיאה: ' + e.message);
     } finally {
@@ -259,12 +321,18 @@ export default function BookingPage() {
         <div className="header"><h1>{barber.businessName}</h1></div>
         <div className="card text-center">
           <div style={{ fontSize: '3rem' }}>✅</div>
-          <h2>התור נקבע!</h2>
+          <h2>{success.createdCount > 1 ? `${success.createdCount} תורים נקבעו!` : 'התור נקבע!'}</h2>
           <p className="muted">
             {formatDateHe(selectedDate)} ({DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}) בשעה <strong>{success.time}</strong>
             {totalDuration ? ` • ${totalDuration} דק׳` : ''}
             {totalPrice ? ` • ₪${totalPrice}` : ''}
           </p>
+          {success.createdCount > 1 && (
+            <p className="muted" style={{ fontSize: '0.9rem' }}>
+              חוזר אוטומטית כל {recurEvery} שבועות, סה״כ {success.createdCount} פעמים
+              {success.skipped > 0 && ` (${success.skipped} דולגו עקב התנגשות)`}
+            </p>
+          )}
           {success.addons?.length > 0 && (
             <p className="muted" style={{ fontSize: '0.9rem' }}>
               כולל: {success.addons.map((a) => a.name).join(' • ')}
@@ -370,6 +438,41 @@ export default function BookingPage() {
           {DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}
           {pickedService && (
             <> • סה״כ {totalDuration} דק׳{totalPrice ? ` • ₪${totalPrice}` : ''}</>
+          )}
+        </div>
+
+        <div className="card-inset" style={{ marginBottom: 12 }}>
+          <label className="row" style={{ alignItems: 'center', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={recurring}
+              onChange={(e) => setRecurring(e.target.checked)}
+              style={{ width: 22, height: 22, flex: 'none', accentColor: 'var(--accent)', marginLeft: 8 }}
+            />
+            <span style={{ flex: 1 }}><strong>🔁 תור קבוע</strong> <span className="muted">(אותה שעה, חוזר)</span></span>
+          </label>
+          {recurring && (
+            <div className="row" style={{ marginTop: 10 }}>
+              <div>
+                <label className="muted" style={{ fontSize: '0.85rem' }}>כל</label>
+                <select value={recurEvery} onChange={(e) => setRecurEvery(Number(e.target.value))}>
+                  <option value={1}>שבוע</option>
+                  <option value={2}>שבועיים</option>
+                  <option value={3}>3 שבועות</option>
+                  <option value={4}>4 שבועות</option>
+                </select>
+              </div>
+              <div>
+                <label className="muted" style={{ fontSize: '0.85rem' }}>סה״כ פעמים</label>
+                <select value={recurTimes} onChange={(e) => setRecurTimes(Number(e.target.value))}>
+                  <option value={4}>4</option>
+                  <option value={6}>6</option>
+                  <option value={8}>8</option>
+                  <option value={12}>12</option>
+                  <option value={20}>20</option>
+                </select>
+              </div>
+            </div>
           )}
         </div>
 

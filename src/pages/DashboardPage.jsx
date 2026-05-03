@@ -12,10 +12,12 @@ import {
 } from '../utils/slots';
 import { registerFcmToken, requestPushPermission } from '../utils/push';
 import { whatsappUrl, shareLinkText } from '../utils/whatsapp';
+import { upcomingHolidays } from '../utils/holidays';
 import Calendar from '../components/Calendar.jsx';
 import StatsCard from '../components/StatsCard.jsx';
 import RescheduleModal from '../components/RescheduleModal.jsx';
 import VacationModal from '../components/VacationModal.jsx';
+import QrModal from '../components/QrModal.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -31,6 +33,26 @@ export default function DashboardPage() {
   const [rescheduling, setRescheduling] = useState(null); // booking obj
   const [showVacation, setShowVacation] = useState(false);
   const [vacationSaved, setVacationSaved] = useState(null); // {from,to,reason}
+  const [showQr, setShowQr] = useState(false);
+
+  // Upcoming holiday in next 14 days → trigger reminder banner
+  const nextHoliday = useMemo(() => {
+    const todayISO = dateToISO(new Date());
+    const all = upcomingHolidays(todayISO, 5);
+    return all.find((h) => {
+      const diff = (new Date(h.date) - new Date(todayISO)) / (1000 * 60 * 60 * 24);
+      return diff >= 1 && diff <= 14;
+    });
+  }, []);
+
+  function shareHolidayPromo() {
+    if (!nextHoliday) return;
+    const text =
+      `שלום! ${nextHoliday.emoji} ${nextHoliday.name} מתקרב.\n\n` +
+      `אם רוצים תור לקראת החג בלי לחץ — היכנס מהר לקבוע:\n${shortLink}\n\n` +
+      `${barber.businessName}`;
+    window.open(whatsappUrl(text), '_blank');
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -135,6 +157,39 @@ export default function DashboardPage() {
     if (!confirm(`לבטל את התור של ${b.clientName} ב-${b.time}?`)) return;
     try {
       await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'cancelled' });
+      // After cancel: if there's a waitlist, suggest WhatsApp blast
+      const wl = await getDocs(query(
+        collection(db, 'barbers', user.uid, 'waitlist'),
+        where('fromDate', '<=', b.date),
+      ));
+      const matches = wl.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((w) => (w.toDate || w.fromDate) >= b.date);
+      if (matches.length > 0) {
+        if (confirm(`📢 ${matches.length} לקוחות ממתינים לחלון בתאריך הזה. לפתוח WhatsApp עם הודעה לכולם?`)) {
+          const text =
+            `שלום! 🎉 התפנה תור ב-${barber.businessName} ל-${formatDateHe(new Date(b.date))} בשעה ${b.time}.\n\n` +
+            `אם רלוונטי, היכנס מהר ללינק: ${shortLink}`;
+          window.open(whatsappUrl(text), '_blank');
+        }
+      }
+    } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+
+  async function startBooking(b) {
+    try {
+      await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), {
+        status: 'inProgress',
+        startedAt: serverTimestamp(),
+      });
+    } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+  async function completeBooking(b) {
+    try {
+      await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), {
+        status: 'completed',
+        completedAt: serverTimestamp(),
+      });
     } catch (e) { alert('שגיאה: ' + e.message); }
   }
 
@@ -227,13 +282,28 @@ export default function DashboardPage() {
         <div className="copy-link" onClick={copyLink}>{shortLink || '—'}</div>
         <div className="row" style={{ marginTop: 12 }}>
           <button className="btn-primary" onClick={shareWhatsApp} style={{ flex: 1 }}>
-            📤 שתף ב-WhatsApp
+            📤 WhatsApp
+          </button>
+          <button className="btn-secondary" onClick={() => setShowQr(true)} style={{ flex: 'none' }}>
+            🔳 QR
           </button>
           <button className="btn-secondary" onClick={copyLink} style={{ flex: 'none' }}>
             📋
           </button>
         </div>
       </div>
+
+      {nextHoliday && (
+        <div className="card" style={{ borderColor: 'var(--accent)' }}>
+          <strong>{nextHoliday.emoji} {nextHoliday.name} מתקרב</strong>
+          <p className="muted" style={{ marginTop: 6, marginBottom: 12 }}>
+            עוד {Math.ceil((new Date(nextHoliday.date) - new Date()) / (1000 * 60 * 60 * 24))} ימים — מומלץ לעדכן את הלקוחות שלא קבעו עדיין.
+          </p>
+          <button className="btn-primary" onClick={shareHolidayPromo} style={{ width: '100%' }}>
+            💬 שלח הודעה ב-WhatsApp
+          </button>
+        </div>
+      )}
 
       {!tokenInstalled && pushStatus !== 'enabled' && (
         <div className="card" style={{ borderColor: 'var(--accent)' }}>
@@ -300,10 +370,17 @@ export default function DashboardPage() {
               if (it.type === 'booked' && !it.isStart) return null;
               if (it.type === 'booked') {
                 const b = it.booking;
+                const inProgress = b.status === 'inProgress';
+                const completed = b.status === 'completed';
                 return (
-                  <div key={i} className="booking-item">
+                  <div key={i} className={`booking-item ${inProgress ? 'in-progress' : ''} ${completed ? 'completed' : ''}`}>
                     <div style={{ flex: 1 }}>
-                      <div className="time">{b.time}{b.duration ? ` • ${b.duration} דק׳` : ''}</div>
+                      <div className="time">
+                        {b.time}{b.duration ? ` • ${b.duration} דק׳` : ''}
+                        {inProgress && <span className="status-pill in-progress"> בטיפול</span>}
+                        {completed && <span className="status-pill completed"> הסתיים</span>}
+                        {b.recurringId && <span className="status-pill recurring"> 🔁</span>}
+                      </div>
                       <div className="name">{b.clientName}</div>
                       <div className="phone">
                         <a href={`tel:${b.clientPhone}`} style={{ color: 'inherit' }}>{b.clientPhone}</a>
@@ -317,8 +394,18 @@ export default function DashboardPage() {
                       )}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => setRescheduling(b)}>✏️ ערוך</button>
-                      <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => cancelBooking(b)}>בטל</button>
+                      {!completed && !inProgress && (
+                        <button className="btn-primary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => startBooking(b)}>▶ התחל</button>
+                      )}
+                      {inProgress && (
+                        <button className="btn-primary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => completeBooking(b)}>✓ סיים</button>
+                      )}
+                      {!completed && (
+                        <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => setRescheduling(b)}>✏️ ערוך</button>
+                      )}
+                      {!completed && (
+                        <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => cancelBooking(b)}>בטל</button>
+                      )}
                     </div>
                   </div>
                 );
@@ -375,6 +462,9 @@ export default function DashboardPage() {
         <Link to="/settings" style={{ display: 'block', marginTop: 12 }}>
           <button className="btn-secondary" style={{ width: '100%' }}>⚙️ הגדרות שעות / שירותים</button>
         </Link>
+        <Link to="/reports" style={{ display: 'block', marginTop: 8 }}>
+          <button className="btn-secondary" style={{ width: '100%' }}>📊 דוחות + השוואות + חגים</button>
+        </Link>
       </div>
 
       {rescheduling && (
@@ -391,6 +481,14 @@ export default function DashboardPage() {
         <VacationModal
           onClose={() => setShowVacation(false)}
           onConfirm={handleVacation}
+        />
+      )}
+
+      {showQr && (
+        <QrModal
+          link={shortLink}
+          businessName={barber.businessName || 'הספרות שלי'}
+          onClose={() => setShowQr(false)}
         />
       )}
 

@@ -17,8 +17,8 @@ export default function HomePage() {
       try {
         const ref = doc(db, 'barbers', user.uid);
         const snap = await getDoc(ref);
+        let onboarded = true;
         if (!snap.exists()) {
-          // create barber profile + short code
           const code = await pickUniqueShortCode();
           await setDoc(ref, {
             displayName: user.displayName || '',
@@ -27,11 +27,23 @@ export default function HomePage() {
             shortCode: code,
             workingHours: defaultWorkingHours(),
             fcmTokens: [],
+            services: [],
+            addons: [
+              { id: 'beard', name: 'עיצוב זקן', duration: 10, price: 0 },
+              { id: 'nose', name: 'שעווה באף', duration: 5, price: 0 },
+              { id: 'ears', name: 'שעווה באוזניים', duration: 5, price: 0 },
+            ],
+            defaultDuration: 20,
+            defaultPrice: 0,
+            onboarded: false,
             createdAt: serverTimestamp(),
           });
           await setDoc(doc(db, 'shortCodes', code), { uid: user.uid });
+          onboarded = false;
+        } else {
+          onboarded = snap.data().onboarded !== false; // treat missing as true (legacy users)
         }
-        navigate('/dashboard', { replace: true });
+        navigate(onboarded ? '/dashboard' : '/onboarding', { replace: true });
       } catch (e) {
         console.error(e);
         setError(e.message);

@@ -59,6 +59,16 @@ service cloud.firestore {
         allow read: if true;
         allow create, update, delete: if isOwner(uid);
       }
+
+      // Waitlist: client can subscribe (create); only owner reads/lists/deletes
+      match /waitlist/{entryId} {
+        allow read, list: if isOwner(uid);
+        allow create: if isPhone(request.resource.data.clientPhone)
+                      && isString(request.resource.data.clientName, 100)
+                      && isDateStr(request.resource.data.fromDate)
+                      && isDateStr(request.resource.data.toDate);
+        allow delete: if isOwner(uid);
+      }
     }
 
     // Short code lookup → barberId. Public read, owner-only write.
