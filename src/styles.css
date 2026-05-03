@@ -418,27 +418,28 @@ input:focus { border-color: var(--accent); }
 /* Branded header for the public booking page */
 .brand-header {
   text-align: center;
-  padding: 24px 16px 12px;
-  margin: -16px -16px 16px;
+  padding: 32px 16px 20px;
+  margin: -16px -16px 20px;
   background: linear-gradient(180deg, var(--surface), var(--bg));
   border-bottom: 1px solid var(--border);
 }
 .brand-logo {
-  width: 96px;
-  height: 96px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--gold);
-  box-shadow: var(--shadow);
+  border: 3px solid var(--gold);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 6px rgba(184, 137, 58, 0.08);
   display: block;
-  margin: 0 auto 8px;
+  margin: 0 auto 14px;
   background: white;
 }
 .brand-title {
-  margin: 4px 0 0;
-  font-size: 1.4rem;
+  margin: 6px 0 0;
+  font-size: 1.7rem;
   font-weight: 700;
   color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 /* Dashboard small logo */
