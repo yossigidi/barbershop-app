@@ -17,17 +17,30 @@ export async function handleNotify(request, env) {
   }
 
   if (!env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    console.error('NOTIFY missing FIREBASE_SERVICE_ACCOUNT_JSON');
     return new Response('Server not configured (missing FIREBASE_SERVICE_ACCOUNT_JSON)', { status: 500 });
   }
 
   let svc;
   try {
     svc = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT_JSON);
-  } catch {
-    return new Response('Bad service account', { status: 500 });
+  } catch (e) {
+    console.error('NOTIFY bad service account JSON', e?.message);
+    return new Response('Bad service account JSON: ' + e?.message, { status: 500 });
   }
 
-  const accessToken = await getAccessToken(svc);
+  if (!svc.private_key || !svc.client_email || !svc.project_id) {
+    console.error('NOTIFY service account missing fields', Object.keys(svc));
+    return new Response('Service account JSON missing fields. Has: ' + Object.keys(svc).join(','), { status: 500 });
+  }
+
+  let accessToken;
+  try {
+    accessToken = await getAccessToken(svc);
+  } catch (e) {
+    console.error('NOTIFY token exchange failed', e?.message);
+    return new Response('Token exchange failed: ' + e?.message, { status: 500 });
+  }
 
   // Read barber doc from Firestore REST
   const docUrl = `https://firestore.googleapis.com/v1/projects/${svc.project_id}/databases/(default)/documents/barbers/${encodeURIComponent(barberId)}`;
@@ -35,11 +48,15 @@ export async function handleNotify(request, env) {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!docRes.ok) {
-    return new Response('Barber not found', { status: 404 });
+    const errText = await docRes.text().catch(() => '');
+    console.error('NOTIFY firestore read failed', docRes.status, errText);
+    return new Response(`Barber not found (status ${docRes.status})`, { status: 404 });
   }
   const docJson = await docRes.json();
   const tokensField = docJson.fields?.fcmTokens?.arrayValue?.values || [];
   const tokens = tokensField.map((v) => v.stringValue).filter(Boolean);
+
+  console.log('NOTIFY tokens found:', tokens.length, 'for barber', barberId);
 
   if (tokens.length === 0) {
     return new Response(JSON.stringify({ sent: 0, reason: 'no tokens' }), {

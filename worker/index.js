@@ -16,7 +16,8 @@ export default {
       try {
         return await handleNotify(request, env);
       } catch (e) {
-        return new Response('Internal: ' + e.message, { status: 500 });
+        console.error('NOTIFY_ERROR', e?.message, e?.stack);
+        return new Response('Internal: ' + (e?.message || 'unknown'), { status: 500 });
       }
     }
 
