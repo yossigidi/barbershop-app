@@ -2,48 +2,101 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
-import { collection, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
-import { dateToISO, formatDateHe, nextNDays, DAY_LABELS_HE, dayKeyFromDate } from '../utils/slots';
+import {
+  collection, doc, onSnapshot, query, updateDoc, where,
+  addDoc, deleteDoc, getDocs, arrayUnion, arrayRemove, serverTimestamp,
+} from 'firebase/firestore';
+import {
+  dateToISO, formatDateHe, nextNDays, DAY_LABELS_HE, dayKeyFromDate,
+  listAllSlotsForDate, addMinToTime,
+} from '../utils/slots';
 import { registerFcmToken, requestPushPermission } from '../utils/push';
+import { whatsappUrl, shareLinkText } from '../utils/whatsapp';
 import Calendar from '../components/Calendar.jsx';
+import StatsCard from '../components/StatsCard.jsx';
+import RescheduleModal from '../components/RescheduleModal.jsx';
+import VacationModal from '../components/VacationModal.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const [barber, setBarber] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [blocks, setBlocks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
   });
   const [pushStatus, setPushStatus] = useState('idle');
+  const [rescheduling, setRescheduling] = useState(null); // booking obj
+  const [showVacation, setShowVacation] = useState(false);
+  const [vacationSaved, setVacationSaved] = useState(null); // {from,to,reason}
 
   useEffect(() => {
     if (!user) return;
     const unsubBarber = onSnapshot(doc(db, 'barbers', user.uid), (snap) => {
       if (snap.exists()) setBarber({ id: snap.id, ...snap.data() });
     });
-    const q = query(
+    const bq = query(
       collection(db, 'barbers', user.uid, 'bookings'),
       where('status', '==', 'booked'),
     );
-    const unsubBookings = onSnapshot(q, (snap) => {
+    const unsubBookings = onSnapshot(bq, (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
       setBookings(list);
     });
-    return () => { unsubBarber(); unsubBookings(); };
+    const unsubBlocks = onSnapshot(collection(db, 'barbers', user.uid, 'blocks'), (snap) => {
+      setBlocks(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+    return () => { unsubBarber(); unsubBookings(); unsubBlocks(); };
   }, [user]);
 
   const days = useMemo(() => nextNDays(14), []);
   const selectedISO = dateToISO(selectedDate);
+  const todayISO = dateToISO(new Date());
   const dayBookings = bookings.filter((b) => b.date === selectedISO);
-  const upcomingCount = bookings.filter((b) => b.date >= dateToISO(new Date())).length;
+  const dayBlocks = blocks.filter((b) => b.date === selectedISO);
+  const upcomingCount = bookings.filter((b) => b.date >= todayISO).length;
   const bookingsByDate = useMemo(() => {
     const map = {};
     for (const b of bookings) map[b.date] = (map[b.date] || 0) + 1;
     return map;
   }, [bookings]);
+
+  // Day timeline: combine bookings + blocks + free slots
+  const allSlotsForDay = useMemo(
+    () => listAllSlotsForDate(selectedDate, barber?.workingHours),
+    [selectedDate, barber],
+  );
+  const timeline = useMemo(() => {
+    const items = [];
+    const occupiedTimes = new Map();
+    for (const b of dayBookings) {
+      const dur = b.duration || 20;
+      // Mark every 20-min step in [time, time+duration) as occupied by this booking
+      let t = b.time;
+      for (let elapsed = 0; elapsed < dur; elapsed += 20) {
+        occupiedTimes.set(t, { type: 'booked', booking: b, isStart: elapsed === 0 });
+        t = addMinToTime(t, 20);
+      }
+    }
+    for (const bl of dayBlocks) {
+      const dur = bl.duration || 20;
+      let t = bl.time;
+      for (let elapsed = 0; elapsed < dur; elapsed += 20) {
+        occupiedTimes.set(t, { type: 'blocked', block: bl, isStart: elapsed === 0 });
+        t = addMinToTime(t, 20);
+      }
+    }
+    for (const s of allSlotsForDay) {
+      const occ = occupiedTimes.get(s.time);
+      if (s.inBreak) items.push({ type: 'break', time: s.time });
+      else if (occ) items.push({ ...occ, time: s.time });
+      else items.push({ type: 'free', time: s.time });
+    }
+    return items;
+  }, [allSlotsForDay, dayBookings, dayBlocks]);
 
   const shortLink = barber?.shortCode
     ? `${window.location.origin}/b/${barber.shortCode}`
@@ -53,20 +106,23 @@ export default function DashboardPage() {
     if (!shortLink) return;
     try {
       await navigator.clipboard.writeText(shortLink);
-      alert('הלינק הועתק! שלח ללקוחות.');
+      alert('הלינק הועתק!');
     } catch {
       prompt('העתק את הלינק:', shortLink);
     }
+  }
+
+  function shareWhatsApp() {
+    if (!shortLink) return;
+    const text = shareLinkText(barber.businessName || 'הספרות שלי', shortLink);
+    window.open(whatsappUrl(text), '_blank');
   }
 
   async function enablePush() {
     setPushStatus('requesting');
     try {
       const token = await requestPushPermission();
-      if (!token) {
-        setPushStatus('denied');
-        return;
-      }
+      if (!token) return setPushStatus('denied');
       await registerFcmToken(user.uid, token);
       setPushStatus('enabled');
     } catch (e) {
@@ -79,9 +135,79 @@ export default function DashboardPage() {
     if (!confirm(`לבטל את התור של ${b.clientName} ב-${b.time}?`)) return;
     try {
       await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'cancelled' });
-    } catch (e) {
-      alert('שגיאה: ' + e.message);
-    }
+    } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+
+  async function blockSlot(time) {
+    try {
+      await addDoc(collection(db, 'barbers', user.uid, 'blocks'), {
+        date: selectedISO,
+        time,
+        duration: 20,
+        reason: '',
+        createdAt: serverTimestamp(),
+      });
+    } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+
+  async function unblockSlot(blockId) {
+    try {
+      await deleteDoc(doc(db, 'barbers', user.uid, 'blocks', blockId));
+    } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+
+  async function handleReschedule(newDate, newTime) {
+    if (!rescheduling) return;
+    try {
+      await updateDoc(doc(db, 'barbers', user.uid, 'bookings', rescheduling.id), {
+        date: newDate,
+        time: newTime,
+      });
+      setRescheduling(null);
+    } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+
+  async function handleVacation({ from, to, reason }) {
+    try {
+      // Save vacation entry
+      await updateDoc(doc(db, 'barbers', user.uid), {
+        vacations: arrayUnion({ from, to, reason, id: Math.random().toString(36).slice(2, 9) }),
+      });
+      // Block every working day in range with a full-day block (one block per day at first slot, marked wholeDay)
+      const start = new Date(from);
+      const end = new Date(to);
+      const writes = [];
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const iso = dateToISO(d);
+        // Use a single 24-hour block to cover the whole day in slot computations
+        writes.push(addDoc(collection(db, 'barbers', user.uid, 'blocks'), {
+          date: iso,
+          time: '00:00',
+          duration: 24 * 60,
+          reason: reason || 'חופש',
+          wholeDay: true,
+          createdAt: serverTimestamp(),
+        }));
+      }
+      await Promise.all(writes);
+      setShowVacation(false);
+      setVacationSaved({ from, to, reason });
+    } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+
+  async function shareVacationToClients() {
+    if (!vacationSaved) return;
+    const fromLabel = formatDateHe(new Date(vacationSaved.from));
+    const toLabel = formatDateHe(new Date(vacationSaved.to));
+    const body =
+      `שלום! 🪒\n\n${barber.businessName} ייסגר ` +
+      (vacationSaved.from === vacationSaved.to
+        ? `ב-${fromLabel}`
+        : `מ-${fromLabel} עד ${toLabel}`) +
+      `${vacationSaved.reason ? ` (${vacationSaved.reason})` : ''}.\n\n` +
+      `כשנחזור אפשר לקבוע תור חדש בלינק:\n${shortLink}\n\nתודה על ההבנה! 🙏`;
+    // Open WhatsApp share — barber selects broadcast list / contacts inside WhatsApp
+    window.open(whatsappUrl(body), '_blank');
   }
 
   if (!barber) return <div className="loading">טוען…</div>;
@@ -100,9 +226,12 @@ export default function DashboardPage() {
         <div className="spacer" />
         <div className="copy-link" onClick={copyLink}>{shortLink || '—'}</div>
         <div className="row" style={{ marginTop: 12 }}>
-          <Link to="/settings" style={{ flex: 1 }}>
-            <button className="btn-secondary" style={{ width: '100%' }}>הגדרות שעות עבודה</button>
-          </Link>
+          <button className="btn-primary" onClick={shareWhatsApp} style={{ flex: 1 }}>
+            📤 שתף ב-WhatsApp
+          </button>
+          <button className="btn-secondary" onClick={copyLink} style={{ flex: 'none' }}>
+            📋
+          </button>
         </div>
       </div>
 
@@ -121,6 +250,8 @@ export default function DashboardPage() {
         </div>
       )}
 
+      <StatsCard bookings={bookings} />
+
       <div className="card">
         <h3 style={{ marginTop: 0 }}>📅 תורים — {upcomingCount} צפויים</h3>
         <Calendar
@@ -133,25 +264,154 @@ export default function DashboardPage() {
           {DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}
         </div>
 
-        {dayBookings.length === 0 ? (
-          <div className="empty">אין תורים ליום זה</div>
+        {timeline.length === 0 ? (
+          <div className="empty">סגור ביום זה</div>
         ) : (
           <div>
-            {dayBookings.map((b) => (
-              <div key={b.id} className="booking-item">
-                <div>
-                  <div className="time">{b.time}</div>
-                  <div className="name">{b.clientName}</div>
-                  <div className="phone">
-                    <a href={`tel:${b.clientPhone}`} style={{ color: 'inherit' }}>{b.clientPhone}</a>
+            {timeline.map((it, i) => {
+              if (it.type === 'free') {
+                return (
+                  <div key={i} className="timeline-row free">
+                    <span className="timeline-time">{it.time}</span>
+                    <span className="muted" style={{ flex: 1 }}>פנוי</span>
+                    <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.85rem' }} onClick={() => blockSlot(it.time)}>
+                      🚫 חסום
+                    </button>
                   </div>
-                </div>
-                <button className="btn-secondary" onClick={() => cancelBooking(b)}>בטל</button>
+                );
+              }
+              if (it.type === 'break') {
+                return <div key={i} className="timeline-row break"><span className="timeline-time">{it.time}</span><span className="muted">הפסקה</span></div>;
+              }
+              if (it.type === 'blocked' && !it.isStart) return null;
+              if (it.type === 'blocked') {
+                return (
+                  <div key={i} className="timeline-row blocked">
+                    <span className="timeline-time">{it.time}</span>
+                    <span style={{ flex: 1 }}>🚫 {it.block.reason || 'חסום'} {it.block.duration > 60 && `(${Math.round(it.block.duration / 60)} שעות)`}</span>
+                    {!it.block.wholeDay && (
+                      <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.85rem' }} onClick={() => unblockSlot(it.block.id)}>
+                        בטל
+                      </button>
+                    )}
+                  </div>
+                );
+              }
+              if (it.type === 'booked' && !it.isStart) return null;
+              if (it.type === 'booked') {
+                const b = it.booking;
+                return (
+                  <div key={i} className="booking-item">
+                    <div style={{ flex: 1 }}>
+                      <div className="time">{b.time}{b.duration ? ` • ${b.duration} דק׳` : ''}</div>
+                      <div className="name">{b.clientName}</div>
+                      <div className="phone">
+                        <a href={`tel:${b.clientPhone}`} style={{ color: 'inherit' }}>{b.clientPhone}</a>
+                      </div>
+                      {(b.serviceName || b.addons?.length) && (
+                        <div className="muted" style={{ fontSize: '0.85rem', marginTop: 4 }}>
+                          {b.serviceName}
+                          {b.addons?.length > 0 && ` + ${b.addons.map((a) => a.name).join(', ')}`}
+                          {b.price > 0 && ` • ₪${b.price}`}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => setRescheduling(b)}>✏️ ערוך</button>
+                      <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.85rem' }} onClick={() => cancelBooking(b)}>בטל</button>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>🌴 חופשים</h3>
+        <button className="btn-secondary" onClick={() => setShowVacation(true)} style={{ width: '100%' }}>
+          + הוסף חופש (חוסם תאריכים + הודעת WhatsApp ללקוחות)
+        </button>
+        {(barber.vacations || []).length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            {barber.vacations.map((v) => (
+              <div key={v.id} className="timeline-row">
+                <span className="timeline-time">🌴</span>
+                <span style={{ flex: 1 }}>
+                  {formatDateHe(new Date(v.from))} → {formatDateHe(new Date(v.to))}
+                  {v.reason ? ` • ${v.reason}` : ''}
+                </span>
+                <button
+                  className="btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: '0.85rem' }}
+                  onClick={async () => {
+                    if (!confirm('להסיר חופש? התאריכים ייפתחו מחדש להזמנה.')) return;
+                    // Remove vacation entry
+                    await updateDoc(doc(db, 'barbers', user.uid), {
+                      vacations: arrayRemove(v),
+                    });
+                    // Remove the wholeDay blocks created for this vacation range
+                    const start = new Date(v.from);
+                    const end = new Date(v.to);
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                      const iso = dateToISO(d);
+                      const snap = await getDocs(query(
+                        collection(db, 'barbers', user.uid, 'blocks'),
+                        where('date', '==', iso),
+                        where('wholeDay', '==', true),
+                      ));
+                      for (const s of snap.docs) await deleteDoc(s.ref);
+                    }
+                  }}
+                >
+                  הסר
+                </button>
               </div>
             ))}
           </div>
         )}
+        <Link to="/settings" style={{ display: 'block', marginTop: 12 }}>
+          <button className="btn-secondary" style={{ width: '100%' }}>⚙️ הגדרות שעות / שירותים</button>
+        </Link>
       </div>
+
+      {rescheduling && (
+        <RescheduleModal
+          booking={rescheduling}
+          barber={barber}
+          barberId={user.uid}
+          onClose={() => setRescheduling(null)}
+          onConfirm={handleReschedule}
+        />
+      )}
+
+      {showVacation && (
+        <VacationModal
+          onClose={() => setShowVacation(false)}
+          onConfirm={handleVacation}
+        />
+      )}
+
+      {vacationSaved && (
+        <div className="modal-backdrop" onClick={() => setVacationSaved(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>✅ החופש נשמר</h2>
+            <p>התאריכים נחסמו ביומן. עכשיו אפשר להודיע ללקוחות ב-WhatsApp בלחיצה אחת.</p>
+            <p className="muted" style={{ fontSize: '0.85rem' }}>
+              💡 טיפ: ב-WhatsApp צור פעם אחת <strong>רשימת תפוצה</strong> (Broadcast List) עם כל הלקוחות,
+              ואז בלחיצה הזאת תוכל לבחור את הרשימה ולשלוח לכולם בבת אחת.
+            </p>
+            <button className="btn-primary" onClick={shareVacationToClients} style={{ width: '100%', marginBottom: 8 }}>
+              💬 שלח הודעה ב-WhatsApp
+            </button>
+            <button className="btn-secondary" onClick={() => setVacationSaved(null)} style={{ width: '100%' }}>
+              סגור
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helpers
     function isOwner(uid) {
       return request.auth != null && request.auth.uid == uid;
     }
@@ -13,11 +12,9 @@ service cloud.firestore {
       return f is string && f.size() >= 9 && f.size() <= 15 && f.matches('^[0-9+\\-\\s]+$');
     }
     function isDateStr(f) {
-      // YYYY-MM-DD
       return f is string && f.matches('^\\d{4}-\\d{2}-\\d{2}$');
     }
     function isTimeStr(f) {
-      // HH:MM
       return f is string && f.matches('^\\d{2}:\\d{2}$');
     }
 
@@ -27,11 +24,11 @@ service cloud.firestore {
       allow create: if isOwner(uid);
       allow update, delete: if isOwner(uid);
 
-      // Clients sub-collection: anyone can create a client doc (registration);
-      // only owner of the barber doc can read/list/modify. Document ID = phone.
+      // Clients sub-collection: anyone can create / read a single client by phone (login).
+      // Only owner can list/modify.
       match /clients/{phone} {
         allow read, list: if isOwner(uid);
-        allow get: if true; // single client lookup by phone (login)
+        allow get: if true;
         allow create: if isString(request.resource.data.firstName, 50)
                       && isString(request.resource.data.lastName, 50)
                       && isPhone(request.resource.data.phone)
@@ -39,8 +36,8 @@ service cloud.firestore {
         allow update, delete: if isOwner(uid);
       }
 
-      // Bookings: anyone can create a booking; only owner can list/update/delete.
-      // A client can read+delete their own booking by ID (cancellation link).
+      // Bookings: anyone can read (so clients can fetch availability), create new bookings,
+      // and cancel their own (status booked → cancelled). Only owner can list/update/delete.
       match /bookings/{bookingId} {
         allow read: if true;
         allow list: if isOwner(uid);
@@ -50,11 +47,17 @@ service cloud.firestore {
                       && isPhone(request.resource.data.clientPhone)
                       && request.resource.data.status == 'booked';
         allow update: if isOwner(uid);
-        // Allow client cancellation: must keep same phone; only status changes to 'cancelled'
         allow update: if resource.data.clientPhone == request.resource.data.clientPhone
                       && request.resource.data.status == 'cancelled'
                       && resource.data.status == 'booked';
         allow delete: if isOwner(uid);
+      }
+
+      // Blocks: barber-only manage; public can READ to compute availability but NOT list arbitrarily.
+      // Allow query by date so booking page can fetch blocks for a specific day.
+      match /blocks/{blockId} {
+        allow read: if true;
+        allow create, update, delete: if isOwner(uid);
       }
     }
 

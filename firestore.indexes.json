@@ -7,6 +7,14 @@
         { "fieldPath": "date", "order": "ASCENDING" },
         { "fieldPath": "time", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "blocks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "wholeDay", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

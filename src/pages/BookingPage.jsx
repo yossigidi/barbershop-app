@@ -7,9 +7,10 @@ import {
 } from 'firebase/firestore';
 import {
   computeSlotsForDate, dateToISO, formatDateHe, nextNDays,
-  DAY_LABELS_HE, dayKeyFromDate,
+  DAY_LABELS_HE, dayKeyFromDate, addMinToTime,
 } from '../utils/slots';
 import Calendar from '../components/Calendar.jsx';
+import { buildIcs, downloadIcs } from '../utils/ics';
 
 const PHONE_KEY = 'bs_phone';
 
@@ -27,9 +28,11 @@ export default function BookingPage() {
     d.setHours(0, 0, 0, 0);
     return d;
   });
-  const [bookedTimes, setBookedTimes] = useState([]);
+  const [occupied, setOccupied] = useState([]);
   const [pickedTime, setPickedTime] = useState(null);
-  const [client, setClient] = useState(null); // {firstName,lastName,phone}
+  const [pickedService, setPickedService] = useState(null);
+  const [pickedAddonIds, setPickedAddonIds] = useState([]);
+  const [client, setClient] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [pendingPhone, setPendingPhone] = useState('');
@@ -43,16 +46,10 @@ export default function BookingPage() {
     (async () => {
       try {
         const codeSnap = await getDoc(doc(db, 'shortCodes', code));
-        if (!codeSnap.exists()) {
-          setError('לינק לא תקין');
-          return;
-        }
+        if (!codeSnap.exists()) return setError('לינק לא תקין');
         const uid = codeSnap.data().uid;
         const barberSnap = await getDoc(doc(db, 'barbers', uid));
-        if (!barberSnap.exists()) {
-          setError('הספר לא נמצא');
-          return;
-        }
+        if (!barberSnap.exists()) return setError('הספר לא נמצא');
         setBarberId(uid);
         setBarber(barberSnap.data());
       } catch (e) {
@@ -61,7 +58,7 @@ export default function BookingPage() {
     })();
   }, [code]);
 
-  // Try to auto-load returning client from localStorage
+  // Returning client
   useEffect(() => {
     if (!barberId) return;
     const phone = localStorage.getItem(`${PHONE_KEY}_${barberId}`);
@@ -72,43 +69,80 @@ export default function BookingPage() {
     })();
   }, [barberId]);
 
-  // Load bookings for selected date
+  // Default-pick first service when barber loads
+  useEffect(() => {
+    if (!barber) return;
+    const services = barber.services || [];
+    if (services.length > 0 && !pickedService) {
+      setPickedService(services[0]);
+    } else if (services.length === 0 && !pickedService) {
+      setPickedService({
+        id: '_default',
+        name: 'תור',
+        duration: barber.defaultDuration || 20,
+        price: barber.defaultPrice || 0,
+      });
+    }
+  }, [barber, pickedService]);
+
+  // Load bookings + blocks for selected date → "occupied"
   useEffect(() => {
     if (!barberId) return;
     (async () => {
       const iso = dateToISO(selectedDate);
-      const q = query(
+      const bq = query(
         collection(db, 'barbers', barberId, 'bookings'),
         where('date', '==', iso),
         where('status', '==', 'booked'),
       );
-      const snap = await getDocs(q);
-      setBookedTimes(snap.docs.map((d) => d.data().time));
+      const blq = query(
+        collection(db, 'barbers', barberId, 'blocks'),
+        where('date', '==', iso),
+      );
+      const [bSnap, blSnap] = await Promise.all([getDocs(bq), getDocs(blq)]);
+      const list = [
+        ...bSnap.docs.map((d) => ({ time: d.data().time, duration: d.data().duration || 20 })),
+        ...blSnap.docs.map((d) => ({ time: d.data().time, duration: d.data().duration || 20 })),
+      ];
+      setOccupied(list);
     })();
   }, [barberId, selectedDate, success]);
 
+  const totalDuration = useMemo(() => {
+    if (!pickedService) return 20;
+    const addonDur = (barber?.addons || [])
+      .filter((a) => pickedAddonIds.includes(a.id))
+      .reduce((sum, a) => sum + (a.duration || 0), 0);
+    return (pickedService.duration || 20) + addonDur;
+  }, [pickedService, pickedAddonIds, barber]);
+
+  const totalPrice = useMemo(() => {
+    if (!pickedService) return 0;
+    const addonPrice = (barber?.addons || [])
+      .filter((a) => pickedAddonIds.includes(a.id))
+      .reduce((sum, a) => sum + (a.price || 0), 0);
+    return (pickedService.price || 0) + addonPrice;
+  }, [pickedService, pickedAddonIds, barber]);
+
   const days = useMemo(() => nextNDays(14), []);
   const slots = useMemo(
-    () => computeSlotsForDate(selectedDate, barber?.workingHours, bookedTimes),
-    [selectedDate, barber, bookedTimes],
+    () => computeSlotsForDate(selectedDate, barber?.workingHours, occupied, totalDuration),
+    [selectedDate, barber, occupied, totalDuration],
   );
 
   function pickSlot(time) {
     setPickedTime(time);
-    if (client) {
-      // confirm immediately
-      confirmBooking(time, client);
-    } else {
-      setShowLogin(true);
-    }
+    if (client) confirmBooking(time, client);
+    else setShowLogin(true);
+  }
+
+  function toggleAddon(id) {
+    setPickedAddonIds((arr) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]));
   }
 
   async function loginByPhone() {
     const phone = normalizePhone(pendingPhone);
-    if (phone.length < 9) {
-      alert('מספר טלפון לא תקין');
-      return;
-    }
+    if (phone.length < 9) return alert('מספר טלפון לא תקין');
     setBusy(true);
     try {
       const snap = await getDoc(doc(db, 'barbers', barberId, 'clients', phone));
@@ -119,7 +153,6 @@ export default function BookingPage() {
         setShowLogin(false);
         if (pickedTime) confirmBooking(pickedTime, data);
       } else {
-        // first time — show signup
         setShowLogin(false);
         setShowSignup(true);
       }
@@ -133,8 +166,7 @@ export default function BookingPage() {
   async function signup() {
     const phone = normalizePhone(pendingPhone);
     if (!firstName.trim() || !lastName.trim() || phone.length < 9) {
-      alert('מלא את כל השדות');
-      return;
+      return alert('מלא את כל השדות');
     }
     setBusy(true);
     try {
@@ -160,16 +192,23 @@ export default function BookingPage() {
     setBusy(true);
     try {
       const iso = dateToISO(selectedDate);
+      const selectedAddons = (barber?.addons || [])
+        .filter((a) => pickedAddonIds.includes(a.id))
+        .map((a) => ({ id: a.id, name: a.name, duration: a.duration || 0, price: a.price || 0 }));
       const ref = await addDoc(collection(db, 'barbers', barberId, 'bookings'), {
         date: iso,
         time,
+        duration: totalDuration,
+        price: totalPrice,
+        serviceId: pickedService.id,
+        serviceName: pickedService.name,
+        addons: selectedAddons,
         clientName: `${c.firstName} ${c.lastName}`,
         clientPhone: c.phone,
         status: 'booked',
         createdAt: serverTimestamp(),
       });
 
-      // Fire push notification (non-blocking; OK if it fails)
       fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -180,13 +219,35 @@ export default function BookingPage() {
         }),
       }).catch(() => {});
 
-      setSuccess({ id: ref.id, time, date: iso });
+      setSuccess({ id: ref.id, time, date: iso, addons: selectedAddons });
       setPickedTime(null);
+      setPickedAddonIds([]);
     } catch (e) {
       alert('שגיאה: ' + e.message);
     } finally {
       setBusy(false);
     }
+  }
+
+  function downloadCalendarInvite() {
+    if (!success) return;
+    const summary = `${barber.businessName} — ${pickedService?.name || 'תור'}`;
+    const lines = [
+      `שירות: ${pickedService?.name || 'תור'}`,
+      success.addons?.length ? `תוספות: ${success.addons.map((a) => a.name).join(', ')}` : '',
+      `אורך: ${totalDuration} דק׳`,
+      totalPrice ? `מחיר: ₪${totalPrice}` : '',
+    ].filter(Boolean);
+    const ics = buildIcs({
+      dateISO: success.date,
+      time: success.time,
+      durationMin: totalDuration,
+      summary,
+      description: lines.join('\n'),
+      location: barber.businessName || '',
+      uid: success.id,
+    });
+    downloadIcs(`${barber.businessName || 'תור'}-${success.date}-${success.time}.ics`, ics);
   }
 
   if (error) return <div className="app"><div className="card text-center text-danger">{error}</div></div>;
@@ -199,8 +260,20 @@ export default function BookingPage() {
         <div className="card text-center">
           <div style={{ fontSize: '3rem' }}>✅</div>
           <h2>התור נקבע!</h2>
-          <p className="muted">{formatDateHe(selectedDate)} ({DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}) בשעה <strong>{success.time}</strong></p>
+          <p className="muted">
+            {formatDateHe(selectedDate)} ({DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}) בשעה <strong>{success.time}</strong>
+            {totalDuration ? ` • ${totalDuration} דק׳` : ''}
+            {totalPrice ? ` • ₪${totalPrice}` : ''}
+          </p>
+          {success.addons?.length > 0 && (
+            <p className="muted" style={{ fontSize: '0.9rem' }}>
+              כולל: {success.addons.map((a) => a.name).join(' • ')}
+            </p>
+          )}
           <div className="spacer" />
+          <button className="btn-primary" onClick={downloadCalendarInvite} style={{ width: '100%', marginBottom: 8 }}>
+            📅 הוסף ליומן (תזכורת אוטומטית)
+          </button>
           <button className="btn-secondary" onClick={() => { setSuccess(null); }} style={{ width: '100%' }}>
             הזמנת תור נוסף
           </button>
@@ -209,11 +282,12 @@ export default function BookingPage() {
     );
   }
 
+  const services = barber.services || [];
+  const addons = barber.addons || [];
+
   return (
     <div className="app">
-      <div className="header">
-        <h1>{barber.businessName}</h1>
-      </div>
+      <div className="header"><h1>{barber.businessName}</h1></div>
 
       {client && (
         <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -234,6 +308,56 @@ export default function BookingPage() {
         </div>
       )}
 
+      {services.length > 0 && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>בחר שירות</h3>
+          <div className="service-list">
+            {services.map((s) => {
+              const active = pickedService?.id === s.id;
+              return (
+                <button
+                  key={s.id}
+                  className={`service-card ${active ? 'active' : ''}`}
+                  onClick={() => setPickedService(s)}
+                  type="button"
+                >
+                  <div className="service-card-name">{s.name}</div>
+                  <div className="service-card-meta">
+                    {s.duration} דק׳{s.price ? ` • ₪${s.price}` : ''}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {addons.length > 0 && pickedService && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>תוספות (אופציונלי)</h3>
+          <div className="addon-list">
+            {addons.map((a) => {
+              const checked = pickedAddonIds.includes(a.id);
+              return (
+                <label key={a.id} className={`addon-row ${checked ? 'active' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleAddon(a.id)}
+                  />
+                  <div className="addon-info">
+                    <div className="addon-name">{a.name}</div>
+                    <div className="muted" style={{ fontSize: '0.85rem' }}>
+                      {a.duration ? `+${a.duration} דק׳` : ''}{a.price ? ` • +₪${a.price}` : ''}
+                    </div>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="card">
         <h3 style={{ marginTop: 0 }}>בחר יום</h3>
         <Calendar
@@ -244,20 +368,28 @@ export default function BookingPage() {
         />
         <div className="muted text-center" style={{ marginBottom: 12 }}>
           {DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}
+          {pickedService && (
+            <> • סה״כ {totalDuration} דק׳{totalPrice ? ` • ₪${totalPrice}` : ''}</>
+          )}
         </div>
 
         <h3>בחר שעה</h3>
         {slots.length === 0 ? (
           <div className="empty">סגור ביום זה</div>
+        ) : slots.every((s) => !s.available) ? (
+          <div className="empty">אין שעות פנויות בתאריך זה</div>
         ) : (
           <div className="slots">
             {slots.map((s) => (
               <div
                 key={s.time}
-                className={`slot ${s.booked ? 'booked' : ''} ${pickedTime === s.time ? 'selected' : ''}`}
-                onClick={() => !s.booked && pickSlot(s.time)}
+                className={`slot ${!s.available ? 'booked' : ''} ${pickedTime === s.time ? 'selected' : ''}`}
+                onClick={() => s.available && pickSlot(s.time)}
               >
                 {s.time}
+                {s.available && pickedService?.duration > 20 && (
+                  <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
+                )}
               </div>
             ))}
           </div>

@@ -1,6 +1,6 @@
-// Slot helpers — 30-minute slots, working-hours aware.
+// Slot helpers — 30-minute granularity, variable service durations.
 
-export const SLOT_MIN = 30;
+export const STEP_MIN = 20;
 export const DAYS_OF_WEEK = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 export const DAY_LABELS_HE = {
   sunday: 'ראשון',
@@ -35,36 +35,71 @@ export function dayKeyFromDate(date) {
   return DAYS_OF_WEEK[date.getDay()];
 }
 
-function timeToMin(t) {
+export function timeToMin(t) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
 }
-function minToTime(min) {
+export function minToTime(min) {
   const h = String(Math.floor(min / 60)).padStart(2, '0');
   const m = String(min % 60).padStart(2, '0');
   return `${h}:${m}`;
 }
+export function addMinToTime(time, min) {
+  return minToTime(timeToMin(time) + min);
+}
 
-// Compute available 30-min slots for a given date based on workingHours.
-// bookedTimes: array of "HH:MM" already booked.
-export function computeSlotsForDate(date, workingHours, bookedTimes = []) {
+// Compute available start times for a slot of `duration` minutes.
+// occupied: array of { time: "HH:MM", duration: number } — bookings + blocks.
+// Returns: array of { time, available, reason? }
+export function computeSlotsForDate(date, workingHours, occupied = [], duration = 20) {
   const dayKey = dayKeyFromDate(date);
   const cfg = workingHours?.[dayKey];
   if (!cfg || !cfg.active) return [];
 
-  const start = timeToMin(cfg.start);
-  const end = timeToMin(cfg.end);
+  const dayStart = timeToMin(cfg.start);
+  const dayEnd = timeToMin(cfg.end);
+
+  // Build occupied ranges in minutes-since-midnight
+  const ranges = [];
+  for (const o of occupied) {
+    const s = timeToMin(o.time);
+    ranges.push({ start: s, end: s + (o.duration || 20) });
+  }
+  if (cfg.break?.start && cfg.break?.end) {
+    ranges.push({ start: timeToMin(cfg.break.start), end: timeToMin(cfg.break.end) });
+  }
+
+  const out = [];
+  for (let t = dayStart; t + duration <= dayEnd; t += STEP_MIN) { // 20-min step
+
+    let available = true;
+    for (const r of ranges) {
+      if (t < r.end && t + duration > r.start) {
+        available = false;
+        break;
+      }
+    }
+    out.push({ time: minToTime(t), available });
+  }
+  return out;
+}
+
+// Returns all 30-min steps in the working day (used for the day-management view in
+// the dashboard so the barber can mark any 30-min cell as blocked even outside booking flow).
+export function listAllSlotsForDate(date, workingHours) {
+  const dayKey = dayKeyFromDate(date);
+  const cfg = workingHours?.[dayKey];
+  if (!cfg || !cfg.active) return [];
+  const dayStart = timeToMin(cfg.start);
+  const dayEnd = timeToMin(cfg.end);
   const breakStart = cfg.break?.start ? timeToMin(cfg.break.start) : null;
   const breakEnd = cfg.break?.end ? timeToMin(cfg.break.end) : null;
-
-  const booked = new Set(bookedTimes);
-  const slots = [];
-  for (let t = start; t + SLOT_MIN <= end; t += SLOT_MIN) {
-    if (breakStart != null && breakEnd != null && t >= breakStart && t < breakEnd) continue;
-    const time = minToTime(t);
-    slots.push({ time, booked: booked.has(time) });
+  const out = [];
+  for (let t = dayStart; t + STEP_MIN <= dayEnd; t += STEP_MIN) {
+    const inBreak = breakStart != null && breakEnd != null && t >= breakStart && t < breakEnd;
+    out.push({ time: minToTime(t), inBreak });
   }
-  return slots;
+  return out;
 }
 
 export function nextNDays(n = 14) {
