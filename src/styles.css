@@ -478,6 +478,93 @@ input:focus { border-color: var(--accent); }
   background: var(--surface-2);
 }
 
+/* Morning summary card */
+.morning-card {
+  background: linear-gradient(135deg, #fff8e7, #ffffff);
+  border: 1px solid var(--gold);
+}
+.morning-greeting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.morning-emoji { font-size: 1.6rem; }
+.morning-empty {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+.morning-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.morning-stat {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.morning-stat-label { font-size: 0.78rem; color: var(--text-dim); }
+.morning-stat-num { font-size: 1.6rem; font-weight: 700; color: var(--accent); margin: 4px 0 0; }
+.morning-stat-sub { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+.morning-current {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.morning-current:hover { background: var(--bg); }
+.morning-current.in-progress {
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+}
+.morning-current-label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.morning-current-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.morning-current-meta {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+/* Break suggestions */
+.break-suggestion { border: 1px dashed var(--gold); }
+.break-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.break-row:first-of-type { border-top: none; }
+
+/* Weekly report card */
+.weekly-card {
+  background: linear-gradient(135deg, #f5f0fc, #ffffff);
+  border: 1px solid #c89548;
+}
+.weekly-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+.weekly-stats span:not(:has(strong)) { color: var(--text-dim); }
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

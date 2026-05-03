@@ -21,6 +21,10 @@ import QrModal from '../components/QrModal.jsx';
 import DayTimeline from '../components/DayTimeline.jsx';
 import BookingActionSheet from '../components/BookingActionSheet.jsx';
 import TomorrowReminders from '../components/TomorrowReminders.jsx';
+import MorningSummaryCard from '../components/MorningSummaryCard.jsx';
+import BreakSuggestions from '../components/BreakSuggestions.jsx';
+import WeeklyReportCard from '../components/WeeklyReportCard.jsx';
+import YesterdayFollowUp from '../components/YesterdayFollowUp.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -41,6 +45,7 @@ export default function DashboardPage() {
   const [vacationSaved, setVacationSaved] = useState(null);
   const [showQr, setShowQr] = useState(false);
   const [showTomorrow, setShowTomorrow] = useState(false);
+  const [showYesterday, setShowYesterday] = useState(false);
   const [actionFor, setActionFor] = useState(null);
 
   useEffect(() => {
@@ -239,17 +244,36 @@ export default function DashboardPage() {
   function TodayTab() {
     return (
       <>
-        <div className="today-summary">
-          <div>
-            <div className="muted" style={{ fontSize: '0.85rem' }}>{todayHeading}</div>
-            <div className="today-count">{todayBookings.length} תורים היום</div>
-          </div>
-          {nextHoliday && (
-            <button className="chip" onClick={shareHolidayPromo}>
-              {nextHoliday.emoji} {nextHoliday.name}
-            </button>
-          )}
-        </div>
+        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'הספרות שלי'} />
+
+        <MorningSummaryCard
+          displayName={barber.displayName}
+          businessName={barber.businessName}
+          todayBookings={todayBookings}
+          onTapBooking={setActionFor}
+        />
+
+        <BreakSuggestions
+          todayBookings={todayBookings}
+          todayBlocks={todayBlocks.filter((b) => !b.wholeDay)}
+          onBlock={(time, length) => {
+            if (confirm(`לחסום ${length} דקות מ-${time} כהפסקה?`)) {
+              addDoc(collection(db, 'barbers', user.uid, 'blocks'), {
+                date: todayISO,
+                time,
+                duration: length,
+                reason: 'הפסקה',
+                createdAt: serverTimestamp(),
+              });
+            }
+          }}
+        />
+
+        {nextHoliday && (
+          <button className="chip" onClick={shareHolidayPromo} style={{ width: '100%', marginBottom: 12 }}>
+            {nextHoliday.emoji} {nextHoliday.name} מתקרב — שלח הודעה ב-WhatsApp
+          </button>
+        )}
 
         {showPushCard && (
           <div className="card push-card">
@@ -341,6 +365,9 @@ export default function DashboardPage() {
         <SmartTipsCard workingHours={barber.workingHours} bookings={bookings} blocks={blocks} />
         <button className="btn-secondary" onClick={() => setShowTomorrow(true)} style={{ width: '100%', marginBottom: 8 }}>
           📋 תזכורות WhatsApp ללקוחות מחר
+        </button>
+        <button className="btn-secondary" onClick={() => setShowYesterday(true)} style={{ width: '100%', marginBottom: 8 }}>
+          💬 הודעות תודה ללקוחות מאתמול
         </button>
         <Link to="/reports">
           <button className="btn-primary" style={{ width: '100%' }}>📊 דוחות מלאים + השוואות + חגים</button>
@@ -440,6 +467,9 @@ export default function DashboardPage() {
       )}
       {showTomorrow && (
         <TomorrowReminders bookings={bookings} businessName={barber.businessName || 'הספרות שלי'} onClose={() => setShowTomorrow(false)} />
+      )}
+      {showYesterday && (
+        <YesterdayFollowUp uid={user.uid} businessName={barber.businessName || 'הספרות שלי'} onClose={() => setShowYesterday(false)} />
       )}
       {actionFor && (
         <BookingActionSheet
