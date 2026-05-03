@@ -405,14 +405,18 @@ export default function BookingPage() {
               return (
                 <button
                   key={s.id}
-                  className={`service-card ${active ? 'active' : ''}`}
+                  className={`service-card ${active ? 'active' : ''} ${s.isPackage ? 'is-package' : ''}`}
                   onClick={() => setPickedService(s)}
                   type="button"
                 >
+                  {s.isPackage && <span className="service-pkg-pill">חבילה</span>}
                   <div className="service-card-name">{s.name}</div>
                   <div className="service-card-meta">
                     {s.duration} דק׳{s.price ? ` • ₪${s.price}` : ''}
                   </div>
+                  {s.description && (
+                    <div className="service-card-desc">{s.description}</div>
+                  )}
                 </button>
               );
             })}
@@ -420,7 +424,7 @@ export default function BookingPage() {
         </div>
       )}
 
-      {addons.length > 0 && pickedService && (
+      {addons.length > 0 && pickedService && !pickedService.isPackage && (
         <div className="card">
           <h3 style={{ marginTop: 0 }}>תוספות (אופציונלי)</h3>
           <div className="addon-list">

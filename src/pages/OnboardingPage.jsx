@@ -67,6 +67,7 @@ export default function OnboardingPage() {
   const [addons, setAddons] = useState(
     STANDARD_ADDONS.map((a) => ({ ...a, offered: false, price: 0 })),
   );
+  const [packages, setPackages] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
@@ -99,6 +100,10 @@ export default function OnboardingPage() {
             }),
           );
         }
+        if (Array.isArray(data.services)) {
+          const existingPackages = data.services.filter((s) => s.isPackage);
+          if (existingPackages.length) setPackages(existingPackages);
+        }
       }
       setLoaded(true);
     })();
@@ -130,6 +135,51 @@ export default function OnboardingPage() {
     setAddons((list) => list.map((a) => (a.id === id ? { ...a, duration: Number(d) || 0 } : a)));
   }
 
+  // --- Packages ---
+  function addPackage() {
+    setPackages((p) => [
+      ...p,
+      {
+        id: `pkg_${Math.random().toString(36).slice(2, 9)}`,
+        name: '',
+        includes: [], // array of { kind: 'service'|'addon', id }
+        duration: 0,
+        price: 0,
+        manualOverride: false,
+        isPackage: true,
+      },
+    ]);
+  }
+  function updatePackage(id, patch) {
+    setPackages((list) => list.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }
+  function removePackage(id) {
+    setPackages((list) => list.filter((p) => p.id !== id));
+  }
+  function togglePackageItem(pkgId, kind, itemId) {
+    setPackages((list) => list.map((p) => {
+      if (p.id !== pkgId) return p;
+      const has = p.includes.some((i) => i.kind === kind && i.id === itemId);
+      const next = has
+        ? p.includes.filter((i) => !(i.kind === kind && i.id === itemId))
+        : [...p.includes, { kind, id: itemId }];
+      // Recompute auto totals (unless overridden)
+      let dur = 0, price = 0;
+      for (const inc of next) {
+        const src = inc.kind === 'service'
+          ? services.find((s) => s.id === inc.id)
+          : addons.find((a) => a.id === inc.id);
+        if (src) { dur += Number(src.duration) || 0; price += Number(src.price) || 0; }
+      }
+      return {
+        ...p,
+        includes: next,
+        duration: p.manualOverride ? p.duration : dur,
+        price: p.manualOverride ? p.price : price,
+      };
+    }));
+  }
+
   async function finish() {
     const offeredSvc = services
       .filter((s) => s.offered)
@@ -138,7 +188,28 @@ export default function OnboardingPage() {
       .filter((a) => a.offered)
       .map((a) => ({ id: a.id, name: a.name, duration: a.duration, price: a.price }));
 
-    if (offeredSvc.length === 0) {
+    // Build package "services" — bundles of selected items.
+    const cleanedPackages = packages
+      .filter((p) => p.name.trim() && p.includes.length > 0)
+      .map((p) => {
+        const includesNames = p.includes.map((i) => {
+          const src = i.kind === 'service' ? services.find((s) => s.id === i.id) : addons.find((a) => a.id === i.id);
+          return src?.name || '';
+        }).filter(Boolean);
+        return {
+          id: p.id,
+          name: p.name.trim(),
+          description: 'כולל: ' + includesNames.join(' + '),
+          duration: Number(p.duration) || 0,
+          price: Number(p.price) || 0,
+          isPackage: true,
+          includes: p.includes,
+        };
+      });
+
+    const allServices = [...offeredSvc, ...cleanedPackages];
+
+    if (allServices.length === 0) {
       if (!confirm('לא הגדרת אף שירות. תוכל להוסיף אחר כך בהגדרות. להמשיך?')) return;
     }
     setSaving(true);
@@ -146,7 +217,7 @@ export default function OnboardingPage() {
       await updateDoc(doc(db, 'barbers', user.uid), {
         businessName: businessName.trim() || 'הספרות שלי',
         workingHours: hours,
-        services: offeredSvc,
+        services: allServices,
         addons: offeredAdd,
         defaultDuration: 20,
         defaultPrice: offeredSvc[0]?.price || 0,
@@ -247,11 +318,114 @@ export default function OnboardingPage() {
         ))}
       </div>
 
-      <div className="card" style={{ background: 'rgba(212, 166, 74, 0.06)', borderColor: 'var(--accent)' }}>
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>שלב 5 — חבילות (אופציונלי)</h3>
+        <p className="muted" style={{ marginTop: -6 }}>
+          הרכב חבילות משירותים ותוספות עם מחיר וזמן משלהן (יכולות לכלול הנחה).
+          הלקוח רואה אותן כפריט אחד ובוחר אותן ישירות.
+        </p>
+
+        {packages.map((p, idx) => {
+          const offeredSvcItems = services.filter((s) => s.offered);
+          const offeredAddItems = addons.filter((a) => a.offered);
+          const allItems = [
+            ...offeredSvcItems.map((s) => ({ ...s, kind: 'service' })),
+            ...offeredAddItems.map((a) => ({ ...a, kind: 'addon' })),
+          ];
+          if (offeredSvcItems.length === 0 && offeredAddItems.length === 0) {
+            return (
+              <div key={p.id} className="onb-card">
+                <p className="muted">קודם כל סמן ✓ שירותים ותוספות בשלבים 3–4.</p>
+                <button className="btn-secondary" onClick={() => removePackage(p.id)} type="button">הסר</button>
+              </div>
+            );
+          }
+
+          return (
+            <div key={p.id} className="onb-card active" style={{ marginBottom: 12 }}>
+              <div className="row" style={{ alignItems: 'center', marginBottom: 8 }}>
+                <input
+                  placeholder={`שם החבילה (חבילה ${idx + 1})`}
+                  value={p.name}
+                  onChange={(e) => updatePackage(p.id, { name: e.target.value })}
+                  style={{ flex: 1 }}
+                />
+                <button className="btn-danger" style={{ padding: '8px 12px', flex: 'none' }} onClick={() => removePackage(p.id)} type="button">🗑</button>
+              </div>
+
+              <div className="muted" style={{ fontSize: '0.85rem', marginBottom: 6 }}>סמן מה כלול:</div>
+              <div className="pkg-items">
+                {allItems.map((it) => {
+                  const checked = p.includes.some((i) => i.kind === it.kind && i.id === it.id);
+                  return (
+                    <label key={`${it.kind}-${it.id}`} className={`pkg-item ${checked ? 'active' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => togglePackageItem(p.id, it.kind, it.id)}
+                      />
+                      <span style={{ flex: 1 }}>
+                        <span style={{ fontWeight: 600 }}>{it.name}</span>
+                        <span className="muted" style={{ fontSize: '0.8rem', marginInlineStart: 6 }}>
+                          {it.duration ? `${it.duration} דק׳` : ''}
+                          {it.price ? ` • ₪${it.price}` : ''}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+
+              <div className="row" style={{ marginTop: 10 }}>
+                <div>
+                  <label className="muted" style={{ fontSize: '0.85rem' }}>זמן (דק׳)</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    value={p.duration || ''}
+                    onChange={(e) => updatePackage(p.id, { duration: Number(e.target.value) || 0, manualOverride: true })}
+                  />
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: '0.85rem' }}>מחיר ₪</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    value={p.price || ''}
+                    onChange={(e) => updatePackage(p.id, { price: Number(e.target.value) || 0, manualOverride: true })}
+                  />
+                </div>
+              </div>
+              {p.manualOverride && (
+                <p className="muted" style={{ fontSize: '0.75rem', marginTop: 4 }}>
+                  מחיר/זמן ידני — לא מתעדכן אוטומטית.{' '}
+                  <a href="#" onClick={(e) => {
+                    e.preventDefault();
+                    let dur = 0, price = 0;
+                    for (const inc of p.includes) {
+                      const src = inc.kind === 'service' ? services.find((s) => s.id === inc.id) : addons.find((a) => a.id === inc.id);
+                      if (src) { dur += Number(src.duration) || 0; price += Number(src.price) || 0; }
+                    }
+                    updatePackage(p.id, { duration: dur, price, manualOverride: false });
+                  }}>חזור לחישוב אוטומטי</a>
+                </p>
+              )}
+            </div>
+          );
+        })}
+
+        <button className="btn-secondary" onClick={addPackage} type="button" style={{ width: '100%', marginTop: 8 }}>
+          + הוסף חבילה
+        </button>
+      </div>
+
+      <div className="card" style={{ borderColor: 'var(--gold)', background: 'rgba(184, 137, 58, 0.04)' }}>
         <strong>💡 איך זה עובד ללקוח</strong>
         <p className="muted" style={{ fontSize: '0.85rem', marginTop: 6, marginBottom: 0 }}>
-          הלקוח בוחר <strong>שירות אחד ראשי</strong> (תספורת/לייזר/פרימיום) ואז יכול לסמן <strong>כמה תוספות שירצה</strong>
-          (זקן + שעווה באף). המחיר והזמן מתחברים אוטומטית — והסלוטים שמוצגים מתאימים בדיוק לאורך הכולל.
+          הלקוח רואה את <strong>השירותים והחבילות יחד</strong> ובוחר אחד. אם זה שירות רגיל, הוא יכול להוסיף תוספות.
+          אם זו חבילה, הכל כבר כלול. הסלוטים שמוצגים מותאמים בדיוק לאורך הכולל.
         </p>
       </div>
 
