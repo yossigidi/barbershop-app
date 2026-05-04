@@ -19,10 +19,15 @@ service cloud.firestore {
     }
 
     // Public can read barber profile (for booking page); only owner can write
+    // EXCEPT the `subscription` field, which only the Cloudflare Worker can
+    // write (via Firebase Admin SDK with elevated credentials). This prevents
+    // a user from typing into devtools and granting themselves a subscription.
     match /barbers/{uid} {
       allow read: if true;
       allow create: if isOwner(uid);
-      allow update, delete: if isOwner(uid);
+      allow update: if isOwner(uid)
+                    && !('subscription' in request.resource.data.diff(resource.data).affectedKeys());
+      allow delete: if isOwner(uid);
 
       // Clients sub-collection: anyone can create / read a single client by phone (login).
       // Only owner can list/modify.

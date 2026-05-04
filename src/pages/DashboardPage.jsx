@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
-  MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X,
+  MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X, Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { useSubscription } from '../hooks/useSubscription';
+import PaywallModal from '../components/PaywallModal.jsx';
 import { db } from '../firebase';
 import {
   collection, doc, onSnapshot, query, updateDoc, where,
@@ -122,6 +124,10 @@ export default function DashboardPage() {
   const shortLink = barber?.shortCode
     ? `${window.location.origin}/b/${barber.shortCode}`
     : '';
+
+  // Subscription gate — when access is denied (trial expired, no payment),
+  // the entire dashboard is replaced by the paywall.
+  const access = useSubscription(barber);
 
   // --- Actions ---
   async function copyLink() {
@@ -268,6 +274,7 @@ export default function DashboardPage() {
   }
 
   if (!barber) return <div className="loading">טוען…</div>;
+  if (!access.granted) return <PaywallModal access={access} />;
 
   const tokenInstalled = (barber.fcmTokens || []).length > 0;
   const showPushCard = !tokenInstalled && pushStatus !== 'enabled' && !pushDismissed;
@@ -434,6 +441,11 @@ export default function DashboardPage() {
 
         <Link to="/onboarding">
           <button className="btn-primary" style={{ width: '100%', marginBottom: 8 }}><Scissors size={18} className="icon-inline" />קטלוג מהיר — שירותים, מחירים, ימים</button>
+        </Link>
+        <Link to="/pricing">
+          <button className="btn-gold" style={{ width: '100%', marginBottom: 8 }}><Sparkles size={18} className="icon-inline" />
+            {access.reason === 'trial' ? `מסלול Pro — נותרו ${access.daysLeft} ימי טריאל` : 'מסלול וחיוב'}
+          </button>
         </Link>
         <Link to="/settings">
           <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><Settings size={18} className="icon-inline" />הגדרות מתקדמות</button>

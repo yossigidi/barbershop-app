@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { defaultWorkingHours, generateShortCode } from '../utils/slots';
+import { initialSubscription } from '../utils/subscription';
 
 export default function HomePage() {
   const { user, loading, loginGoogle } = useAuth();
@@ -34,6 +35,7 @@ export default function HomePage() {
             defaultDuration: 20,
             defaultPrice: 0,
             onboarded: false,
+            subscription: initialSubscription(),
             createdAt: serverTimestamp(),
           });
           await setDoc(doc(db, 'shortCodes', code), { uid: user.uid });

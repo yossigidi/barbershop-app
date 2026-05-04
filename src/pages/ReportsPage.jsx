@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, CalendarDays, Trophy, PartyPopper } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { getAccessState } from '../utils/subscription';
+import PaywallModal from '../components/PaywallModal.jsx';
 import { db } from '../firebase';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { dateToISO, DAY_LABELS_HE, DAYS_OF_WEEK } from '../utils/slots';
 import { upcomingHolidays, holidayOn } from '../utils/holidays';
 
@@ -46,6 +48,7 @@ export default function ReportsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const [barberData, setBarberData] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -56,8 +59,14 @@ export default function ReportsPage() {
     const unsub = onSnapshot(q, (snap) => {
       setBookings(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
-    return unsub;
+    const unsubBarber = onSnapshot(doc(db, 'barbers', user.uid), (snap) => {
+      if (snap.exists()) setBarberData(snap.data());
+    });
+    return () => { unsub(); unsubBarber(); };
   }, [user]);
+
+  const access = getAccessState(barberData);
+  if (barberData && !access.granted) return <PaywallModal access={access} />;
 
   const data = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);

@@ -6,6 +6,7 @@ import SettingsPage from './pages/SettingsPage.jsx';
 import BookingPage from './pages/BookingPage.jsx';
 import OnboardingPage from './pages/OnboardingPage.jsx';
 import ReportsPage from './pages/ReportsPage.jsx';
+import PricingPage from './pages/PricingPage.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -22,6 +23,7 @@ export default function App() {
       <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
       <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
       <Route path="/reports" element={<Protected><ReportsPage /></Protected>} />
+      <Route path="/pricing" element={<Protected><PricingPage /></Protected>} />
       <Route path="/b/:code" element={<BookingPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

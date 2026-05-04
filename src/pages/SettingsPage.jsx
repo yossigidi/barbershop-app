@@ -6,7 +6,9 @@ import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
 import { PROFESSION_LIST, readProfessions } from '../utils/professions';
+import { getAccessState } from '../utils/subscription';
 import LogoUploader from '../components/LogoUploader.jsx';
+import PaywallModal from '../components/PaywallModal.jsx';
 
 const DURATION_OPTIONS = [20, 40, 60, 80, 100, 120];
 
@@ -38,6 +40,7 @@ export default function SettingsPage() {
   const [googleReviewUrl, setGoogleReviewUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [barberData, setBarberData] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -45,6 +48,7 @@ export default function SettingsPage() {
       const snap = await getDoc(doc(db, 'barbers', user.uid));
       if (snap.exists()) {
         const data = snap.data();
+        setBarberData(data);
         setBusinessName(data.businessName || '');
         setLogoUrl(data.logoUrl || '');
         setBitPhone(data.bitPhone || '');
@@ -136,6 +140,8 @@ export default function SettingsPage() {
   }
 
   if (!loaded) return <div className="loading">טוען…</div>;
+  const access = getAccessState(barberData);
+  if (!access.granted) return <PaywallModal access={access} />;
 
   return (
     <div className="app">
