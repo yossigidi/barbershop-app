@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
-import { PROFESSION_LIST, presetCatalogFor, getProfession } from '../utils/professions';
+import { PROFESSION_LIST, presetCatalogForMany, readProfessions, getProfession } from '../utils/professions';
 import LogoUploader from '../components/LogoUploader.jsx';
 
 function ServiceCard({ item, options, onToggle, onPrice, onDuration }) {
@@ -43,11 +43,11 @@ function ServiceCard({ item, options, onToggle, onPrice, onDuration }) {
 export default function OnboardingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [profession, setProfession] = useState('barber');
+  const [professions, setProfessions] = useState(['barber']);
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [hours, setHours] = useState(defaultWorkingHours());
-  const initialPreset = presetCatalogFor('barber');
+  const initialPreset = presetCatalogForMany(['barber']);
   const [services, setServices] = useState(initialPreset.services);
   const [addons, setAddons] = useState(initialPreset.addons);
   const [serviceDurations, setServiceDurations] = useState(initialPreset.serviceDurations);
@@ -57,19 +57,24 @@ export default function OnboardingPage() {
   const [loaded, setLoaded] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
 
-  // Swap the catalog when the profession changes (only if it differs from
-  // what's already loaded — won't wipe a returning user's offered services).
-  function changeProfession(nextKey) {
-    if (nextKey === profession) return;
-    setProfession(nextKey);
-    const preset = presetCatalogFor(nextKey);
-    setServices(preset.services);
-    setAddons(preset.addons);
-    setServiceDurations(preset.serviceDurations);
-    setAddonDurations(preset.addonDurations);
-    setPackages([]);
-    // Default business name only if user hasn't typed one yet
-    setBusinessName((cur) => cur.trim() ? cur : '');
+  // Toggle a profession on/off. Always keeps at least one selected.
+  // When the set changes, the catalog is replaced with the union of all
+  // selected verticals (only if user hasn't manually customized — we just
+  // overwrite suggestions; their saved offered services are merged back
+  // in the load effect).
+  function toggleProfession(nextKey) {
+    setProfessions((cur) => {
+      const has = cur.includes(nextKey);
+      const next = has ? cur.filter((x) => x !== nextKey) : [...cur, nextKey];
+      const final = next.length === 0 ? cur : next; // never empty
+      const preset = presetCatalogForMany(final);
+      setServices(preset.services);
+      setAddons(preset.addons);
+      setServiceDurations(preset.serviceDurations);
+      setAddonDurations(preset.addonDurations);
+      setPackages([]);
+      return final;
+    });
   }
 
   useEffect(() => {
@@ -79,9 +84,9 @@ export default function OnboardingPage() {
       if (snap.exists()) {
         const data = snap.data();
         if (data.onboarded === true) setIsReturning(true);
-        const profKey = data.profession || 'barber';
-        setProfession(profKey);
-        const preset = presetCatalogFor(profKey);
+        const profKeys = readProfessions(data);
+        setProfessions(profKeys);
+        const preset = presetCatalogForMany(profKeys);
         setServiceDurations(preset.serviceDurations);
         setAddonDurations(preset.addonDurations);
         setBusinessName(data.businessName || '');
@@ -234,16 +239,18 @@ export default function OnboardingPage() {
     }
     setSaving(true);
     try {
-      const profCfg = getProfession(profession);
-      const fallbackName = profCfg.defaultBusinessName('');
+      const primaryProf = getProfession(professions[0]);
+      const fallbackName = primaryProf.defaultBusinessName('');
+      const presetForAll = presetCatalogForMany(professions);
       await updateDoc(doc(db, 'barbers', user.uid), {
-        profession,
+        professions,
+        profession: professions[0], // legacy single field, keep for back-compat
         businessName: businessName.trim() || fallbackName,
         logoUrl: logoUrl || '',
         workingHours: hours,
         services: allServices,
         addons: offeredAdd,
-        defaultDuration: profCfg.serviceDurations[0] || 20,
+        defaultDuration: presetForAll.serviceDurations[0] || 20,
         defaultPrice: offeredSvc[0]?.price || 0,
         onboarded: true,
       });
@@ -273,23 +280,32 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card card-feature">
-        <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />שלב 1 — מה תחום העיסוק שלך?</h3>
+        <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />שלב 1 — מה תחומי העיסוק שלך?</h3>
         <p className="muted" style={{ marginTop: -6 }}>
-          הבחירה תקבע את הקטלוג ההתחלתי של השירותים והתוספות. אפשר לערוך אחר כך.
+          סמן את כל מה שאת/ה מציע/ה. הקטלוג ההתחלתי יורכב מכל מה שתבחר/י (ללא כפילויות). אפשר לערוך אחר כך.
         </p>
         <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
-          {PROFESSION_LIST.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => changeProfession(p.id)}
-              className={profession === p.id ? 'btn-primary' : 'btn-secondary'}
-              style={{ flex: '1 0 130px', padding: '14px 8px', fontSize: '0.95rem' }}
-            >
-              {p.label}
-            </button>
-          ))}
+          {PROFESSION_LIST.map((p) => {
+            const on = professions.includes(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => toggleProfession(p.id)}
+                className={on ? 'btn-primary' : 'btn-secondary'}
+                style={{ flex: '1 0 130px', padding: '14px 8px', fontSize: '0.95rem' }}
+              >
+                {on && <Check size={14} className="icon-inline" />}
+                {p.label}
+              </button>
+            );
+          })}
         </div>
+        {professions.length > 1 && (
+          <p className="muted" style={{ fontSize: '0.78rem', marginTop: 10, marginBottom: 0 }}>
+            ✨ נבחרו {professions.length} תחומים — הקטלוג יציע שירותים מכולם.
+          </p>
+        )}
       </div>
 
       <div className="card">

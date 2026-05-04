@@ -126,3 +126,52 @@ export function presetCatalogFor(key) {
     addonDurations: p.addonDurations,
   };
 }
+
+// Multi-profession variant — merges catalogs from several professions,
+// deduplicating by name (case-insensitive). Used when a beauty pro
+// offers e.g. manicure + pedicure + light cosmetics from one studio.
+export function presetCatalogForMany(keys) {
+  const list = (keys || []).map(getProfession).filter(Boolean);
+  if (list.length === 0) return presetCatalogFor('barber');
+  if (list.length === 1) return presetCatalogFor(list[0].id);
+
+  const services = [];
+  const addons = [];
+  const seenSvc = new Set();
+  const seenAdd = new Set();
+  for (const p of list) {
+    for (const s of p.services) {
+      const k = s.name.trim().toLowerCase();
+      if (!seenSvc.has(k)) {
+        seenSvc.add(k);
+        services.push({ id: id(), ...s, offered: false });
+      }
+    }
+    for (const a of p.addons) {
+      const k = a.name.trim().toLowerCase();
+      if (!seenAdd.has(k)) {
+        seenAdd.add(k);
+        addons.push({ id: id(), ...a, offered: false });
+      }
+    }
+  }
+
+  const serviceDurations = [...new Set(list.flatMap((p) => p.serviceDurations))]
+    .sort((a, b) => a - b);
+  const addonDurations = [...new Set(list.flatMap((p) => p.addonDurations))]
+    .sort((a, b) => a - b);
+
+  return { services, addons, serviceDurations, addonDurations };
+}
+
+// Read a barber doc's profession(s) — accepts both legacy single
+// `profession` string and new `professions` array. Always returns array
+// with at least one element.
+export function readProfessions(data) {
+  if (!data) return ['barber'];
+  if (Array.isArray(data.professions) && data.professions.length > 0) {
+    return data.professions;
+  }
+  if (typeof data.profession === 'string') return [data.profession];
+  return ['barber'];
+}

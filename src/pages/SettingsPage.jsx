@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
-import { PROFESSION_LIST } from '../utils/professions';
+import { PROFESSION_LIST, readProfessions } from '../utils/professions';
 import LogoUploader from '../components/LogoUploader.jsx';
 
 const DURATION_OPTIONS = [20, 40, 60, 80, 100, 120];
@@ -34,7 +34,7 @@ export default function SettingsPage() {
   const [addons, setAddons] = useState([]);
   const [defaultDuration, setDefaultDuration] = useState(20);
   const [defaultPrice, setDefaultPrice] = useState(0);
-  const [profession, setProfession] = useState('barber');
+  const [professions, setProfessions] = useState(['barber']);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -56,7 +56,7 @@ export default function SettingsPage() {
         setAddons(Array.isArray(data.addons) ? data.addons : []);
         setDefaultDuration(data.defaultDuration || 20);
         setDefaultPrice(data.defaultPrice || 0);
-        setProfession(data.profession || 'barber');
+        setProfessions(readProfessions(data));
       }
       setLoaded(true);
     })();
@@ -121,7 +121,8 @@ export default function SettingsPage() {
         addons: cleanedAddons,
         defaultDuration: Number(defaultDuration) || 20,
         defaultPrice: Number(defaultPrice) || 0,
-        profession,
+        professions,
+        profession: professions[0],
       });
       navigate('/dashboard');
     } catch (e) {
@@ -152,23 +153,38 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}><Briefcase size={18} className="icon-inline" />תחום העיסוק</h3>
+        <h3 style={{ marginTop: 0 }}><Briefcase size={18} className="icon-inline" />תחומי העיסוק</h3>
         <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
-          ההגדרה מקבעת את הקטלוג ההתחלתי של הצעות שירות בעמוד ה-onboarding. שינוי לא משפיע על השירותים שכבר הגדרת.
+          סמן את כל מה שאתה/את מציע/ה. אפשר לבחור כמה מקצועות ביחד (למשל מניקור + פדיקור + קוסמטיקה). שינוי לא מוחק שירותים שכבר הגדרת — רק משפיע על ההצעות בקטלוג ה-onboarding.
         </p>
         <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
-          {PROFESSION_LIST.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setProfession(p.id)}
-              className={profession === p.id ? 'btn-primary' : 'btn-secondary'}
-              style={{ flex: '1 0 130px', padding: '10px 8px', fontSize: '0.88rem' }}
-            >
-              {p.label}
-            </button>
-          ))}
+          {PROFESSION_LIST.map((p) => {
+            const on = professions.includes(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setProfessions((cur) => {
+                    const has = cur.includes(p.id);
+                    const next = has ? cur.filter((x) => x !== p.id) : [...cur, p.id];
+                    return next.length === 0 ? cur : next;
+                  });
+                }}
+                className={on ? 'btn-primary' : 'btn-secondary'}
+                style={{ flex: '1 0 130px', padding: '10px 8px', fontSize: '0.88rem' }}
+              >
+                {on && <Check size={14} className="icon-inline" />}
+                {p.label}
+              </button>
+            );
+          })}
         </div>
+        {professions.length > 1 && (
+          <p className="muted" style={{ fontSize: '0.78rem', marginTop: 10, marginBottom: 0 }}>
+            ✨ נבחרו {professions.length} תחומים — בקטלוג יוצגו שירותים מכל אחד.
+          </p>
+        )}
       </div>
 
       <div className="card">
