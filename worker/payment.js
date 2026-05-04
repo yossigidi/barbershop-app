@@ -101,12 +101,12 @@ export async function handleCreatePaymentLink(request, env) {
 
 // ─── POST /api/tranzila-webhook ───────────────────────────────────────────
 // Tranzila POSTs form-encoded data here after a payment.
-// We verify the transaction index against Tranzila's confirm API, then
-// activate the barber's subscription if approved.
+// Mirrors Engleez's tranzila-webhook.js: trusts the form payload (no
+// out-of-band confirmation call to Tranzila — that broke us before).
+// Always returns 200 so Tranzila doesn't retry endlessly on our errors.
 export async function handleTranzilaWebhook(request, env) {
   if (request.method !== 'POST') return err('Method not allowed', 405);
 
-  // Parse form data (Tranzila sends application/x-www-form-urlencoded)
   let body;
   try {
     const text = await request.text();
@@ -115,57 +115,63 @@ export async function handleTranzilaWebhook(request, env) {
     return err('Bad form data', 400);
   }
 
-  console.log('TRANZILA_WEBHOOK', { keys: Object.keys(body), uid: body.myid });
+  console.log('TRANZILA_WEBHOOK_RAW', JSON.stringify(body));
 
-  const uid = body.firebaseUid || body.myid; // back-compat with the early test version that used myid
+  const uid = body.firebaseUid || body.myid; // myid is back-compat
   const tranzilaToken = body.TranzilaTK || body.tranzila_tk || '';
   const indexId = body.index || body.IndexId || body.transactionId || '';
   const responseCode = body.Response || body.response || body.responsecode || '';
-  const sum = body.sum || '';
-  const last4 = body.ccno?.slice(-4) || '';
+  const sumPaid = body.sum || '';
+  const last4 = (body.ccno || '').slice(-4);
+  const expdate = body.expdate || '';
+  const contactEmail = body.contact || '';
 
-  if (!uid) return err('Missing myid', 400);
-  if (!tranzilaToken) return err('Missing token', 400);
-
-  // Mitigation against forged webhooks: verify against Tranzila's confirm API.
-  // (Note: requires private key; without it we still match index_id existence
-  // as a soft check. Not as strong but better than nothing.)
-  const verified = await verifyTranzilaTransaction(env, indexId, sum);
-  if (!verified.ok) {
-    console.warn('TRANZILA_WEBHOOK verification failed', verified.reason);
-    return err('Verification failed', 400);
+  if (!uid) {
+    console.warn('TRANZILA_WEBHOOK missing uid');
+    return new Response('OK', { status: 200 });
   }
 
-  // Approved? Tranzila response 000 = success
+  // Tranzila response codes: '000' = approved
   if (responseCode && responseCode !== '000') {
-    console.log('TRANZILA_WEBHOOK declined response', responseCode);
-    return ok({ ignored: true, reason: 'declined' });
+    console.log('TRANZILA_WEBHOOK declined', { uid, responseCode });
+    return new Response('OK', { status: 200 });
   }
 
-  // Activate subscription
-  const svc = await loadServiceAccount(env);
-  const accessToken = await getAccessToken(svc);
-  const periodEnd = new Date(Date.now() + RENEWAL_DAYS * 86_400_000);
+  if (!tranzilaToken) {
+    console.warn('TRANZILA_WEBHOOK missing token', { uid });
+    return new Response('OK', { status: 200 });
+  }
 
-  const subscriptionMap = fs.map({
-    status: fs.str('active'),
-    currentPeriodEnd: fs.ts(periodEnd),
-    tranzilaToken: fs.str(tranzilaToken),
-    last4: fs.str(last4),
-    activatedAt: fs.ts(new Date()),
-    indexId: fs.str(indexId),
-  });
+  try {
+    const svc = await loadServiceAccount(env);
+    const accessToken = await getAccessToken(svc);
+    const periodEnd = new Date(Date.now() + RENEWAL_DAYS * 86_400_000);
 
-  await firestorePatch(
-    svc,
-    accessToken,
-    `barbers/${uid}`,
-    { subscription: subscriptionMap },
-    ['subscription'],
-  );
+    const subscriptionMap = {
+      status: fs.str('active'),
+      currentPeriodEnd: fs.ts(periodEnd),
+      tranzilaToken: fs.str(tranzilaToken),
+      last4: fs.str(last4),
+      cardExpiry: fs.str(expdate),
+      activatedAt: fs.ts(new Date()),
+      indexId: fs.str(indexId),
+      sumPaid: fs.str(sumPaid),
+    };
 
-  console.log('TRANZILA_WEBHOOK activated', { uid, last4, periodEnd: periodEnd.toISOString() });
-  return ok({ activated: true });
+    await firestorePatch(
+      svc,
+      accessToken,
+      `barbers/${uid}`,
+      { subscription: fs.map(subscriptionMap) },
+      ['subscription'],
+    );
+
+    console.log('TRANZILA_WEBHOOK activated', { uid, last4, sumPaid, periodEnd: periodEnd.toISOString() });
+  } catch (e) {
+    console.error('TRANZILA_WEBHOOK Firestore error', e?.message, e?.stack);
+  }
+
+  return new Response('OK', { status: 200 });
 }
 
 // ─── Success/fail redirect handlers ───────────────────────────────────────
@@ -246,44 +252,6 @@ function mapBack(sub) {
   return out;
 }
 
-// Best-effort transaction verification. Tranzila has a "confirm" API but
-// it requires the private key. If TRANZILA_PRIVATE_KEY is set, we'll use
-// the proper confirmation endpoint. Otherwise, we accept the webhook with
-// a warning logged.
-async function verifyTranzilaTransaction(env, indexId, sum) {
-  if (!indexId) return { ok: false, reason: 'no-index' };
-
-  if (!env.TRANZILA_PRIVATE_KEY) {
-    console.warn('TRANZILA_PRIVATE_KEY not set — skipping deep verification');
-    return { ok: true, reason: 'soft-accept' };
-  }
-
-  // Tranzila confirm endpoint — POST with terminal + private key + index
-  // (Their docs vary; this is the documented "/cgi-bin/tranzila71confirm.cgi" path.)
-  try {
-    const params = new URLSearchParams({
-      supplier: env.TRANZILA_TERMINAL,
-      TranzilaPW: env.TRANZILA_PRIVATE_KEY,
-      indexId: indexId,
-    });
-    const r = await fetch('https://secure5.tranzila.com/cgi-bin/tranzila71confirm.cgi', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-    });
-    const text = await r.text();
-    // Tranzila returns key=value pairs. Parse into object.
-    const result = Object.fromEntries(new URLSearchParams(text));
-    if (result.Response === '000' || result.response === '000') {
-      // Optional: verify the sum matches
-      if (sum && result.sum && Number(result.sum) !== Number(sum)) {
-        return { ok: false, reason: 'sum-mismatch' };
-      }
-      return { ok: true };
-    }
-    return { ok: false, reason: 'confirm-not-approved: ' + (result.Response || text.slice(0, 100)) };
-  } catch (e) {
-    console.error('TRANZILA confirm fetch failed', e?.message);
-    return { ok: false, reason: 'confirm-fetch-error' };
-  }
-}
+// Note: removed verifyTranzilaTransaction — Engleez's production webhook
+// doesn't call the confirm API. The custom firebaseUid + Tranzila's own
+// Response='000' code on the webhook payload are sufficient.
