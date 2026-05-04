@@ -13,7 +13,7 @@
 // Set to the start of the launch day (Israel time).
 export const LAUNCH_DATE = new Date('2026-05-04T00:00:00+03:00');
 export const PRICE_NIS = 50;
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 30;
 export const RENEWAL_DAYS = 30;
 
 // Grandfathering — anyone who signed up before launch keeps the app forever,
