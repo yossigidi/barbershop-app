@@ -176,6 +176,50 @@ input:focus, select:focus {
   overflow-x: hidden;
 }
 
+/* Tablet — comfortable centered card */
+@media (min-width: 768px) {
+  .app {
+    max-width: 600px;
+    padding: 28px 24px;
+  }
+  .app.dashboard {
+    max-width: 760px;
+  }
+  body { font-size: 17px; }
+}
+
+/* Desktop — wider booking page; 2-column dashboard */
+@media (min-width: 1100px) {
+  .app {
+    max-width: 680px;
+  }
+  .app.dashboard {
+    max-width: 1120px;
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+  /* Auto-split dashboard cards into 2 balanced columns; keep each card intact */
+  .app.dashboard .tab-content {
+    column-count: 2;
+    column-gap: 24px;
+  }
+  .app.dashboard .tab-content > * {
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+    width: 100%;
+    display: block;
+    margin-bottom: 16px;
+  }
+}
+
+/* Very wide desktop — give a bit more breathing room */
+@media (min-width: 1500px) {
+  .app.dashboard {
+    max-width: 1240px;
+  }
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -1328,6 +1372,20 @@ h1 { font-family: var(--font-display); font-weight: 700; }
     max-width: 480px;
     left: 50%;
     transform: translateX(-50%);
+  }
+}
+@media (min-width: 768px) {
+  .bottom-nav {
+    max-width: 760px;
+  }
+}
+@media (min-width: 1100px) {
+  /* On desktop the dashboard is a 2-col layout — pin nav to a comfortable
+     reach width rather than stretching it across the whole page */
+  .bottom-nav {
+    max-width: 600px;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.10);
   }
 }
 .nav-tab {
