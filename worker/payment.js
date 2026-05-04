@@ -78,7 +78,10 @@ export async function handleCreatePaymentLink(request, env) {
     email: claims.email || '',
     lang: 'il',
     nologo: '1',
-    myid: claims.uid,
+    // Custom field — returned to us in the webhook for matching the user.
+    // NOT `myid` (Tranzila reserves that as the Israeli ID field — using it
+    // would auto-fill the ID box on the form with our Firebase UID).
+    firebaseUid: claims.uid,
     notify_url_address: `${origin}/api/tranzila-webhook`,
     success_url_address: `${origin}/pricing?paid=1`,
     fail_url_address: `${origin}/pricing?failed=1`,
@@ -106,7 +109,7 @@ export async function handleTranzilaWebhook(request, env) {
 
   console.log('TRANZILA_WEBHOOK', { keys: Object.keys(body), uid: body.myid });
 
-  const uid = body.myid;
+  const uid = body.firebaseUid || body.myid; // back-compat with the early test version that used myid
   const tranzilaToken = body.TranzilaTK || body.tranzila_tk || '';
   const indexId = body.index || body.IndexId || body.transactionId || '';
   const responseCode = body.Response || body.response || body.responsecode || '';
