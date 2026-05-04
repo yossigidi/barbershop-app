@@ -63,21 +63,26 @@ export default function DayTimeline({ date, workingHours, bookings, blocks, onBo
         </div>
       ))}
 
-      {free.map((f, i) => {
-        // Skip < 20-min gaps (unbookable)
-        if (f.end - f.start < 20) return null;
-        const top = (f.start - dayStart) * PX_PER_MIN;
-        const height = (f.end - f.start) * PX_PER_MIN;
-        return (
-          <div
-            key={`f${i}`}
-            className="dt-free"
-            style={{ top, height }}
-            onClick={() => onFreeSlotTap?.(minToTime(f.start), f.end - f.start)}
-          >
-            <span className="dt-free-label">+ פנוי {f.end - f.start} דק׳</span>
-          </div>
-        );
+      {free.flatMap((f, fi) => {
+        // Render each free gap as discrete 20-min sub-slots so the barber
+        // can block any specific 20-min cell, not just the start of a merged gap.
+        if (f.end - f.start < 20) return [];
+        const cells = [];
+        for (let s = f.start; s + 20 <= f.end; s += 20) {
+          const top = (s - dayStart) * PX_PER_MIN;
+          const height = 20 * PX_PER_MIN - 1; // 1px gap between cells
+          cells.push(
+            <div
+              key={`f${fi}-${s}`}
+              className="dt-free"
+              style={{ top, height }}
+              onClick={() => onFreeSlotTap?.(minToTime(s), 20)}
+            >
+              <span className="dt-free-label">+ {minToTime(s)}</span>
+            </div>
+          );
+        }
+        return cells;
       })}
 
       {occ.map((o, i) => {

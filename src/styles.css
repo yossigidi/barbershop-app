@@ -1102,21 +1102,30 @@ h1 { font-family: var(--font-display); font-weight: 700; }
 .dt-badge { font-size: 0.7rem; }
 
 .dt-free {
-  border: 1px dashed var(--border);
-  color: var(--text-dim);
-  background: var(--surface-2);
+  border: 1px dashed rgba(0, 0, 0, 0.10);
+  color: var(--text-soft);
+  background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
+  border-radius: 5px;
+  opacity: 0.55;
+  transition: opacity 0.15s var(--ease), border-color 0.15s var(--ease), color 0.15s var(--ease), background 0.15s var(--ease);
 }
 .dt-free:hover {
   border-color: var(--danger);
   color: var(--danger);
-  background: rgba(220, 38, 38, 0.05);
+  background: rgba(220, 38, 38, 0.06);
+  opacity: 1;
+  border-style: solid;
 }
-.dt-free-label { font-size: 0.75rem; }
+.dt-free-label {
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
 
 .dt-block {
   background: rgba(220, 38, 38, 0.08);
