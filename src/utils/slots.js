@@ -51,6 +51,8 @@ export function addMinToTime(time, min) {
 // Compute available start times for a slot of `duration` minutes.
 // occupied: array of { time: "HH:MM", duration: number } — bookings + blocks.
 // Returns: array of { time, available, reason? }
+// For today, slots whose start time has already passed are filtered out so
+// clients can't book earlier than "now".
 export function computeSlotsForDate(date, workingHours, occupied = [], duration = 20) {
   const dayKey = dayKeyFromDate(date);
   const cfg = workingHours?.[dayKey];
@@ -58,6 +60,13 @@ export function computeSlotsForDate(date, workingHours, occupied = [], duration 
 
   const dayStart = timeToMin(cfg.start);
   const dayEnd = timeToMin(cfg.end);
+
+  // If `date` is today, drop any slots starting in the past
+  const now = new Date();
+  const dAtMidnight = new Date(date); dAtMidnight.setHours(0, 0, 0, 0);
+  const todayAtMidnight = new Date(now); todayAtMidnight.setHours(0, 0, 0, 0);
+  const isToday = dAtMidnight.getTime() === todayAtMidnight.getTime();
+  const nowMin = isToday ? now.getHours() * 60 + now.getMinutes() : -1;
 
   // Build occupied ranges in minutes-since-midnight
   const ranges = [];
@@ -71,6 +80,7 @@ export function computeSlotsForDate(date, workingHours, occupied = [], duration 
 
   const out = [];
   for (let t = dayStart; t + duration <= dayEnd; t += STEP_MIN) { // 20-min step
+    if (isToday && t < nowMin) continue;
 
     let available = true;
     for (const r of ranges) {
