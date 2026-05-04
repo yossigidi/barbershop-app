@@ -87,8 +87,10 @@ export async function handleCreatePaymentLink(request, env) {
     // would auto-fill the ID box on the form with our Firebase UID).
     firebaseUid: claims.uid,
     notify_url_address: `${origin}/api/tranzila-webhook`,
-    success_url_address: `${origin}/pricing?paid=1`,
-    fail_url_address: `${origin}/pricing?failed=1`,
+    // Tranzila POSTs to success/fail URLs — SPAs can't handle POST.
+    // Route through worker endpoints that 302-redirect to the SPA.
+    success_url_address: `${origin}/api/tranzila-success`,
+    fail_url_address: `${origin}/api/tranzila-fail`,
   });
 
   // Use the modern responsive iframe (iframenew.php) — better RTL, mobile,
@@ -164,6 +166,16 @@ export async function handleTranzilaWebhook(request, env) {
 
   console.log('TRANZILA_WEBHOOK activated', { uid, last4, periodEnd: periodEnd.toISOString() });
   return ok({ activated: true });
+}
+
+// ─── Success/fail redirect handlers ───────────────────────────────────────
+// Tranzila POSTs to these. SPAs can't handle POST, so we 302-redirect to the
+// pricing page with a query flag. Mirrors Engleez's tranzila-success.js.
+export async function handleTranzilaSuccess(request, env) {
+  return Response.redirect(new URL('/pricing?paid=1', request.url).toString(), 302);
+}
+export async function handleTranzilaFail(request, env) {
+  return Response.redirect(new URL('/pricing?failed=1', request.url).toString(), 302);
 }
 
 // ─── POST /api/cancel-subscription ────────────────────────────────────────

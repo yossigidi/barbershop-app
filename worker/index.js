@@ -7,7 +7,10 @@
 //   anything else                   → static assets (Vite build in ./dist), with SPA fallback
 
 import { handleNotify } from './notify.js';
-import { handleCreatePaymentLink, handleTranzilaWebhook, handleCancelSubscription } from './payment.js';
+import {
+  handleCreatePaymentLink, handleTranzilaWebhook, handleCancelSubscription,
+  handleTranzilaSuccess, handleTranzilaFail,
+} from './payment.js';
 import { handleRedeemPromo } from './promo.js';
 import { handleCronBilling } from './cron.js';
 
@@ -15,6 +18,8 @@ const apiHandlers = {
   '/api/notify': handleNotify,
   '/api/create-payment-link': handleCreatePaymentLink,
   '/api/tranzila-webhook': handleTranzilaWebhook,
+  '/api/tranzila-success': handleTranzilaSuccess,
+  '/api/tranzila-fail': handleTranzilaFail,
   '/api/cancel-subscription': handleCancelSubscription,
   '/api/redeem-promo': handleRedeemPromo,
 };
