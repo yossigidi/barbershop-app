@@ -65,24 +65,26 @@ export async function handleCreatePaymentLink(request, env) {
   // TranzilaTK=1  = issue token in response so we can charge again next cycle
   // myid          = our internal barber UID, returned in webhook for matching
   const origin = new URL(request.url).origin;
+  // Match the Engleez pattern: cred_type=1 (regular charge) + TranzilaTK=1
+  // (issue token for future cron-based monthly charges). The recurring is
+  // handled by our daily cron (worker/cron.js), not by Tranzila itself.
   const params = new URLSearchParams({
-    sum: String(chargeSum),
-    currency: '1',                  // 1 = ILS
-    cred_type: '8',                 // recurring standing order
-    tranmode: 'VK',
+    sum: chargeSum.toFixed(2),
+    currency: '1',
+    cred_type: '1',
     TranzilaTK: '1',
     pdesc: isTest ? 'בדיקת אינטגרציה — ₪1' : 'מנוי חודשי Pro — ניהול תורים',
     contact: businessName.slice(0, 100),
     email: claims.email || '',
+    lang: 'il',
+    nologo: '1',
     myid: claims.uid,
     notify_url_address: `${origin}/api/tranzila-webhook`,
     success_url_address: `${origin}/pricing?paid=1`,
     fail_url_address: `${origin}/pricing?failed=1`,
-    u71: '1',
-    u72: '1',
   });
 
-  const url = `${TRANZILA_BASE}/${encodeURIComponent(env.TRANZILA_TERMINAL)}/iframenew.php?${params.toString()}`;
+  const url = `${TRANZILA_BASE}/${encodeURIComponent(env.TRANZILA_TERMINAL)}/newiframe.php?${params.toString()}`;
   return ok({ url }, 200);
 }
 
@@ -153,6 +155,74 @@ export async function handleTranzilaWebhook(request, env) {
 
   console.log('TRANZILA_WEBHOOK activated', { uid, last4, periodEnd: periodEnd.toISOString() });
   return ok({ activated: true });
+}
+
+// ─── POST /api/cancel-subscription ────────────────────────────────────────
+// SOFT cancel — matches the Engleez pattern. We just set
+// `subscription.cancelAtPeriodEnd: true` and leave everything else intact.
+// The user keeps access until currentPeriodEnd. The daily cron will see
+// the flag, mark them cancelled, and stop charging the token.
+//
+// We do NOT delete the Tranzila token here — the cron handles cleanup, and
+// keeping the token means the user can re-activate by clicking subscribe
+// again without re-entering their card.
+export async function handleCancelSubscription(request, env) {
+  if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+  if (request.method !== 'POST') return err('Method not allowed', 405);
+
+  let claims;
+  try {
+    const token = getBearerToken(request);
+    const svc = await loadServiceAccount(env);
+    claims = await verifyIdToken(token, svc.project_id);
+  } catch (e) {
+    return err('Unauthorized: ' + e.message, 401);
+  }
+
+  const svc = await loadServiceAccount(env);
+  const accessToken = await getAccessToken(svc);
+  const barberDoc = await firestoreGet(svc, accessToken, `barbers/${claims.uid}`);
+  if (!barberDoc) return err('Barber not found', 404);
+
+  const sub = fieldVal(barberDoc.fields?.subscription) || {};
+  if (sub.status !== 'active') return err('No active subscription to cancel', 400);
+
+  // Patch only the cancelAtPeriodEnd field — preserves the rest of the map.
+  // Note: REST API field masks for nested map fields use dot notation.
+  await firestorePatch(
+    svc,
+    accessToken,
+    `barbers/${claims.uid}`,
+    {
+      subscription: fs.map({
+        ...mapBack(sub),
+        cancelAtPeriodEnd: fs.bool(true),
+        cancelRequestedAt: fs.ts(new Date()),
+      }),
+    },
+    ['subscription'],
+  );
+
+  return ok({
+    cancelled: true,
+    accessUntil: sub.currentPeriodEnd ? sub.currentPeriodEnd.toISOString() : null,
+  });
+}
+
+// Re-encode a decoded subscription back into Firestore field format
+function mapBack(sub) {
+  const out = {};
+  if (sub.status) out.status = fs.str(sub.status);
+  if (sub.tranzilaToken) out.tranzilaToken = fs.str(sub.tranzilaToken);
+  if (sub.last4) out.last4 = fs.str(sub.last4);
+  if (sub.indexId) out.indexId = fs.str(sub.indexId);
+  if (sub.startedAt instanceof Date) out.startedAt = fs.ts(sub.startedAt);
+  if (sub.activatedAt instanceof Date) out.activatedAt = fs.ts(sub.activatedAt);
+  if (sub.trialEndsAt instanceof Date) out.trialEndsAt = fs.ts(sub.trialEndsAt);
+  if (sub.currentPeriodEnd instanceof Date) out.currentPeriodEnd = fs.ts(sub.currentPeriodEnd);
+  if (sub.lastPromoRedeemed) out.lastPromoRedeemed = fs.str(sub.lastPromoRedeemed);
+  if (sub.lastPromoAt instanceof Date) out.lastPromoAt = fs.ts(sub.lastPromoAt);
+  return out;
 }
 
 // Best-effort transaction verification. Tranzila has a "confirm" API but

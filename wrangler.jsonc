@@ -9,6 +9,11 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   },
+  "triggers": {
+    // Daily at 06:00 UTC (09:00 Israel time) — runs the Tranzila billing cron
+    // (worker/cron.js → handleCronBilling). Mirrors Engleez's daily renewal job.
+    "crons": ["0 6 * * *"]
+  },
   "observability": {
     "enabled": true
   }

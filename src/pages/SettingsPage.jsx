@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -143,11 +143,73 @@ export default function SettingsPage() {
   const access = getAccessState(barberData);
   if (!access.granted) return <PaywallModal access={access} />;
 
+  async function cancelSubscription() {
+    if (!confirm('לבטל את המנוי? תשמור על גישה עד סוף תקופת התשלום הנוכחית, ולא תחויב יותר.')) return;
+    try {
+      const idToken = await user.getIdToken();
+      const r = await fetch('/api/cancel-subscription', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'הביטול נכשל');
+      alert('המנוי בוטל. תהיה לך גישה עד ' + new Date(data.accessUntil).toLocaleDateString('he-IL'));
+      window.location.reload();
+    } catch (e) {
+      alert('שגיאה: ' + e.message);
+    }
+  }
+
+  const sub = barberData?.subscription || {};
+  const periodEnd = sub.currentPeriodEnd?.toDate
+    ? sub.currentPeriodEnd.toDate()
+    : (sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : null);
+
   return (
     <div className="app">
       <div className="header">
         <h1><SettingsIcon size={20} className="icon-inline" />הגדרות</h1>
         <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate('/dashboard')}>חזור</button>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />מנוי</h3>
+        {access.reason === 'grandfathered' && (
+          <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
+            🎁 משתמש/ת ותיק/ה — הגישה חינם לתמיד.
+          </p>
+        )}
+        {access.reason === 'trial' && (
+          <>
+            <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.9rem' }}>
+              נותרו <strong>{access.daysLeft}</strong> ימי ניסיון. אחרי כן ייתחיל חיוב חודשי של ₪50.
+            </p>
+            <button className="btn-gold" style={{ width: '100%' }} onClick={() => navigate('/pricing')}>
+              <Sparkles size={16} className="icon-inline" />שדרג עכשיו
+            </button>
+          </>
+        )}
+        {access.reason === 'active' && (
+          <>
+            <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.9rem' }}>
+              ✓ מנוי פעיל. החיוב הבא: <strong>{periodEnd?.toLocaleDateString('he-IL')}</strong>
+              {sub.last4 && <> (כרטיס {sub.last4})</>}
+            </p>
+            <button className="btn-secondary" style={{ width: '100%' }} onClick={cancelSubscription}>
+              <XCircle size={16} className="icon-inline" />ביטול מנוי
+            </button>
+          </>
+        )}
+        {access.reason === 'cancelled-pending' && (
+          <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
+            ⏳ המנוי בוטל. גישה עד <strong>{periodEnd?.toLocaleDateString('he-IL')}</strong>, ואז ייסגר אוטומטית.
+          </p>
+        )}
+        {access.reason === 'past-due-grace' && (
+          <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--danger)' }}>
+            ⚠ בעיה בחיוב — מנסה שוב יומית. עדכן/י כרטיס ב-<a href="/pricing" style={{ textDecoration: 'underline' }}>עמוד התשלום</a>.
+          </p>
+        )}
       </div>
 
       <div className="card">

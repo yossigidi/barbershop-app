@@ -65,6 +65,24 @@ export async function firestorePatch(svc, accessToken, path, fields, updateMask)
   return r.json();
 }
 
+// Run a structured query against Firestore REST. Pass a `structuredQuery`
+// object (per Firestore docs) and we'll POST it. Returns the array of raw
+// document objects (with .document.fields) — caller decodes with fieldVal.
+export async function firestoreQuery(svc, accessToken, structuredQuery) {
+  const url = `https://firestore.googleapis.com/v1/projects/${svc.project_id}/databases/(default)/documents:runQuery`;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ structuredQuery }),
+  });
+  if (!r.ok) throw new Error(`Firestore runQuery: ${r.status} ${await r.text()}`);
+  const arr = await r.json();
+  return (arr || []).filter((row) => row.document).map((row) => ({
+    name: row.document.name,
+    fields: row.document.fields || {},
+  }));
+}
+
 // Firestore field encoders — REST API requires typed values
 export const fs = {
   str: (v) => ({ stringValue: String(v ?? '') }),

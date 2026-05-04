@@ -7,13 +7,15 @@
 //   anything else                   → static assets (Vite build in ./dist), with SPA fallback
 
 import { handleNotify } from './notify.js';
-import { handleCreatePaymentLink, handleTranzilaWebhook } from './payment.js';
+import { handleCreatePaymentLink, handleTranzilaWebhook, handleCancelSubscription } from './payment.js';
 import { handleRedeemPromo } from './promo.js';
+import { handleCronBilling } from './cron.js';
 
 const apiHandlers = {
   '/api/notify': handleNotify,
   '/api/create-payment-link': handleCreatePaymentLink,
   '/api/tranzila-webhook': handleTranzilaWebhook,
+  '/api/cancel-subscription': handleCancelSubscription,
   '/api/redeem-promo': handleRedeemPromo,
 };
 
@@ -35,5 +37,13 @@ export default {
     }
 
     return env.ASSETS.fetch(request);
+  },
+
+  // Cloudflare Cron Trigger — see wrangler.jsonc "triggers.crons"
+  async scheduled(event, env, ctx) {
+    console.log('CRON_TRIGGER', event.cron, new Date().toISOString());
+    ctx.waitUntil(
+      handleCronBilling(env).catch((e) => console.error('CRON_FATAL', e?.message, e?.stack)),
+    );
   },
 };
