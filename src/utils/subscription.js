@@ -8,7 +8,10 @@
 // "self-grant" hole — a malicious user typing into devtools to flip
 // status:'active'. See firestore.rules for enforcement.
 
-export const LAUNCH_DATE = new Date('2026-05-05T00:00:00+03:00');
+// Cutoff: accounts created BEFORE this moment are grandfathered (free forever).
+// Anyone who signs up AT/AFTER this gets the 14-day trial → paid.
+// Set to the start of the launch day (Israel time).
+export const LAUNCH_DATE = new Date('2026-05-04T00:00:00+03:00');
 export const PRICE_NIS = 50;
 export const TRIAL_DAYS = 14;
 export const RENEWAL_DAYS = 30;
