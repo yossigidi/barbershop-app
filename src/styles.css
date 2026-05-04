@@ -27,13 +27,16 @@ html, body, #root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Heebo', system-ui, sans-serif;
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
-  /* iOS safe area */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
   /* prevent any element from causing horizontal scroll on mobile */
   overflow-x: hidden;
   width: 100%;
   max-width: 100vw;
+}
+/* iOS safe area applied ONCE to body. If applied to all three (html, body, #root)
+   the paddings accumulate and create a huge empty space at the top of the PWA. */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 html { direction: rtl; }
