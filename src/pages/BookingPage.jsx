@@ -170,10 +170,15 @@ export default function BookingPage() {
     [selectedDate, barber, occupied, totalDuration],
   );
 
-  // Smart Slot Engine — pick 1-3 "best" slots based on the day's shape
+  // Smart Slot Engine — pick 1-3 "best" slots based on the day's shape.
+  // Off-peak window (if the barber enabled one) feeds in as a scoring boost,
+  // so the agent amplifies the barber's strategy rather than overriding it.
   const recommended = useMemo(() => {
-    return getRecommendedSlots(slots, occupied, selectedDate, new Date(), totalDuration);
-  }, [slots, occupied, selectedDate, totalDuration]);
+    return getRecommendedSlots(
+      slots, occupied, selectedDate, new Date(), totalDuration,
+      barber?.offPeakWindow,
+    );
+  }, [slots, occupied, selectedDate, totalDuration, barber]);
 
   // Inject "usual time" as the highest-priority recommendation for returning
   // clients (Phase 3) — only if the slot is actually available today.
