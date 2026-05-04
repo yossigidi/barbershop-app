@@ -87,7 +87,9 @@ export async function handleCreatePaymentLink(request, env) {
     fail_url_address: `${origin}/pricing?failed=1`,
   });
 
-  const url = `${TRANZILA_BASE}/${encodeURIComponent(env.TRANZILA_TERMINAL)}/newiframe.php?${params.toString()}`;
+  // Use the modern responsive iframe (iframenew.php) — better RTL, mobile,
+  // and Tranzila branding than the older newiframe.php form.
+  const url = `${TRANZILA_BASE}/${encodeURIComponent(env.TRANZILA_TERMINAL)}/iframenew.php?${params.toString()}`;
   return ok({ url }, 200);
 }
 
