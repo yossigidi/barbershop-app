@@ -21,8 +21,13 @@ export default function DayTimeline({ date, workingHours, bookings, blocks, onBo
     for (const bl of blocks) {
       occ.push({ kind: 'block', data: bl, start: timeToMin(bl.time), end: timeToMin(bl.time) + (bl.duration || 20) });
     }
+    // Break: only treat as occupied if mode is 'closed'. In private/open modes
+    // the barber sees those cells as bookable in the dashboard.
     if (cfg.break?.start && cfg.break?.end) {
-      occ.push({ kind: 'break', start: timeToMin(cfg.break.start), end: timeToMin(cfg.break.end) });
+      const mode = cfg.break.mode || 'closed';
+      if (mode === 'closed') {
+        occ.push({ kind: 'break', start: timeToMin(cfg.break.start), end: timeToMin(cfg.break.end) });
+      }
     }
     occ.sort((a, b) => a.start - b.start);
 

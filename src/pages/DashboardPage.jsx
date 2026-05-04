@@ -135,7 +135,7 @@ export default function DashboardPage() {
   }
   function shareWhatsApp() {
     if (!shortLink) return;
-    const text = shareLinkText(barber.businessName || 'הספרות שלי', shortLink);
+    const text = shareLinkText(barber.businessName || 'העסק שלי', shortLink);
     window.open(whatsappUrl(text), '_blank');
   }
   function shareHolidayPromo() {
@@ -278,7 +278,7 @@ export default function DashboardPage() {
   function TodayTab() {
     return (
       <>
-        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'הספרות שלי'} />
+        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
 
         <MorningSummaryCard
           displayName={barber.displayName}
@@ -346,7 +346,7 @@ export default function DashboardPage() {
   function CalendarTab() {
     return (
       <>
-        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'הספרות שלי'} />
+        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
 
         <MorningSummaryCard
           displayName={barber.displayName}
@@ -462,7 +462,7 @@ export default function DashboardPage() {
         {barber.logoUrl && (
           <img src={barber.logoUrl} alt="logo" className="dashboard-logo" />
         )}
-        <h1>{barber.businessName || 'הספרות שלי'}</h1>
+        <h1>{barber.businessName || 'העסק שלי'}</h1>
       </div>
 
       <div className="tab-content">
@@ -506,13 +506,13 @@ export default function DashboardPage() {
         <VacationModal onClose={() => setShowVacation(false)} onConfirm={handleVacation} />
       )}
       {showQr && (
-        <QrModal link={shortLink} businessName={barber.businessName || 'הספרות שלי'} onClose={() => setShowQr(false)} />
+        <QrModal link={shortLink} businessName={barber.businessName || 'העסק שלי'} onClose={() => setShowQr(false)} />
       )}
       {showTomorrow && (
-        <TomorrowReminders bookings={bookings} businessName={barber.businessName || 'הספרות שלי'} onClose={() => setShowTomorrow(false)} />
+        <TomorrowReminders bookings={bookings} businessName={barber.businessName || 'העסק שלי'} onClose={() => setShowTomorrow(false)} />
       )}
       {showYesterday && (
-        <YesterdayFollowUp uid={user.uid} businessName={barber.businessName || 'הספרות שלי'} onClose={() => setShowYesterday(false)} />
+        <YesterdayFollowUp uid={user.uid} businessName={barber.businessName || 'העסק שלי'} onClose={() => setShowYesterday(false)} />
       )}
       {actionFor && (
         <BookingActionSheet

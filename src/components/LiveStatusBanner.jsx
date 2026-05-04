@@ -120,10 +120,10 @@ export default function LiveStatusBanner({ barberId, barberName }) {
   } else if (isToday && minutesUntil <= 5 && minutesUntil >= -5) {
     icon = <Hand size={20} />;
     main = 'הגיע תורך!';
-    sub = inProgressNow ? 'הספר כמעט מסיים, הכנס בעוד רגע' : 'אפשר להיכנס';
+    sub = inProgressNow ? 'כמעט מסיימים, הכנס בעוד רגע' : 'אפשר להיכנס';
   } else if (isToday && delayMin >= 5) {
     icon = <Hourglass size={20} />;
-    main = `הספר מאחר ${delayMin} דק׳`;
+    main = `עיכוב — ${delayMin} דק׳`;
     sub = `התור שלך ב-${timeStr} → הערכה: ${etaTimeStr}`;
   } else if (isToday) {
     icon = <Clock size={20} />;

@@ -24,9 +24,9 @@ export function whatsappUrl(text, phone = '') {
 }
 
 export function shareLinkText(businessName, link) {
-  return `🪒 ${businessName}\n\nאפשר לקבוע תור בלינק:\n${link}`;
+  return `📅 ${businessName}\n\nאפשר לקבוע תור בלינק:\n${link}`;
 }
 
 export function reminderText(businessName, dateLabel, time) {
-  return `🪒 תזכורת — תור ב-${businessName}\nתאריך: ${dateLabel}\nשעה: ${time}\n\nנתראה!`;
+  return `⏰ תזכורת — תור ב-${businessName}\nתאריך: ${dateLabel}\nשעה: ${time}\n\nנתראה!`;
 }

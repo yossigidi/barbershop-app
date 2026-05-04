@@ -53,7 +53,12 @@ export function addMinToTime(time, min) {
 // Returns: array of { time, available, reason? }
 // For today, slots whose start time has already passed are filtered out so
 // clients can't book earlier than "now".
-export function computeSlotsForDate(date, workingHours, occupied = [], duration = 20) {
+//
+// viewerScope determines how the daily break is treated:
+//   'public' (default) — break is occupied unless its mode is 'open'
+//   'barber'           — break is occupied only if its mode is 'closed'
+// Legacy data without `mode` is treated as 'closed'.
+export function computeSlotsForDate(date, workingHours, occupied = [], duration = 20, viewerScope = 'public') {
   const dayKey = dayKeyFromDate(date);
   const cfg = workingHours?.[dayKey];
   if (!cfg || !cfg.active) return [];
@@ -75,7 +80,13 @@ export function computeSlotsForDate(date, workingHours, occupied = [], duration 
     ranges.push({ start: s, end: s + (o.duration || 20) });
   }
   if (cfg.break?.start && cfg.break?.end) {
-    ranges.push({ start: timeToMin(cfg.break.start), end: timeToMin(cfg.break.end) });
+    const mode = cfg.break.mode || 'closed';
+    const blockBreak =
+      mode === 'closed' ||
+      (mode === 'private' && viewerScope === 'public');
+    if (blockBreak) {
+      ranges.push({ start: timeToMin(cfg.break.start), end: timeToMin(cfg.break.end) });
+    }
   }
 
   const out = [];

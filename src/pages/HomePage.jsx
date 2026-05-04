@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scissors } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -24,7 +24,8 @@ export default function HomePage() {
           await setDoc(ref, {
             displayName: user.displayName || '',
             email: user.email || '',
-            businessName: user.displayName ? `${user.displayName} — ספרות` : 'הספרות שלי',
+            businessName: user.displayName ? `${user.displayName}` : 'העסק שלי',
+            profession: null, // chosen during onboarding
             shortCode: code,
             workingHours: defaultWorkingHours(),
             fcmTokens: [],
@@ -65,11 +66,11 @@ export default function HomePage() {
   return (
     <div className="app">
       <div className="header">
-        <h1><Scissors size={22} className="icon-inline" />Barbershop</h1>
+        <h1><Calendar size={22} className="icon-inline" />ניהול תורים</h1>
       </div>
       <div className="card">
-        <h2 style={{ marginTop: 0 }}>שלום, ספר 👋</h2>
-        <p className="muted">מערכת ניהול תורים פשוטה. כניסה עם חשבון Google.</p>
+        <h2 style={{ marginTop: 0 }}>שלום 👋</h2>
+        <p className="muted">מערכת ניהול תורים — לספרים, קוסמטיקאיות, מניקור ופדיקור. כניסה עם חשבון Google.</p>
         <div className="spacer" />
         <button className="btn-primary" onClick={handleLogin} disabled={busy} style={{ width: '100%' }}>
           {busy ? 'מתחבר…' : 'התחבר עם Google'}
@@ -78,7 +79,7 @@ export default function HomePage() {
       </div>
       <div className="card">
         <p className="muted" style={{ margin: 0 }}>
-          לקוחות לא מתחברים כאן — הם מקבלים מהספר שלהם לינק קצר ייעודי.
+          לקוחות לא מתחברים כאן — הם מקבלים מבעל המקצוע לינק קצר ייעודי.
         </p>
       </div>
     </div>

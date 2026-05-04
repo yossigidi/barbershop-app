@@ -1,30 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scissors, HandHeart, Trash2, Lightbulb, Save, Check } from 'lucide-react';
+import { Scissors, HandHeart, Trash2, Lightbulb, Save, Check, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
+import { PROFESSION_LIST, presetCatalogFor, getProfession } from '../utils/professions';
 import LogoUploader from '../components/LogoUploader.jsx';
-
-// Suggested catalog of services and add-ons. Barber toggles which apply
-// and sets prices. Durations are pre-set but editable.
-const SERVICE_DURATIONS = [20, 40, 60, 80, 100, 120];
-const ADDON_DURATIONS = [0, 5, 10, 15, 20, 30];
-
-const STANDARD_SERVICES = [
-  { id: 'haircut', name: 'תספורת רגילה', duration: 20 },
-  { id: 'haircut_beard', name: 'תספורת + זקן', duration: 40 },
-  { id: 'kids', name: 'תספורת ילדים', duration: 20 },
-  { id: 'premium', name: 'שירות פרימיום', duration: 60 },
-  { id: 'laser', name: 'טיפולי לייזר', duration: 60 },
-];
-const STANDARD_ADDONS = [
-  { id: 'beard', name: 'עיצוב זקן', duration: 10 },
-  { id: 'nose', name: 'שעווה באף', duration: 5 },
-  { id: 'ears', name: 'שעווה באוזניים', duration: 5 },
-  { id: 'eyebrows', name: 'עיצוב גבות', duration: 10 },
-];
 
 function ServiceCard({ item, options, onToggle, onPrice, onDuration }) {
   return (
@@ -61,19 +43,34 @@ function ServiceCard({ item, options, onToggle, onPrice, onDuration }) {
 export default function OnboardingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [profession, setProfession] = useState('barber');
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [hours, setHours] = useState(defaultWorkingHours());
-  const [services, setServices] = useState(
-    STANDARD_SERVICES.map((s) => ({ ...s, offered: false, price: 0 })),
-  );
-  const [addons, setAddons] = useState(
-    STANDARD_ADDONS.map((a) => ({ ...a, offered: false, price: 0 })),
-  );
+  const initialPreset = presetCatalogFor('barber');
+  const [services, setServices] = useState(initialPreset.services);
+  const [addons, setAddons] = useState(initialPreset.addons);
+  const [serviceDurations, setServiceDurations] = useState(initialPreset.serviceDurations);
+  const [addonDurations, setAddonDurations] = useState(initialPreset.addonDurations);
   const [packages, setPackages] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
+
+  // Swap the catalog when the profession changes (only if it differs from
+  // what's already loaded — won't wipe a returning user's offered services).
+  function changeProfession(nextKey) {
+    if (nextKey === profession) return;
+    setProfession(nextKey);
+    const preset = presetCatalogFor(nextKey);
+    setServices(preset.services);
+    setAddons(preset.addons);
+    setServiceDurations(preset.serviceDurations);
+    setAddonDurations(preset.addonDurations);
+    setPackages([]);
+    // Default business name only if user hasn't typed one yet
+    setBusinessName((cur) => cur.trim() ? cur : '');
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -82,32 +79,51 @@ export default function OnboardingPage() {
       if (snap.exists()) {
         const data = snap.data();
         if (data.onboarded === true) setIsReturning(true);
+        const profKey = data.profession || 'barber';
+        setProfession(profKey);
+        const preset = presetCatalogFor(profKey);
+        setServiceDurations(preset.serviceDurations);
+        setAddonDurations(preset.addonDurations);
         setBusinessName(data.businessName || '');
         setLogoUrl(data.logoUrl || '');
         if (data.workingHours) {
           setHours({ ...defaultWorkingHours(), ...data.workingHours });
         }
-        // Hydrate from any pre-seeded services/addons (carry-over from old signup)
-        if (Array.isArray(data.services) && data.services.length) {
-          setServices((cur) =>
-            cur.map((c) => {
-              const m = data.services.find((s) => s.id === c.id);
-              return m ? { ...c, offered: true, price: m.price || 0, duration: m.duration || c.duration } : c;
-            }),
-          );
-        }
-        if (Array.isArray(data.addons) && data.addons.length) {
-          setAddons((cur) =>
-            cur.map((c) => {
-              const m = data.addons.find((a) => a.id === c.id);
-              return m ? { ...c, offered: true, price: m.price || 0, duration: m.duration || c.duration } : c;
-            }),
-          );
-        }
-        if (Array.isArray(data.services)) {
-          const existingPackages = data.services.filter((s) => s.isPackage);
-          if (existingPackages.length) setPackages(existingPackages);
-        }
+        // Hydrate offered services from saved data on top of the preset
+        const savedServices = (data.services || []).filter((s) => !s.isPackage);
+        const presetSvcs = preset.services;
+        const merged = [
+          ...savedServices.map((s) => ({
+            id: s.id,
+            name: s.name,
+            duration: s.duration || 20,
+            price: s.price || 0,
+            offered: true,
+          })),
+          ...presetSvcs.filter(
+            (ps) => !savedServices.some((s) => s.name.trim() === ps.name.trim()),
+          ),
+        ];
+        setServices(merged);
+
+        const savedAddons = data.addons || [];
+        const presetAddons = preset.addons;
+        const mergedAddons = [
+          ...savedAddons.map((a) => ({
+            id: a.id,
+            name: a.name,
+            duration: a.duration || 0,
+            price: a.price || 0,
+            offered: true,
+          })),
+          ...presetAddons.filter(
+            (pa) => !savedAddons.some((a) => a.name.trim() === pa.name.trim()),
+          ),
+        ];
+        setAddons(mergedAddons);
+
+        const existingPackages = (data.services || []).filter((s) => s.isPackage);
+        if (existingPackages.length) setPackages(existingPackages);
       }
       setLoaded(true);
     })();
@@ -218,13 +234,16 @@ export default function OnboardingPage() {
     }
     setSaving(true);
     try {
+      const profCfg = getProfession(profession);
+      const fallbackName = profCfg.defaultBusinessName('');
       await updateDoc(doc(db, 'barbers', user.uid), {
-        businessName: businessName.trim() || 'הספרות שלי',
+        profession,
+        businessName: businessName.trim() || fallbackName,
         logoUrl: logoUrl || '',
         workingHours: hours,
         services: allServices,
         addons: offeredAdd,
-        defaultDuration: 20,
+        defaultDuration: profCfg.serviceDurations[0] || 20,
         defaultPrice: offeredSvc[0]?.price || 0,
         onboarded: true,
       });
@@ -253,14 +272,34 @@ export default function OnboardingPage() {
         )}
       </div>
 
+      <div className="card card-feature">
+        <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />שלב 1 — מה תחום העיסוק שלך?</h3>
+        <p className="muted" style={{ marginTop: -6 }}>
+          הבחירה תקבע את הקטלוג ההתחלתי של השירותים והתוספות. אפשר לערוך אחר כך.
+        </p>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+          {PROFESSION_LIST.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => changeProfession(p.id)}
+              className={profession === p.id ? 'btn-primary' : 'btn-secondary'}
+              style={{ flex: '1 0 130px', padding: '14px 8px', fontSize: '0.95rem' }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 1 — שם ולוגו של העסק</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 2 — שם ולוגו של העסק</h3>
         <div className="field">
           <label>שם העסק</label>
           <input
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
-            placeholder="הספרות של דני"
+            placeholder="העסק של דני"
           />
         </div>
         <div className="field">
@@ -273,7 +312,7 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 2 — ימים ושעות עבודה</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 3 — ימים ושעות עבודה</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           סמן ✓ כל יום שאתה עובד והגדר את שעות הפתיחה והסגירה. הפסקת צהריים אפשר להוסיף אחר כך בהגדרות.
         </p>
@@ -304,7 +343,7 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 3 — שירותים שאתה מציע</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 4 — שירותים שאתה מציע</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           סמן ✓ כל שירות שאתה מציע, ועדכן מחיר ואורך. לקוחות יראו רק את אלה שתסמן.
         </p>
@@ -312,7 +351,7 @@ export default function OnboardingPage() {
           <ServiceCard
             key={s.id}
             item={s}
-            options={SERVICE_DURATIONS}
+            options={serviceDurations}
             onToggle={toggleSvc}
             onPrice={priceSvc}
             onDuration={durationSvc}
@@ -321,7 +360,7 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 4 — תוספות שאתה מציע</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 5 — תוספות שאתה מציע</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           תוספות שלקוח יכול להוסיף על השירות שלו (זקן, שעווה, גבות וכו׳). הלקוח רואה אותן כ-checkboxes ויכול לבחור כמה שירצה.
         </p>
@@ -329,7 +368,7 @@ export default function OnboardingPage() {
           <ServiceCard
             key={a.id}
             item={a}
-            options={ADDON_DURATIONS}
+            options={addonDurations}
             onToggle={toggleAdd}
             onPrice={priceAdd}
             onDuration={durationAdd}
@@ -338,7 +377,7 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>שלב 5 — חבילות (אופציונלי)</h3>
+        <h3 style={{ marginTop: 0 }}>שלב 6 — חבילות (אופציונלי)</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           הרכב חבילות משירותים ותוספות עם מחיר וזמן משלהן (יכולות לכלול הנחה).
           הלקוח רואה אותן כפריט אחד ובוחר אותן ישירות.
@@ -354,7 +393,7 @@ export default function OnboardingPage() {
           if (offeredSvcItems.length === 0 && offeredAddItems.length === 0) {
             return (
               <div key={p.id} className="onb-card">
-                <p className="muted">קודם כל סמן ✓ שירותים ותוספות בשלבים 3–4.</p>
+                <p className="muted">קודם כל סמן ✓ שירותים ותוספות בשלבים 4–5.</p>
                 <button className="btn-secondary" onClick={() => removePackage(p.id)} type="button">הסר</button>
               </div>
             );

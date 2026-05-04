@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
+import { PROFESSION_LIST } from '../utils/professions';
 import LogoUploader from '../components/LogoUploader.jsx';
 
 const DURATION_OPTIONS = [20, 40, 60, 80, 100, 120];
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const [addons, setAddons] = useState([]);
   const [defaultDuration, setDefaultDuration] = useState(20);
   const [defaultPrice, setDefaultPrice] = useState(0);
+  const [profession, setProfession] = useState('barber');
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -54,6 +56,7 @@ export default function SettingsPage() {
         setAddons(Array.isArray(data.addons) ? data.addons : []);
         setDefaultDuration(data.defaultDuration || 20);
         setDefaultPrice(data.defaultPrice || 0);
+        setProfession(data.profession || 'barber');
       }
       setLoaded(true);
     })();
@@ -106,7 +109,7 @@ export default function SettingsPage() {
         }))
         .filter((a) => a.name.length > 0);
       await updateDoc(doc(db, 'barbers', user.uid), {
-        businessName: businessName.trim() || 'הספרות שלי',
+        businessName: businessName.trim() || 'העסק שלי',
         logoUrl: logoUrl || '',
         bitPhone: (bitPhone || '').replace(/[^\d]/g, '') || '',
         payboxPhone: (payboxPhone || '').replace(/[^\d]/g, '') || '',
@@ -118,6 +121,7 @@ export default function SettingsPage() {
         addons: cleanedAddons,
         defaultDuration: Number(defaultDuration) || 20,
         defaultPrice: Number(defaultPrice) || 0,
+        profession,
       });
       navigate('/dashboard');
     } catch (e) {
@@ -139,11 +143,31 @@ export default function SettingsPage() {
       <div className="card">
         <div className="field">
           <label>שם העסק</label>
-          <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="הספרות של דני" />
+          <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="העסק של דני" />
         </div>
         <div className="field">
           <label>לוגו</label>
           <LogoUploader uid={user.uid} currentUrl={logoUrl} onChange={setLogoUrl} />
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Briefcase size={18} className="icon-inline" />תחום העיסוק</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+          ההגדרה מקבעת את הקטלוג ההתחלתי של הצעות שירות בעמוד ה-onboarding. שינוי לא משפיע על השירותים שכבר הגדרת.
+        </p>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
+          {PROFESSION_LIST.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setProfession(p.id)}
+              className={profession === p.id ? 'btn-primary' : 'btn-secondary'}
+              style={{ flex: '1 0 130px', padding: '10px 8px', fontSize: '0.88rem' }}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -377,6 +401,34 @@ export default function SettingsPage() {
                       <input type="time" value={cfg.break?.end || ''} onChange={(e) => updateBreak(day, { end: e.target.value })} />
                     </div>
                   </div>
+                  {cfg.break?.start && cfg.break?.end && (
+                    <div className="field" style={{ marginTop: 10 }}>
+                      <label className="muted" style={{ fontSize: '0.8rem' }}>זמינות ההפסקה</label>
+                      <div className="row" style={{ gap: 4 }}>
+                        {[
+                          { v: 'closed',  label: 'סגורה',  desc: 'לא זמינה לאף אחד' },
+                          { v: 'private', label: 'פרטית', desc: 'רק אתה משבץ' },
+                          { v: 'open',    label: 'פתוחה', desc: 'גם לקוחות יכולים' },
+                        ].map((opt) => {
+                          const cur = cfg.break?.mode || 'closed';
+                          const on = cur === opt.v;
+                          return (
+                            <button
+                              key={opt.v}
+                              type="button"
+                              onClick={() => updateBreak(day, { mode: opt.v })}
+                              className={on ? 'btn-primary' : 'btn-secondary'}
+                              title={opt.desc}
+                              style={{ flex: 1, padding: '8px 4px', fontSize: '0.78rem', flexDirection: 'column', gap: 2 }}
+                            >
+                              <span>{opt.label}</span>
+                              <span style={{ fontSize: '0.62rem', opacity: 0.7, fontWeight: 400 }}>{opt.desc}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>

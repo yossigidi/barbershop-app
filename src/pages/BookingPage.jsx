@@ -62,7 +62,7 @@ export default function BookingPage() {
         if (!codeSnap.exists()) return setError('לינק לא תקין');
         const uid = codeSnap.data().uid;
         const barberSnap = await getDoc(doc(db, 'barbers', uid));
-        if (!barberSnap.exists()) return setError('הספר לא נמצא');
+        if (!barberSnap.exists()) return setError('העסק לא נמצא');
         setBarberId(uid);
         setBarber(barberSnap.data());
       } catch (e) {
@@ -400,7 +400,7 @@ export default function BookingPage() {
         toDate: iso,
         createdAt: serverTimestamp(),
       });
-      alert('נרשמת לרשימת ההמתנה. הספר ייצור איתך קשר אם יתפנה משהו.');
+      alert('נרשמת לרשימת ההמתנה. ניצור איתך קשר אם יתפנה משהו.');
     } catch (e) {
       alert('שגיאה: ' + e.message);
     }

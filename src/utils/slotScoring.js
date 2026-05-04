@@ -24,7 +24,7 @@ export const SLOT_REASONS = {
     tone: 'fast',
   },
   'chain-before': {
-    label: 'משלים את היום של הספר',
+    label: 'משלים יום עבודה — סוגר פער',
     badge: 'סוגר פער',
     tone: 'fill',
   },
