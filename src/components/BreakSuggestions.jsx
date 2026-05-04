@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Coffee } from 'lucide-react';
 import { timeToMin, minToTime } from '../utils/slots';
 
 const MIN_GAP = 45; // minutes
@@ -32,7 +33,7 @@ export default function BreakSuggestions({ todayBookings, todayBlocks, onBlock }
 
   return (
     <div className="card break-suggestion">
-      <strong>☕ הצעת הפסקה חכמה</strong>
+      <strong><Coffee size={16} className="icon-inline" />הצעת הפסקה חכמה</strong>
       <p className="muted" style={{ marginTop: 4, marginBottom: 10, fontSize: '0.85rem' }}>
         זיהיתי חלון ריק רצוף — רוצה לחסום אותו לפני שיתפוס לקוח?
       </p>
@@ -47,7 +48,7 @@ export default function BreakSuggestions({ todayBookings, todayBlocks, onBlock }
             style={{ padding: '8px 14px', fontSize: '0.9rem' }}
             onClick={() => onBlock(minToTime(s.start), s.length)}
           >
-            ☕ חסום
+<Coffee size={16} className="icon-inline" />חסום
           </button>
         </div>
       ))}

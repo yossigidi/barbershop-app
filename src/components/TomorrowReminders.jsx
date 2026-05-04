@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { ClipboardList, MessageCircle } from 'lucide-react';
 import { dateToISO, formatDateHe } from '../utils/slots';
 import { whatsappUrl } from '../utils/whatsapp';
 
@@ -28,7 +29,7 @@ export default function TomorrowReminders({ bookings, businessName, onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>📋 תזכורת ללקוחות מחר</h2>
+        <h2><ClipboardList size={20} className="icon-inline" />תזכורת ללקוחות מחר</h2>
         <p className="muted">לחץ על הכפתור ליד כל לקוח כדי לפתוח WhatsApp עם הודעת תזכורת מוכנה.</p>
         {tomorrowList.length === 0 ? (
           <div className="empty">אין תורים למחר</div>
@@ -43,8 +44,8 @@ export default function TomorrowReminders({ bookings, businessName, onClose }) {
                     {b.serviceName} {b.addons?.length > 0 && `+ ${b.addons.length}`}
                   </div>
                 </span>
-                <button className="btn-primary" onClick={() => send(b)} style={{ padding: '6px 10px', fontSize: '0.85rem' }}>
-                  💬
+                <button className="btn-primary" onClick={() => send(b)} style={{ padding: '6px 10px', fontSize: '0.85rem' }} aria-label="שלח WhatsApp">
+                  <MessageCircle size={16} />
                 </button>
               </div>
             ))}

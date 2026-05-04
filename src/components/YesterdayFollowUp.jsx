@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { MessageCircle, Check } from 'lucide-react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { dateToISO, formatDateHe } from '../utils/slots';
@@ -49,7 +50,7 @@ export default function YesterdayFollowUp({ uid, businessName, onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>💬 תודה ללקוחות מאתמול</h2>
+        <h2><MessageCircle size={20} className="icon-inline" />תודה ללקוחות מאתמול</h2>
         <p className="muted">
           הודעות נשלחות מ-WhatsApp שלך, בשמך — לא כ"מערכת". טקסט מוכן, שולחים לפי הצורך.
         </p>
@@ -75,8 +76,9 @@ export default function YesterdayFollowUp({ uid, businessName, onClose }) {
                   className={sentSet.has(b.id) ? 'btn-secondary' : 'btn-primary'}
                   style={{ padding: '6px 10px', fontSize: '0.85rem' }}
                   onClick={() => send(b)}
+                  aria-label={sentSet.has(b.id) ? 'נשלח' : 'שלח WhatsApp'}
                 >
-                  {sentSet.has(b.id) ? '✓ נשלח' : '💬'}
+                  {sentSet.has(b.id) ? <><Check size={14} className="icon-inline" />נשלח</> : <MessageCircle size={16} />}
                 </button>
               </div>
             ))}

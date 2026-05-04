@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { BarChart3, X, Share2 } from 'lucide-react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { dateToISO } from '../utils/slots';
@@ -73,7 +74,7 @@ export default function WeeklyReportCard({ uid, businessName }) {
     <div className="card weekly-card">
       <div className="row" style={{ alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
-          <strong>📊 השבוע שעבר</strong>
+          <strong><BarChart3 size={16} className="icon-inline" />השבוע שעבר</strong>
           <div className="weekly-stats">
             <span><strong>{stats.count}</strong> תורים</span>
             <span>•</span>
@@ -92,13 +93,14 @@ export default function WeeklyReportCard({ uid, businessName }) {
           className="btn-secondary"
           style={{ padding: '4px 8px', fontSize: '0.75rem', flex: 'none' }}
           onClick={dismiss}
+          aria-label="סגור"
         >
-          ✕
+          <X size={14} />
         </button>
       </div>
       <div className="row" style={{ marginTop: 10 }}>
         <button className="btn-secondary" style={{ flex: 1, fontSize: '0.85rem' }} onClick={share}>
-          📤 שתף
+          <Share2 size={14} className="icon-inline" />שתף
         </button>
       </div>
     </div>

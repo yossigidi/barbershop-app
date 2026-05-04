@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import {
+  CheckCircle2, CalendarPlus, CreditCard, Repeat, Bell, Check,
+  Calendar as CalendarIcon, Clock, Hourglass, Scissors as ScissorsIcon,
+  Sparkles, CircleDollarSign, User,
+} from 'lucide-react';
 import { db } from '../firebase';
 import {
   doc, getDoc, setDoc, addDoc, collection, query, where, getDocs,
@@ -353,7 +358,9 @@ export default function BookingPage() {
           <h1 className="brand-title">{barber.businessName}</h1>
         </div>
         <div className="card text-center">
-          <div style={{ fontSize: '3rem' }}>✅</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+            <CheckCircle2 size={56} color="var(--success)" strokeWidth={1.75} />
+          </div>
           <h2>{success.createdCount > 1 ? `${success.createdCount} תורים נקבעו!` : 'התור נקבע!'}</h2>
           <p className="muted">
             {formatDateHe(selectedDate)} ({DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}) בשעה <strong>{success.time}</strong>
@@ -373,7 +380,7 @@ export default function BookingPage() {
           )}
           <div className="spacer" />
           <button className="btn-primary" onClick={downloadCalendarInvite} style={{ width: '100%', marginBottom: 8 }}>
-            📅 הוסף ליומן (תזכורת אוטומטית)
+            <CalendarPlus size={18} className="icon-inline" />הוסף ליומן (תזכורת אוטומטית)
           </button>
           <button className="btn-secondary" onClick={() => { setSuccess(null); }} style={{ width: '100%' }}>
             הזמנת תור נוסף
@@ -382,7 +389,7 @@ export default function BookingPage() {
 
         {totalPrice > 0 && (barber.paypalUsername || barber.bitLink || barber.payboxLink || barber.bitPhone || barber.payboxPhone) && (
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>💸 שלם ₪{totalPrice}</h3>
+            <h3 style={{ marginTop: 0 }}><CreditCard size={18} className="icon-inline" />שלם ₪{totalPrice}</h3>
             <p className="muted" style={{ marginTop: -6 }}>
               {barber.paypalUsername ? 'PayPal פותח עם הסכום מוכן.' : 'לחץ → המספר יועתק ויפתח את האפליקציה.'}
             </p>
@@ -553,7 +560,7 @@ export default function BookingPage() {
               onChange={(e) => setRecurring(e.target.checked)}
               style={{ width: 22, height: 22, flex: 'none', accentColor: 'var(--accent)', marginLeft: 8 }}
             />
-            <span style={{ flex: 1 }}><strong>🔁 תור קבוע</strong> <span className="muted">(אותה שעה, חוזר)</span></span>
+            <span style={{ flex: 1 }}><strong><Repeat size={14} className="icon-inline" />תור קבוע</strong> <span className="muted">(אותה שעה, חוזר)</span></span>
           </label>
           {recurring && (
             <div className="row" style={{ marginTop: 10 }}>
@@ -592,7 +599,7 @@ export default function BookingPage() {
                 onClick={joinWaitlist}
                 style={{ width: '100%', marginTop: 8 }}
               >
-                🔔 הצטרף לרשימת המתנה — נודיע אם יתפנה
+<Bell size={18} className="icon-inline" />הצטרף לרשימת המתנה — נודיע אם יתפנה
               </button>
             )}
           </>
@@ -642,24 +649,24 @@ export default function BookingPage() {
             <p className="muted" style={{ marginTop: -6 }}>בדוק שכל הפרטים נכונים לפני שתאשר.</p>
 
             <div className="confirm-row">
-              <span className="confirm-label">📅 תאריך</span>
+              <span className="confirm-label"><CalendarIcon size={14} className="icon-inline" />תאריך</span>
               <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
             </div>
             <div className="confirm-row">
-              <span className="confirm-label">🕒 שעה</span>
+              <span className="confirm-label"><Clock size={14} className="icon-inline" />שעה</span>
               <strong>{pickedTime}–{addMinToTime(pickedTime, totalDuration)}</strong>
             </div>
             <div className="confirm-row">
-              <span className="confirm-label">⏱ אורך</span>
+              <span className="confirm-label"><Hourglass size={14} className="icon-inline" />אורך</span>
               <strong>{totalDuration} דקות</strong>
             </div>
             <div className="confirm-row">
-              <span className="confirm-label">💈 שירות</span>
+              <span className="confirm-label"><ScissorsIcon size={14} className="icon-inline" />שירות</span>
               <strong>{pickedService?.name}</strong>
             </div>
             {pickedAddonIds.length > 0 && (
               <div className="confirm-row">
-                <span className="confirm-label">✨ תוספות</span>
+                <span className="confirm-label"><Sparkles size={14} className="icon-inline" />תוספות</span>
                 <strong>
                   {(barber.addons || [])
                     .filter((a) => pickedAddonIds.includes(a.id))
@@ -670,17 +677,17 @@ export default function BookingPage() {
             )}
             {totalPrice > 0 && (
               <div className="confirm-row">
-                <span className="confirm-label">💰 מחיר</span>
+                <span className="confirm-label"><CircleDollarSign size={14} className="icon-inline" />מחיר</span>
                 <strong>₪{totalPrice}</strong>
               </div>
             )}
             <div className="confirm-row">
-              <span className="confirm-label">👤 על שם</span>
+              <span className="confirm-label"><User size={14} className="icon-inline" />על שם</span>
               <strong>{client.firstName} {client.lastName}</strong>
             </div>
             {recurring && (
               <div className="confirm-row" style={{ borderTop: '1px dashed var(--gold)', paddingTop: 8, marginTop: 8 }}>
-                <span className="confirm-label">🔁 חוזר</span>
+                <span className="confirm-label"><Repeat size={14} className="icon-inline" />חוזר</span>
                 <strong>כל {recurEvery} שבועות, {recurTimes} פעמים</strong>
               </div>
             )}
@@ -692,7 +699,7 @@ export default function BookingPage() {
               disabled={busy}
               style={{ width: '100%', marginBottom: 8 }}
             >
-              ✓ אשר וקבע תור
+<Check size={18} className="icon-inline" />אשר וקבע תור
             </button>
             <button
               className="btn-secondary"

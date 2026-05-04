@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Calendar as CalendarIcon, Check } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import {
@@ -50,7 +51,7 @@ export default function RescheduleModal({ booking, barber, barberId, onClose, on
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>📅 העברת תור</h2>
+        <h2><CalendarIcon size={20} className="icon-inline" />העברת תור</h2>
         <p className="muted" style={{ marginTop: -8 }}>
           {booking.clientName} • כרגע: {formatDateHe(new Date(booking.date))} ב-{booking.time}
         </p>
@@ -85,7 +86,7 @@ export default function RescheduleModal({ booking, barber, barberId, onClose, on
           disabled={!picked}
           style={{ width: '100%' }}
         >
-          ✓ אשר העברה
+<Check size={18} className="icon-inline" />אשר העברה
         </button>
       </div>
     </div>

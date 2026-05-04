@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Scissors, Hand, Hourglass, Clock, CalendarDays } from 'lucide-react';
 import { collection, doc, getDoc, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { dateToISO, timeToMin, minToTime } from '../utils/slots';
@@ -111,27 +112,32 @@ export default function LiveStatusBanner({ barberId, barberName }) {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   })();
 
-  let main, sub;
+  let icon, main, sub;
   if (myBooking.status === 'inProgress') {
-    main = '🪒 אתה בכיסא עכשיו';
+    icon = <Scissors size={20} />;
+    main = 'אתה בכיסא עכשיו';
     sub = 'בהצלחה!';
   } else if (isToday && minutesUntil <= 5 && minutesUntil >= -5) {
-    main = '👉 הגיע תורך!';
+    icon = <Hand size={20} />;
+    main = 'הגיע תורך!';
     sub = inProgressNow ? 'הספר כמעט מסיים, הכנס בעוד רגע' : 'אפשר להיכנס';
   } else if (isToday && delayMin >= 5) {
-    main = `⏳ הספר מאחר ${delayMin} דק׳`;
+    icon = <Hourglass size={20} />;
+    main = `הספר מאחר ${delayMin} דק׳`;
     sub = `התור שלך ב-${timeStr} → הערכה: ${etaTimeStr}`;
   } else if (isToday) {
-    main = `🕒 התור שלך ב-${timeStr}`;
+    icon = <Clock size={20} />;
+    main = `התור שלך ב-${timeStr}`;
     sub = minutesUntil > 0 ? `עוד ${minutesUntil} דקות` : 'בקרוב';
   } else {
-    main = `🗓 התור שלך מחר ב-${timeStr}`;
+    icon = <CalendarDays size={20} />;
+    main = `התור שלך מחר ב-${timeStr}`;
     sub = `${myBooking.serviceName || ''}${myBooking.duration ? ` • ${myBooking.duration} דק׳` : ''}`;
   }
 
   return (
     <div className="card live-status">
-      <div className="live-main">{main}</div>
+      <div className="live-main"><span className="icon-inline">{icon}</span>{main}</div>
       <div className="muted live-sub">{sub}</div>
       <div className="muted" style={{ fontSize: '0.75rem', marginTop: 4 }}>
         {barberName} • מתעדכן אוטומטית

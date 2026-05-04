@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Coffee, Ban, Check, Repeat, Circle } from 'lucide-react';
 import { dayKeyFromDate, timeToMin, minToTime, addMinToTime } from '../utils/slots';
 
 const PX_PER_MIN = 1.0; // 60 min = 60 px tall — compact mobile-first
@@ -85,7 +86,7 @@ export default function DayTimeline({ date, workingHours, bookings, blocks, onBo
         if (o.kind === 'break') {
           return (
             <div key={`br${i}`} className="dt-break" style={{ top, height }}>
-              ☕ הפסקה
+              <Coffee size={13} className="icon-inline" />הפסקה
             </div>
           );
         }
@@ -98,7 +99,7 @@ export default function DayTimeline({ date, workingHours, bookings, blocks, onBo
               style={{ top, height }}
               onClick={() => !bl.wholeDay && onBlockTap?.(bl)}
             >
-              🚫 {bl.reason || 'חסום'}
+              <Ban size={13} className="icon-inline" />{bl.reason || 'חסום'}
               {height > 40 && bl.duration > 60 && <div className="dt-block-meta">{Math.round(bl.duration / 60)} שעות</div>}
             </div>
           );
@@ -116,9 +117,9 @@ export default function DayTimeline({ date, workingHours, bookings, blocks, onBo
           >
             <div className="dt-time">
               {b.time}–{addMinToTime(b.time, b.duration || 20)}
-              {inProgress && <span className="dt-badge">🟢</span>}
-              {completed && <span className="dt-badge">✓</span>}
-              {b.recurringId && <span className="dt-badge">🔁</span>}
+              {inProgress && <span className="dt-badge" style={{ color: '#4ade80' }}><Circle size={9} fill="currentColor" /></span>}
+              {completed && <span className="dt-badge"><Check size={11} /></span>}
+              {b.recurringId && <span className="dt-badge"><Repeat size={11} /></span>}
             </div>
             <div className="dt-name">{b.clientName}</div>
             {(b.serviceName || b.addons?.length) && height > 50 && (

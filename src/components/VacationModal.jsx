@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Palmtree } from 'lucide-react';
 import { dateToISO } from '../utils/slots';
 
 export default function VacationModal({ onClose, onConfirm }) {
@@ -16,7 +17,7 @@ export default function VacationModal({ onClose, onConfirm }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>🌴 הוסף חופש</h2>
+        <h2><Palmtree size={20} className="icon-inline" />הוסף חופש</h2>
         <p className="muted">היומן ייחסם בתאריכים אלה ולא ניתן יהיה לקבוע תור.</p>
         <div className="row">
           <div>

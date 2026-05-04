@@ -1,3 +1,4 @@
+import { Phone, Play, Check, Edit3 } from 'lucide-react';
 import { addMinToTime } from '../utils/slots';
 
 export default function BookingActionSheet({ booking, onClose, onStart, onComplete, onEdit, onCancel }) {
@@ -19,18 +20,18 @@ export default function BookingActionSheet({ booking, onClose, onStart, onComple
             {booking.addons?.length > 0 && ` + ${booking.addons.map((a) => a.name).join(', ')}`}
           </p>
         )}
-        <a href={`tel:${booking.clientPhone}`} className="btn-secondary" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', padding: 12, marginBottom: 8 }}>
-          📞 {booking.clientPhone}
+        <a href={`tel:${booking.clientPhone}`} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', textDecoration: 'none', padding: 12, marginBottom: 8 }}>
+          <Phone size={16} />{booking.clientPhone}
         </a>
 
         {!completed && !inProgress && (
-          <button className="btn-primary" onClick={() => { onStart(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}>▶ התחל תור</button>
+          <button className="btn-primary" onClick={() => { onStart(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Play size={18} className="icon-inline" />התחל תור</button>
         )}
         {inProgress && (
-          <button className="btn-primary" onClick={() => { onComplete(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}>✓ סיים תור</button>
+          <button className="btn-primary" onClick={() => { onComplete(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Check size={18} className="icon-inline" />סיים תור</button>
         )}
         {!completed && (
-          <button className="btn-secondary" onClick={() => { onEdit(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}>✏️ העבר לזמן/יום אחר</button>
+          <button className="btn-secondary" onClick={() => { onEdit(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Edit3 size={18} className="icon-inline" />העבר לזמן/יום אחר</button>
         )}
         {!completed && (
           <button className="btn-danger" onClick={() => { onCancel(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}>בטל תור</button>

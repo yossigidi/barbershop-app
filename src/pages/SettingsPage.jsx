@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -131,7 +132,7 @@ export default function SettingsPage() {
   return (
     <div className="app">
       <div className="header">
-        <h1>⚙️ הגדרות</h1>
+        <h1><SettingsIcon size={20} className="icon-inline" />הגדרות</h1>
         <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate('/dashboard')}>חזור</button>
       </div>
 
@@ -147,7 +148,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>💸 קבלת תשלום מהלקוח (אופציונלי)</h3>
+        <h3 style={{ marginTop: 0 }}><CreditCard size={18} className="icon-inline" />קבלת תשלום מהלקוח (אופציונלי)</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           אחרי הזמנת תור, הלקוח יראה כפתורי תשלום לפי מה שתמלא כאן.
           ככל שתמלא יותר, כך תהיה ללקוח יותר אפשרות.
@@ -159,7 +160,9 @@ export default function SettingsPage() {
           onClick={() => setShowPayHelp((s) => !s)}
           style={{ width: '100%', marginBottom: 12, fontSize: '0.9rem' }}
         >
-          {showPayHelp ? '▲ הסתר הוראות' : '💡 איך משיגים את הלינקים? — הוראות'}
+          {showPayHelp
+            ? <><ChevronUp size={14} className="icon-inline" />הסתר הוראות</>
+            : <><Lightbulb size={14} className="icon-inline" />איך משיגים את הלינקים? — הוראות</>}
         </button>
 
         {showPayHelp && (
@@ -244,7 +247,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>💈 שירותים</h3>
+        <h3 style={{ marginTop: 0 }}><Scissors size={18} className="icon-inline" />שירותים</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           ללקוח יוצגו רק שירותים שתוסיף כאן. אם הרשימה ריקה, יוצג שירות אחד "ברירת מחדל" עם הזמן והמחיר למטה.
         </p>
@@ -269,7 +272,7 @@ export default function SettingsPage() {
               </div>
               <div style={{ flex: 'none' }}>
                 <label className="muted" style={{ fontSize: '0.85rem', visibility: 'hidden' }}>מחק</label>
-                <button className="btn-danger" style={{ padding: '12px 14px' }} onClick={() => removeService(s.id)} type="button">🗑</button>
+                <button className="btn-danger" style={{ padding: '12px 14px' }} onClick={() => removeService(s.id)} type="button" aria-label="מחק"><Trash2 size={16} /></button>
               </div>
             </div>
           </div>
@@ -299,7 +302,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>✨ תוספות (אופציונלי ללקוח)</h3>
+        <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />תוספות (אופציונלי ללקוח)</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           תוספות שהלקוח יכול להוסיף על השירות (עיצוב זקן, שעווה באף/באוזניים…). מתווסף לזמן ולמחיר.
         </p>
@@ -324,7 +327,7 @@ export default function SettingsPage() {
               </div>
               <div style={{ flex: 'none' }}>
                 <label className="muted" style={{ fontSize: '0.85rem', visibility: 'hidden' }}>מחק</label>
-                <button className="btn-danger" style={{ padding: '12px 14px' }} onClick={() => removeAddon(a.id)} type="button">🗑</button>
+                <button className="btn-danger" style={{ padding: '12px 14px' }} onClick={() => removeAddon(a.id)} type="button" aria-label="מחק"><Trash2 size={16} /></button>
               </div>
             </div>
           </div>
@@ -335,7 +338,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>🕒 שעות עבודה</h3>
+        <h3 style={{ marginTop: 0 }}><Clock size={18} className="icon-inline" />שעות עבודה</h3>
         <p className="muted" style={{ marginTop: -6 }}>הפסקת צהריים אופציונלית.</p>
         {DAYS_OF_WEEK.map((day) => {
           const cfg = hours[day];

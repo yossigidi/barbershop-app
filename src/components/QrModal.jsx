@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { QrCode, Printer } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function QrModal({ link, businessName, onClose }) {
@@ -33,7 +34,7 @@ export default function QrModal({ link, businessName, onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>🔳 QR לחלון החנות</h2>
+        <h2><QrCode size={20} className="icon-inline" />QR לחלון החנות</h2>
         <p className="muted">לקוחות סורקים → מגיעים ישירות לדף ההזמנה.</p>
         <div ref={printRef} style={{ background: 'white', padding: 24, borderRadius: 12, textAlign: 'center', margin: '12px 0' }}>
           <QRCodeSVG value={link} size={240} level="M" includeMargin={false} />
@@ -41,7 +42,7 @@ export default function QrModal({ link, businessName, onClose }) {
         <p className="muted text-center" style={{ fontSize: '0.8rem', wordBreak: 'break-all', direction: 'ltr' }}>{link}</p>
         <div className="spacer" />
         <button className="btn-primary" onClick={handlePrint} style={{ width: '100%', marginBottom: 8 }}>
-          🖨️ הדפס
+          <Printer size={18} className="icon-inline" />הדפס
         </button>
         <button className="btn-secondary" onClick={onClose} style={{ width: '100%' }}>
           סגור

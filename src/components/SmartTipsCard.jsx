@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Sparkles, TrendingUp } from 'lucide-react';
 import { dateToISO, formatDateHe, dayKeyFromDate, DAY_LABELS_HE, timeToMin, addMinToTime } from '../utils/slots';
 
 // Heuristic-based scheduling tips:
@@ -97,7 +98,7 @@ export default function SmartTipsCard({ workingHours, bookings, blocks }) {
 
   return (
     <div className="card">
-      <h3 style={{ marginTop: 0 }}>🧠 תזמון חכם</h3>
+      <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />תזמון חכם</h3>
 
       {tips.largestGaps.length > 0 && (
         <div style={{ marginBottom: 12 }}>
@@ -129,7 +130,7 @@ export default function SmartTipsCard({ workingHours, bookings, blocks }) {
 
       {tips.busyDow >= 0 && (
         <div className="muted" style={{ fontSize: '0.85rem' }}>
-          📈 היום העמוס ביותר שלך: <strong>{DAY_LABELS_HE[['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][tips.busyDow]]}</strong>
+          <TrendingUp size={14} className="icon-inline" />היום העמוס ביותר שלך: <strong>{DAY_LABELS_HE[['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][tips.busyDow]]}</strong>
           {' '}({tips.dowCount[tips.busyDow]} תורים ב-60 הימים האחרונים)
         </div>
       )}

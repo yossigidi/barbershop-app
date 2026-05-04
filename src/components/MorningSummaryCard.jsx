@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Scissors, ChevronLeft, AlertTriangle, Check, Share2 } from 'lucide-react';
 import { timeToMin } from '../utils/slots';
 import { whatsappUrl } from '../utils/whatsapp';
 
@@ -72,7 +73,7 @@ export default function MorningSummaryCard({ displayName, businessName, todayBoo
             style={{ padding: '4px 10px', fontSize: '0.8rem' }}
             onClick={share}
           >
-            📤 שתף
+            <Share2 size={14} className="icon-inline" />שתף
           </button>
         )}
       </div>
@@ -93,7 +94,7 @@ export default function MorningSummaryCard({ displayName, businessName, todayBoo
               )}
             </div>
             {totalRevenue > 0 && (
-              <div className="morning-stat">
+              <div className="morning-stat is-revenue">
                 <div className="morning-stat-label">הכנסה צפויה</div>
                 <div className="morning-stat-num">₪{totalRevenue}</div>
               </div>
@@ -102,7 +103,7 @@ export default function MorningSummaryCard({ displayName, businessName, todayBoo
 
           {inProgress ? (
             <div className="morning-current in-progress" onClick={() => onTapBooking?.(inProgress)}>
-              <div className="morning-current-label">🪒 כעת בכיסא</div>
+              <div className="morning-current-label"><Scissors size={14} className="icon-inline" />כעת בכיסא</div>
               <div className="morning-current-name">{inProgress.clientName}</div>
               <div className="morning-current-meta">
                 {inProgress.time} • {describe(inProgress)}
@@ -112,7 +113,9 @@ export default function MorningSummaryCard({ displayName, businessName, todayBoo
           ) : next ? (
             <div className="morning-current" onClick={() => onTapBooking?.(next)}>
               <div className="morning-current-label">
-                {timeToMin(next.time) >= nowMin ? '⏭ הבא בתור' : '⚠ הראשון להיום'}
+                {timeToMin(next.time) >= nowMin
+                  ? <><ChevronLeft size={14} className="icon-inline" />הבא בתור</>
+                  : <><AlertTriangle size={14} className="icon-inline" />הראשון להיום</>}
               </div>
               <div className="morning-current-name">{next.clientName}</div>
               <div className="morning-current-meta">
@@ -124,7 +127,7 @@ export default function MorningSummaryCard({ displayName, businessName, todayBoo
             </div>
           ) : (
             <div className="morning-current">
-              <div className="morning-current-label">✓ סיימת להיום</div>
+              <div className="morning-current-label"><Check size={14} className="icon-inline" />סיימת להיום</div>
               <div className="muted">אין יותר תורים — הופ הבא יתפוס</div>
             </div>
           )}

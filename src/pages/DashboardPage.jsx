@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import {
+  Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
+  MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import {
@@ -279,7 +283,7 @@ export default function DashboardPage() {
           <div className="card push-card">
             <div className="row" style={{ alignItems: 'flex-start' }}>
               <div style={{ flex: 1 }}>
-                <strong>🔔 הפעל התראות</strong>
+                <strong><Bell size={16} className="icon-inline" />הפעל התראות</strong>
                 <p className="muted" style={{ marginTop: 4, marginBottom: 8, fontSize: '0.85rem' }}>
                   באייפון: הוסף קודם ל-Home Screen.
                 </p>
@@ -289,8 +293,8 @@ export default function DashboardPage() {
                 {pushStatus === 'denied' && <p className="text-danger" style={{ fontSize: '0.8rem', marginTop: 6 }}>הרשאה נדחתה.</p>}
                 {pushStatus === 'error' && <p className="text-danger" style={{ fontSize: '0.8rem', marginTop: 6 }}>הוסף ל-Home Screen קודם.</p>}
               </div>
-              <button className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => setPushDismissed(true)}>
-                ✕
+              <button className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => setPushDismissed(true)} aria-label="סגור">
+                <X size={14} />
               </button>
             </div>
           </div>
@@ -345,11 +349,11 @@ export default function DashboardPage() {
         </div>
 
         <button className="btn-secondary" onClick={() => setShowVacation(true)} style={{ width: '100%', marginBottom: 8 }}>
-          🌴 הוסף חופש
+          <Palmtree size={18} className="icon-inline" />הוסף חופש
         </button>
         {(barber.vacations || []).length > 0 && (
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>🌴 חופשים מתוכננים</h3>
+            <h3 style={{ marginTop: 0 }}><Palmtree size={18} className="icon-inline" />חופשים מתוכננים</h3>
             {barber.vacations.map((v) => (
               <div key={v.id} className="timeline-row">
                 <span style={{ flex: 1 }}>
@@ -373,13 +377,13 @@ export default function DashboardPage() {
         <StatsCard bookings={bookings} />
         <SmartTipsCard workingHours={barber.workingHours} bookings={bookings} blocks={blocks} />
         <button className="btn-secondary" onClick={() => setShowTomorrow(true)} style={{ width: '100%', marginBottom: 8 }}>
-          📋 תזכורות WhatsApp ללקוחות מחר
+          <Send size={18} className="icon-inline" />תזכורות WhatsApp ללקוחות מחר
         </button>
         <button className="btn-secondary" onClick={() => setShowYesterday(true)} style={{ width: '100%', marginBottom: 8 }}>
-          💬 הודעות תודה ללקוחות מאתמול
+          <MessageCircle size={18} className="icon-inline" />הודעות תודה ללקוחות מאתמול
         </button>
         <Link to="/reports">
-          <button className="btn-primary" style={{ width: '100%' }}>📊 דוחות מלאים + השוואות + חגים</button>
+          <button className="btn-primary" style={{ width: '100%' }}><BarChart3 size={18} className="icon-inline" />דוחות מלאים + השוואות + חגים</button>
         </Link>
       </>
     );
@@ -392,28 +396,28 @@ export default function DashboardPage() {
           <h3 style={{ marginTop: 0 }}>שיתוף הלינק שלך</h3>
           <div className="copy-link" onClick={copyLink}>{shortLink || '—'}</div>
           <div className="row" style={{ marginTop: 12 }}>
-            <button className="btn-primary" onClick={shareWhatsApp} style={{ flex: 1 }}>📤 WhatsApp</button>
-            <button className="btn-secondary" onClick={() => setShowQr(true)} style={{ flex: 'none' }}>🔳 QR</button>
-            <button className="btn-secondary" onClick={copyLink} style={{ flex: 'none' }}>📋</button>
+            <button className="btn-primary" onClick={shareWhatsApp} style={{ flex: 1 }}><Share2 size={18} className="icon-inline" />WhatsApp</button>
+            <button className="btn-secondary" onClick={() => setShowQr(true)} style={{ flex: 'none' }} aria-label="QR"><QrCode size={18} /></button>
+            <button className="btn-secondary" onClick={copyLink} style={{ flex: 'none' }} aria-label="העתק"><Copy size={18} /></button>
           </div>
         </div>
 
         <Link to="/onboarding">
-          <button className="btn-primary" style={{ width: '100%', marginBottom: 8 }}>🪒 קטלוג מהיר — שירותים, מחירים, ימים</button>
+          <button className="btn-primary" style={{ width: '100%', marginBottom: 8 }}><Scissors size={18} className="icon-inline" />קטלוג מהיר — שירותים, מחירים, ימים</button>
         </Link>
         <Link to="/settings">
-          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}>⚙️ הגדרות מתקדמות</button>
+          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><Settings size={18} className="icon-inline" />הגדרות מתקדמות</button>
         </Link>
         <Link to="/reports">
-          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}>📊 דוחות מלאים</button>
+          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><BarChart3 size={18} className="icon-inline" />דוחות מלאים</button>
         </Link>
         <button className="btn-secondary" onClick={() => setShowVacation(true)} style={{ width: '100%', marginBottom: 8 }}>
-          🌴 הוסף חופש
+          <Palmtree size={18} className="icon-inline" />הוסף חופש
         </button>
 
         {!tokenInstalled && pushStatus !== 'enabled' && (
           <button className="btn-secondary" onClick={enablePush} disabled={pushStatus === 'requesting'} style={{ width: '100%', marginBottom: 8 }}>
-            🔔 הפעל התראות פוש
+            <Bell size={18} className="icon-inline" />הפעל התראות פוש
           </button>
         )}
 
@@ -440,20 +444,20 @@ export default function DashboardPage() {
 
       <nav className="bottom-nav">
         <button className={`nav-tab ${tab === 'calendar' ? 'active' : ''}`} onClick={() => setTab('calendar')}>
-          <span className="nav-icon">📅</span>
+          <span className="nav-icon"><CalendarIcon size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">יומן</span>
         </button>
         <button className={`nav-tab ${tab === 'today' ? 'active' : ''}`} onClick={() => setTab('today')}>
-          <span className="nav-icon">🏠</span>
+          <span className="nav-icon"><Home size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">היום</span>
           {todayBookings.length > 0 && <span className="nav-badge">{todayBookings.length}</span>}
         </button>
         <button className={`nav-tab ${tab === 'reports' ? 'active' : ''}`} onClick={() => setTab('reports')}>
-          <span className="nav-icon">📊</span>
+          <span className="nav-icon"><BarChart3 size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">דוחות</span>
         </button>
         <button className={`nav-tab ${tab === 'more' ? 'active' : ''}`} onClick={() => setTab('more')}>
-          <span className="nav-icon">⚙️</span>
+          <span className="nav-icon"><MoreHorizontal size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">עוד</span>
         </button>
       </nav>

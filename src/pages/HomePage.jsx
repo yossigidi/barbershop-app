@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Scissors } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -64,7 +65,7 @@ export default function HomePage() {
   return (
     <div className="app">
       <div className="header">
-        <h1>✂️ Barbershop</h1>
+        <h1><Scissors size={22} className="icon-inline" />Barbershop</h1>
       </div>
       <div className="card">
         <h2 style={{ marginTop: 0 }}>שלום, ספר 👋</h2>

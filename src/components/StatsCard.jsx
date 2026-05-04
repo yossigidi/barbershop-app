@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { BarChart3 } from 'lucide-react';
 import { dateToISO } from '../utils/slots';
 
 export default function StatsCard({ bookings }) {
@@ -30,7 +31,7 @@ export default function StatsCard({ bookings }) {
 
   return (
     <div className="card">
-      <h3 style={{ marginTop: 0 }}>📊 סטטיסטיקות</h3>
+      <h3 style={{ marginTop: 0 }}><BarChart3 size={18} className="icon-inline" />סטטיסטיקות</h3>
       <div className="stats-grid">
         <Stat label="היום" count={stats.todayCount} revenue={stats.todayRev} />
         <Stat label="השבוע" count={stats.weekCount} revenue={stats.weekRev} />
@@ -42,7 +43,7 @@ export default function StatsCard({ bookings }) {
 
 function Stat({ label, count, revenue }) {
   return (
-    <div className="stat-cell">
+    <div className={`stat-cell ${revenue > 0 ? 'is-revenue' : ''}`}>
       <div className="muted" style={{ fontSize: '0.8rem' }}>{label}</div>
       <div className="stat-num">{count}</div>
       {revenue > 0 && <div className="stat-rev">₪{revenue}</div>}

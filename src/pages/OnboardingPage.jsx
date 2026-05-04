@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Scissors, HandHeart, Trash2, Lightbulb, Save, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -242,7 +243,11 @@ export default function OnboardingPage() {
   return (
     <div className="app">
       <div className="header">
-        <h1>{isReturning ? '🪒 קטלוג שירותים' : '👋 ברוך הבא!'}</h1>
+        <h1>
+          {isReturning
+            ? <><Scissors size={20} className="icon-inline" />קטלוג שירותים</>
+            : <><HandHeart size={20} className="icon-inline" />ברוך הבא!</>}
+        </h1>
         {isReturning && (
           <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate('/dashboard')}>חזור</button>
         )}
@@ -364,7 +369,7 @@ export default function OnboardingPage() {
                   onChange={(e) => updatePackage(p.id, { name: e.target.value })}
                   style={{ flex: 1 }}
                 />
-                <button className="btn-danger" style={{ padding: '8px 12px', flex: 'none' }} onClick={() => removePackage(p.id)} type="button">🗑</button>
+                <button className="btn-danger" style={{ padding: '8px 12px', flex: 'none' }} onClick={() => removePackage(p.id)} type="button" aria-label="מחק"><Trash2 size={16} /></button>
               </div>
 
               <div className="muted" style={{ fontSize: '0.85rem', marginBottom: 6 }}>סמן מה כלול:</div>
@@ -436,7 +441,7 @@ export default function OnboardingPage() {
       </div>
 
       <div className="card" style={{ borderColor: 'var(--gold)', background: 'rgba(184, 137, 58, 0.04)' }}>
-        <strong>💡 איך זה עובד ללקוח</strong>
+        <strong><Lightbulb size={16} className="icon-inline" />איך זה עובד ללקוח</strong>
         <p className="muted" style={{ fontSize: '0.85rem', marginTop: 6, marginBottom: 0 }}>
           הלקוח רואה את <strong>השירותים והחבילות יחד</strong> ובוחר אחד. אם זה שירות רגיל, הוא יכול להוסיף תוספות.
           אם זו חבילה, הכל כבר כלול. הסלוטים שמוצגים מותאמים בדיוק לאורך הכולל.
@@ -444,7 +449,9 @@ export default function OnboardingPage() {
       </div>
 
       <button className="btn-primary" onClick={finish} disabled={saving} style={{ width: '100%' }}>
-        {saving ? 'שומר…' : isReturning ? `💾 שמור (${offeredCount} שירותים)` : `✓ סיום והתחלה (${offeredCount} שירותים)`}
+        {saving ? 'שומר…' : isReturning
+          ? <><Save size={18} className="icon-inline" />{`שמור (${offeredCount} שירותים)`}</>
+          : <><Check size={18} className="icon-inline" />{`סיום והתחלה (${offeredCount} שירותים)`}</>}
       </button>
       <div className="spacer" />
       <p className="muted text-center" style={{ fontSize: '0.85rem' }}>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BarChart3, CalendarDays, Trophy, PartyPopper } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
@@ -147,7 +148,7 @@ export default function ReportsPage() {
   return (
     <div className="app">
       <div className="header">
-        <h1>📊 דוחות</h1>
+        <h1><BarChart3 size={20} className="icon-inline" />דוחות</h1>
         <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate('/dashboard')}>חזור</button>
       </div>
 
@@ -159,7 +160,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>📅 7 ימים אחרונים</h3>
+        <h3 style={{ marginTop: 0 }}><CalendarDays size={18} className="icon-inline" />7 ימים אחרונים</h3>
         <div className="bars">
           {data.last7.map((d) => (
             <div key={d.iso} className="bar-col">
@@ -178,7 +179,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>📊 לפי יום בשבוע (60 ימים אחרונים)</h3>
+        <h3 style={{ marginTop: 0 }}><BarChart3 size={18} className="icon-inline" />לפי יום בשבוע (60 ימים אחרונים)</h3>
         <div className="dow-list">
           {DAYS_OF_WEEK.map((day, i) => {
             const max = Math.max(1, ...data.dowCount);
@@ -197,7 +198,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>🏆 לקוחות מובילים (6 חודשים)</h3>
+        <h3 style={{ marginTop: 0 }}><Trophy size={18} className="icon-inline" />לקוחות מובילים (6 חודשים)</h3>
         {data.topCustomers.length === 0 ? (
           <div className="empty">אין מספיק נתונים</div>
         ) : (
@@ -234,7 +235,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>🎉 חגים קרובים</h3>
+        <h3 style={{ marginTop: 0 }}><PartyPopper size={18} className="icon-inline" />חגים קרובים</h3>
         <p className="muted" style={{ marginTop: -6 }}>
           לחיצה על תאריך תראה כמה תורים נקבעו (אם כבר נקבעו).
         </p>

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Camera, RefreshCw, Trash2 } from 'lucide-react';
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from '../firebase';
 
@@ -79,7 +80,9 @@ export default function LogoUploader({ uid, currentUrl, onChange }) {
           type="button"
           style={{ flex: 1 }}
         >
-          {busy ? 'מעלה…' : currentUrl ? '🔄 החלף לוגו' : '📷 העלה לוגו'}
+          {busy ? 'מעלה…' : currentUrl
+            ? <><RefreshCw size={16} className="icon-inline" />החלף לוגו</>
+            : <><Camera size={16} className="icon-inline" />העלה לוגו</>}
         </button>
         {currentUrl && (
           <button
@@ -88,8 +91,9 @@ export default function LogoUploader({ uid, currentUrl, onChange }) {
             disabled={busy}
             type="button"
             style={{ flex: 'none', padding: '12px 16px' }}
+            aria-label="מחק לוגו"
           >
-            🗑
+            <Trash2 size={16} />
           </button>
         )}
       </div>
