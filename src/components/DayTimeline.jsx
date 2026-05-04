@@ -113,26 +113,42 @@ export default function DayTimeline({ date, workingHours, bookings, blocks, onBo
         const b = o.data;
         const inProgress = b.status === 'inProgress';
         const completed = b.status === 'completed';
+        const compact = height < 30;
         return (
           <div
             key={b.id}
-            className={`dt-booking ${inProgress ? 'in-progress' : ''} ${completed ? 'completed' : ''}`}
+            className={`dt-booking ${inProgress ? 'in-progress' : ''} ${completed ? 'completed' : ''} ${compact ? 'compact' : ''}`}
             style={{ top, height }}
             onClick={() => onBookingTap?.(b)}
           >
-            <div className="dt-time">
-              {b.time}–{addMinToTime(b.time, b.duration || 20)}
-              {inProgress && <span className="dt-badge" style={{ color: '#4ade80' }}><Circle size={9} fill="currentColor" /></span>}
-              {completed && <span className="dt-badge"><Check size={11} /></span>}
-              {b.recurringId && <span className="dt-badge"><Repeat size={11} /></span>}
-            </div>
-            <div className="dt-name">{b.clientName}</div>
-            {(b.serviceName || b.addons?.length) && height > 50 && (
-              <div className="dt-svc">
-                {b.serviceName}
-                {b.addons?.length > 0 && ` + ${b.addons.length} תוספות`}
-                {b.price > 0 && ` • ₪${b.price}`}
+            {compact ? (
+              // 20-min booking: single tight line — name first (most important)
+              <div className="dt-compact">
+                <span className="dt-name-compact">{b.clientName || 'תור'}</span>
+                <span className="dt-time-compact">
+                  {b.time}
+                  {inProgress && <span className="dt-badge" style={{ color: '#4ade80', marginInlineStart: 4 }}><Circle size={8} fill="currentColor" /></span>}
+                  {completed && <span className="dt-badge" style={{ marginInlineStart: 4 }}><Check size={9} /></span>}
+                  {b.recurringId && <span className="dt-badge" style={{ marginInlineStart: 4 }}><Repeat size={9} /></span>}
+                </span>
               </div>
+            ) : (
+              <>
+                <div className="dt-name">
+                  {b.clientName || 'תור'}
+                  {inProgress && <span className="dt-badge" style={{ color: '#4ade80', marginInlineStart: 6 }}><Circle size={9} fill="currentColor" /></span>}
+                  {completed && <span className="dt-badge" style={{ marginInlineStart: 6 }}><Check size={11} /></span>}
+                  {b.recurringId && <span className="dt-badge" style={{ marginInlineStart: 6 }}><Repeat size={11} /></span>}
+                </div>
+                <div className="dt-time">{b.time}–{addMinToTime(b.time, b.duration || 20)}</div>
+                {(b.serviceName || b.addons?.length) && height > 56 && (
+                  <div className="dt-svc">
+                    {b.serviceName}
+                    {b.addons?.length > 0 && ` + ${b.addons.length} תוספות`}
+                    {b.price > 0 && ` • ₪${b.price}`}
+                  </div>
+                )}
+              </>
             )}
           </div>
         );

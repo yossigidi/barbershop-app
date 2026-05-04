@@ -14,6 +14,7 @@ import {
   computeSlotsForDate, dateToISO, formatDateHe, nextNDays,
   DAY_LABELS_HE, dayKeyFromDate, addMinToTime, timeToMin,
 } from '../utils/slots';
+import { getRecommendedSlots, SLOT_REASONS } from '../utils/slotScoring';
 import Calendar from '../components/Calendar.jsx';
 import LiveStatusBanner from '../components/LiveStatusBanner.jsx';
 import { buildIcs, downloadIcs } from '../utils/ics';
@@ -50,6 +51,8 @@ export default function BookingPage() {
   const [recurring, setRecurring] = useState(false);
   const [recurEvery, setRecurEvery] = useState(3); // weeks
   const [recurTimes, setRecurTimes] = useState(8);
+  const [showAllSlots, setShowAllSlots] = useState(false);
+  const [usualHour, setUsualHour] = useState(null);
 
   // Resolve short code → barber
   useEffect(() => {
@@ -78,6 +81,33 @@ export default function BookingPage() {
       if (snap.exists()) setClient(snap.data());
     })();
   }, [barberId]);
+
+  // Phase 3 — when a returning client is identified, look at their last few
+  // bookings and find their most-used hour-of-day. Used as a high-priority
+  // "your usual time" recommendation.
+  useEffect(() => {
+    if (!client || !barberId) { setUsualHour(null); return; }
+    (async () => {
+      try {
+        const q = query(
+          collection(db, 'barbers', barberId, 'bookings'),
+          where('clientPhone', '==', client.phone),
+        );
+        const snap = await getDocs(q);
+        const hourCounts = {};
+        snap.docs.forEach((d) => {
+          const t = d.data().time || '';
+          const h = t.slice(0, 2);
+          if (h) hourCounts[h] = (hourCounts[h] || 0) + 1;
+        });
+        const top = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
+        if (top && top[1] >= 2) setUsualHour(top[0]);
+        else setUsualHour(null);
+      } catch (e) {
+        console.warn('usual-hour lookup failed:', e);
+      }
+    })();
+  }, [client, barberId]);
 
   // Default-pick first service when barber loads
   useEffect(() => {
@@ -140,6 +170,24 @@ export default function BookingPage() {
     [selectedDate, barber, occupied, totalDuration],
   );
 
+  // Smart Slot Engine — pick 1-3 "best" slots based on the day's shape
+  const recommended = useMemo(() => {
+    return getRecommendedSlots(slots, occupied, selectedDate, new Date(), totalDuration);
+  }, [slots, occupied, selectedDate, totalDuration]);
+
+  // Inject "usual time" as the highest-priority recommendation for returning
+  // clients (Phase 3) — only if the slot is actually available today.
+  const recommendedWithUsual = useMemo(() => {
+    if (!usualHour) return recommended;
+    const usualSlot = (slots || []).find(
+      (s) => s.available && s.time.startsWith(usualHour),
+    );
+    if (!usualSlot) return recommended;
+    if (recommended.some((r) => r.time === usualSlot.time)) return recommended;
+    const enriched = [{ time: usualSlot.time, reason: 'usual', score: 100 }, ...recommended];
+    return enriched.slice(0, 3).sort((a, b) => a.time.localeCompare(b.time));
+  }, [recommended, usualHour, slots]);
+
   // Group AVAILABLE slots by period of day: morning < 12:00, afternoon < 17:00, evening ≥ 17:00.
   // Booked/blocked slots are hidden — clients only see what they can actually book.
   const slotGroups = useMemo(() => {
@@ -157,6 +205,30 @@ export default function BookingPage() {
     }
     return groups.filter((g) => g.items.length > 0);
   }, [slots]);
+
+  // Off-peak discount window — barber configures in settings (Phase 2)
+  const offPeak = useMemo(() => {
+    const win = barber?.offPeakWindow;
+    if (!win || !win.enabled || !win.discountPct) return null;
+    const dayKey = dayKeyFromDate(selectedDate);
+    if (Array.isArray(win.daysOfWeek) && win.daysOfWeek.length > 0
+        && !win.daysOfWeek.includes(dayKey)) return null;
+    return win;
+  }, [barber, selectedDate]);
+
+  function discountFor(time) {
+    if (!offPeak) return 0;
+    const t = timeToMin(time);
+    if (t >= timeToMin(offPeak.start) && t < timeToMin(offPeak.end)) {
+      return Number(offPeak.discountPct) || 0;
+    }
+    return 0;
+  }
+
+  const slotDiscount = pickedTime ? discountFor(pickedTime) : 0;
+  const finalPrice = slotDiscount > 0
+    ? Math.round(totalPrice * (1 - slotDiscount / 100))
+    : totalPrice;
 
   // Today's open status — for the brand-header tagline
   const todayStatus = useMemo(() => {
@@ -247,16 +319,22 @@ export default function BookingPage() {
         .filter((a) => pickedAddonIds.includes(a.id))
         .map((a) => ({ id: a.id, name: a.name, duration: a.duration || 0, price: a.price || 0 }));
 
+      const discountPct = discountFor(time);
+      const priceWithDiscount = discountPct > 0
+        ? Math.round(totalPrice * (1 - discountPct / 100))
+        : totalPrice;
+
       const baseDoc = {
         time,
         duration: totalDuration,
-        price: totalPrice,
+        price: priceWithDiscount,
         serviceId: pickedService.id,
         serviceName: pickedService.name,
         addons: selectedAddons,
         clientName: `${c.firstName} ${c.lastName}`,
         clientPhone: c.phone,
         status: 'booked',
+        ...(discountPct > 0 && { originalPrice: totalPrice, discountPct }),
       };
 
       // Build dates: first one + optional recurring
@@ -655,25 +733,64 @@ export default function BookingPage() {
             )}
           </>
         ) : (
-          slotGroups.map((g) => (
-            <div key={g.key} className="slots-section">
-              <div className="slot-group-label">{g.label}</div>
-              <div className="slots">
-                {g.items.map((s) => (
-                  <div
-                    key={s.time}
-                    className={`slot ${!s.available ? 'booked' : ''} ${pickedTime === s.time ? 'selected' : ''}`}
-                    onClick={() => s.available && pickSlot(s.time)}
+          <>
+            {recommendedWithUsual.length > 0 && (
+              <div className="recommended-section">
+                <div className="recommended-label">מומלצים בשבילך</div>
+                <div className="slots-recommended">
+                  {recommendedWithUsual.map((s) => {
+                    const r = SLOT_REASONS[s.reason] || SLOT_REASONS.earliest;
+                    const d = discountFor(s.time);
+                    return (
+                      <div
+                        key={s.time}
+                        className={`slot slot-recommended ${pickedTime === s.time ? 'selected' : ''}`}
+                        onClick={() => pickSlot(s.time)}
+                      >
+                        <div className="slot-time-big">{s.time}</div>
+                        <div className={`slot-badge tone-${r.tone}`}>{r.badge}</div>
+                        <div className="slot-reason">{r.label}</div>
+                        {d > 0 && <div className="slot-discount-pill">חיסכון {d}%</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {!showAllSlots && slotGroups.length > 0 && (
+                  <button
+                    type="button"
+                    className="show-all-toggle"
+                    onClick={() => setShowAllSlots(true)}
                   >
-                    {s.time}
-                    {s.available && pickedService?.duration > 20 && (
-                      <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
-                    )}
-                  </div>
-                ))}
+                    הצג את כל השעות הזמינות
+                  </button>
+                )}
               </div>
-            </div>
-          ))
+            )}
+
+            {(showAllSlots || recommendedWithUsual.length === 0) && slotGroups.map((g) => (
+              <div key={g.key} className="slots-section">
+                <div className="slot-group-label">{g.label}</div>
+                <div className="slots">
+                  {g.items.map((s) => {
+                    const d = discountFor(s.time);
+                    return (
+                      <div
+                        key={s.time}
+                        className={`slot ${pickedTime === s.time ? 'selected' : ''} ${d > 0 ? 'has-discount' : ''}`}
+                        onClick={() => pickSlot(s.time)}
+                      >
+                        <div>{s.time}</div>
+                        {pickedService?.duration > 20 && (
+                          <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
+                        )}
+                        {d > 0 && <span className="slot-discount-tag">-{d}%</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </>
         )}
       </div>
 
@@ -734,7 +851,14 @@ export default function BookingPage() {
             {totalPrice > 0 && (
               <div className="confirm-row">
                 <span className="confirm-label"><CircleDollarSign size={14} className="icon-inline" />מחיר</span>
-                <strong>₪{totalPrice}</strong>
+                <strong>
+                  {slotDiscount > 0 ? (
+                    <>
+                      <span style={{ textDecoration: 'line-through', color: 'var(--text-soft)', fontWeight: 500, marginInlineEnd: 8 }}>₪{totalPrice}</span>
+                      ₪{finalPrice} <span style={{ color: 'var(--gold)', fontSize: '0.85rem' }}>(חיסכון {slotDiscount}%)</span>
+                    </>
+                  ) : `₪${totalPrice}`}
+                </strong>
               </div>
             )}
             <div className="confirm-row">
