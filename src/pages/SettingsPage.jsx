@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Target } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -33,13 +33,6 @@ export default function SettingsPage() {
   const [addons, setAddons] = useState([]);
   const [defaultDuration, setDefaultDuration] = useState(20);
   const [defaultPrice, setDefaultPrice] = useState(0);
-  const [offPeak, setOffPeak] = useState({
-    enabled: false,
-    daysOfWeek: ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'],
-    start: '10:00',
-    end: '13:00',
-    discountPct: 10,
-  });
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -61,17 +54,6 @@ export default function SettingsPage() {
         setAddons(Array.isArray(data.addons) ? data.addons : []);
         setDefaultDuration(data.defaultDuration || 20);
         setDefaultPrice(data.defaultPrice || 0);
-        if (data.offPeakWindow) {
-          setOffPeak({
-            enabled: !!data.offPeakWindow.enabled,
-            daysOfWeek: Array.isArray(data.offPeakWindow.daysOfWeek)
-              ? data.offPeakWindow.daysOfWeek
-              : ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'],
-            start: data.offPeakWindow.start || '10:00',
-            end: data.offPeakWindow.end || '13:00',
-            discountPct: Number(data.offPeakWindow.discountPct) || 10,
-          });
-        }
       }
       setLoaded(true);
     })();
@@ -136,13 +118,6 @@ export default function SettingsPage() {
         addons: cleanedAddons,
         defaultDuration: Number(defaultDuration) || 20,
         defaultPrice: Number(defaultPrice) || 0,
-        offPeakWindow: {
-          enabled: !!offPeak.enabled,
-          daysOfWeek: offPeak.daysOfWeek || [],
-          start: offPeak.start || '10:00',
-          end: offPeak.end || '13:00',
-          discountPct: Number(offPeak.discountPct) || 0,
-        },
       });
       navigate('/dashboard');
     } catch (e) {
@@ -360,84 +335,6 @@ export default function SettingsPage() {
         <button className="btn-secondary" onClick={addAddon} type="button" style={{ width: '100%', marginTop: 8 }}>
           + הוסף תוספת
         </button>
-      </div>
-
-      <div className="card card-feature">
-        <h3 style={{ marginTop: 0 }}><Target size={18} className="icon-inline" />שעות שקטות עם הנחה</h3>
-        <p className="muted" style={{ marginTop: -6 }}>
-          הענק הנחה אוטומטית לשעות שאתה רוצה למלא. הסוכן החכם ידחוף אליהן לקוחות בעמוד ההזמנה.
-        </p>
-
-        <label className="row" style={{ alignItems: 'center', cursor: 'pointer', marginBottom: 12 }}>
-          <input
-            type="checkbox"
-            checked={offPeak.enabled}
-            onChange={(e) => setOffPeak((p) => ({ ...p, enabled: e.target.checked }))}
-            style={{ width: 22, height: 22, flex: 'none', accentColor: 'var(--gold)', marginLeft: 8 }}
-          />
-          <span style={{ flex: 1, fontWeight: 600 }}>הפעל הנחה לשעות שקטות</span>
-        </label>
-
-        {offPeak.enabled && (
-          <>
-            <div className="field">
-              <label className="muted" style={{ fontSize: '0.85rem' }}>ימים</label>
-              <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
-                {DAYS_OF_WEEK.map((d) => {
-                  const on = offPeak.daysOfWeek.includes(d);
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setOffPeak((p) => ({
-                        ...p,
-                        daysOfWeek: on
-                          ? p.daysOfWeek.filter((x) => x !== d)
-                          : [...p.daysOfWeek, d],
-                      }))}
-                      className={on ? 'btn-primary' : 'btn-secondary'}
-                      style={{ flex: '1 0 60px', padding: '8px 0', fontSize: '0.85rem' }}
-                    >
-                      {DAY_LABELS_HE[d]}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="row">
-              <div>
-                <label className="muted" style={{ fontSize: '0.85rem' }}>מ-</label>
-                <input type="time" value={offPeak.start} onChange={(e) => setOffPeak((p) => ({ ...p, start: e.target.value }))} />
-              </div>
-              <div>
-                <label className="muted" style={{ fontSize: '0.85rem' }}>עד</label>
-                <input type="time" value={offPeak.end} onChange={(e) => setOffPeak((p) => ({ ...p, end: e.target.value }))} />
-              </div>
-            </div>
-
-            <div className="field" style={{ marginTop: 8 }}>
-              <label className="muted" style={{ fontSize: '0.85rem' }}>אחוז ההנחה</label>
-              <div className="row" style={{ gap: 6 }}>
-                {[5, 10, 15, 20].map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setOffPeak((s) => ({ ...s, discountPct: p }))}
-                    className={offPeak.discountPct === p ? 'btn-primary' : 'btn-secondary'}
-                    style={{ padding: '10px 0', fontSize: '0.9rem' }}
-                  >
-                    {p}%
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <p className="muted" style={{ fontSize: '0.78rem', marginTop: 12, marginBottom: 0 }}>
-              💡 לקוחות שיזמינו תור בחלון הזה יראו את ההנחה אוטומטית. המחיר הסופי בתור נשמר אחרי ההנחה.
-            </p>
-          </>
-        )}
       </div>
 
       <div className="card">

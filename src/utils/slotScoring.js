@@ -1,4 +1,4 @@
-import { timeToMin, dayKeyFromDate } from './slots.js';
+import { timeToMin } from './slots.js';
 
 // Smart Slot Engine — picks 1-3 "best" slots for the client based on the
 // barber's day shape. Pure heuristic, no LLM.
@@ -38,28 +38,10 @@ export const SLOT_REASONS = {
     badge: 'שקט',
     tone: 'quiet',
   },
-  'discount': {
-    label: 'הנחה זמינה בשעה הזו',
-    badge: 'חיסכון',
-    tone: 'discount',
-  },
 };
 
 const SAME_TONE_GAP_MIN = 40;
 const MAX_PICKS = 3;
-
-/**
- * Returns true if the slot falls inside the barber's off-peak window.
- * Window shape: { enabled, daysOfWeek[], start "HH:MM", end "HH:MM", discountPct }
- */
-function isInOffPeakWindow(slotTime, selectedDate, win) {
-  if (!win || !win.enabled || !win.discountPct) return false;
-  if (Array.isArray(win.daysOfWeek) && win.daysOfWeek.length > 0) {
-    if (!win.daysOfWeek.includes(dayKeyFromDate(selectedDate))) return false;
-  }
-  const t = timeToMin(slotTime);
-  return t >= timeToMin(win.start) && t < timeToMin(win.end);
-}
 
 /**
  * Score available slots and return up to 3 recommended ones, each tagged
@@ -70,10 +52,9 @@ function isInOffPeakWindow(slotTime, selectedDate, win) {
  * @param {Date} selectedDate
  * @param {Date} now
  * @param {number} duration total minutes for THIS booking
- * @param {Object|null} [offPeakWindow] optional discount window — when set, those slots get a scoring boost
  * @returns {Array<{time, score, reason}>}
  */
-export function getRecommendedSlots(slots, occupied, selectedDate, now, duration, offPeakWindow = null) {
+export function getRecommendedSlots(slots, occupied, selectedDate, now, duration) {
   const available = (slots || []).filter((s) => s.available);
   // Need at least 4 options before "recommending" makes sense — fewer than that,
   // showing all is just as easy.
@@ -127,14 +108,6 @@ export function getRecommendedSlots(slots, occupied, selectedDate, now, duration
     if (nearest >= 90) {
       score += 8;
       if (!reason) reason = 'quiet';
-    }
-
-    // 5. Discount push — only kicks in IF the barber enabled an off-peak
-    // window. The agent never invents a discount; it just amplifies the
-    // barber's strategy.
-    if (isInOffPeakWindow(slot.time, selectedDate, offPeakWindow)) {
-      score += 28;
-      reason = 'discount';
     }
 
     return { time: slot.time, score, reason };

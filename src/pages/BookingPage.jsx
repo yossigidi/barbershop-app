@@ -171,14 +171,9 @@ export default function BookingPage() {
   );
 
   // Smart Slot Engine — pick 1-3 "best" slots based on the day's shape.
-  // Off-peak window (if the barber enabled one) feeds in as a scoring boost,
-  // so the agent amplifies the barber's strategy rather than overriding it.
   const recommended = useMemo(() => {
-    return getRecommendedSlots(
-      slots, occupied, selectedDate, new Date(), totalDuration,
-      barber?.offPeakWindow,
-    );
-  }, [slots, occupied, selectedDate, totalDuration, barber]);
+    return getRecommendedSlots(slots, occupied, selectedDate, new Date(), totalDuration);
+  }, [slots, occupied, selectedDate, totalDuration]);
 
   // Inject "usual time" as the highest-priority recommendation for returning
   // clients (Phase 3) — only if the slot is actually available today.
@@ -211,29 +206,6 @@ export default function BookingPage() {
     return groups.filter((g) => g.items.length > 0);
   }, [slots]);
 
-  // Off-peak discount window — barber configures in settings (Phase 2)
-  const offPeak = useMemo(() => {
-    const win = barber?.offPeakWindow;
-    if (!win || !win.enabled || !win.discountPct) return null;
-    const dayKey = dayKeyFromDate(selectedDate);
-    if (Array.isArray(win.daysOfWeek) && win.daysOfWeek.length > 0
-        && !win.daysOfWeek.includes(dayKey)) return null;
-    return win;
-  }, [barber, selectedDate]);
-
-  function discountFor(time) {
-    if (!offPeak) return 0;
-    const t = timeToMin(time);
-    if (t >= timeToMin(offPeak.start) && t < timeToMin(offPeak.end)) {
-      return Number(offPeak.discountPct) || 0;
-    }
-    return 0;
-  }
-
-  const slotDiscount = pickedTime ? discountFor(pickedTime) : 0;
-  const finalPrice = slotDiscount > 0
-    ? Math.round(totalPrice * (1 - slotDiscount / 100))
-    : totalPrice;
 
   // Today's open status — for the brand-header tagline
   const todayStatus = useMemo(() => {
@@ -324,22 +296,16 @@ export default function BookingPage() {
         .filter((a) => pickedAddonIds.includes(a.id))
         .map((a) => ({ id: a.id, name: a.name, duration: a.duration || 0, price: a.price || 0 }));
 
-      const discountPct = discountFor(time);
-      const priceWithDiscount = discountPct > 0
-        ? Math.round(totalPrice * (1 - discountPct / 100))
-        : totalPrice;
-
       const baseDoc = {
         time,
         duration: totalDuration,
-        price: priceWithDiscount,
+        price: totalPrice,
         serviceId: pickedService.id,
         serviceName: pickedService.name,
         addons: selectedAddons,
         clientName: `${c.firstName} ${c.lastName}`,
         clientPhone: c.phone,
         status: 'booked',
-        ...(discountPct > 0 && { originalPrice: totalPrice, discountPct }),
       };
 
       // Build dates: first one + optional recurring
@@ -745,7 +711,6 @@ export default function BookingPage() {
                 <div className="slots-recommended">
                   {recommendedWithUsual.map((s) => {
                     const r = SLOT_REASONS[s.reason] || SLOT_REASONS.earliest;
-                    const d = discountFor(s.time);
                     return (
                       <div
                         key={s.time}
@@ -755,7 +720,6 @@ export default function BookingPage() {
                         <div className="slot-time-big">{s.time}</div>
                         <div className={`slot-badge tone-${r.tone}`}>{r.badge}</div>
                         <div className="slot-reason">{r.label}</div>
-                        {d > 0 && <div className="slot-discount-pill">חיסכון {d}%</div>}
                       </div>
                     );
                   })}
@@ -776,22 +740,18 @@ export default function BookingPage() {
               <div key={g.key} className="slots-section">
                 <div className="slot-group-label">{g.label}</div>
                 <div className="slots">
-                  {g.items.map((s) => {
-                    const d = discountFor(s.time);
-                    return (
-                      <div
-                        key={s.time}
-                        className={`slot ${pickedTime === s.time ? 'selected' : ''} ${d > 0 ? 'has-discount' : ''}`}
-                        onClick={() => pickSlot(s.time)}
-                      >
-                        <div>{s.time}</div>
-                        {pickedService?.duration > 20 && (
-                          <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
-                        )}
-                        {d > 0 && <span className="slot-discount-tag">-{d}%</span>}
-                      </div>
-                    );
-                  })}
+                  {g.items.map((s) => (
+                    <div
+                      key={s.time}
+                      className={`slot ${pickedTime === s.time ? 'selected' : ''}`}
+                      onClick={() => pickSlot(s.time)}
+                    >
+                      <div>{s.time}</div>
+                      {pickedService?.duration > 20 && (
+                        <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -856,14 +816,7 @@ export default function BookingPage() {
             {totalPrice > 0 && (
               <div className="confirm-row">
                 <span className="confirm-label"><CircleDollarSign size={14} className="icon-inline" />מחיר</span>
-                <strong>
-                  {slotDiscount > 0 ? (
-                    <>
-                      <span style={{ textDecoration: 'line-through', color: 'var(--text-soft)', fontWeight: 500, marginInlineEnd: 8 }}>₪{totalPrice}</span>
-                      ₪{finalPrice} <span style={{ color: 'var(--gold)', fontSize: '0.85rem' }}>(חיסכון {slotDiscount}%)</span>
-                    </>
-                  ) : `₪${totalPrice}`}
-                </strong>
+                <strong>₪{totalPrice}</strong>
               </div>
             )}
             <div className="confirm-row">
