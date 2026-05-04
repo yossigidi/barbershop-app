@@ -31,7 +31,10 @@ export default function PricingPage() {
     setMsg('');
     try {
       const idToken = await user.getIdToken();
-      const r = await fetch('/api/create-payment-link', {
+      // Forward ?test=1 from the page URL to the worker → ₪1 instead of ₪50
+      const isTest = new URLSearchParams(window.location.search).get('test') === '1';
+      const endpoint = isTest ? '/api/create-payment-link?test=1' : '/api/create-payment-link';
+      const r = await fetch(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
       });

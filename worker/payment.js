@@ -52,6 +52,13 @@ export async function handleCreatePaymentLink(request, env) {
 
   const businessName = fieldVal(barberDoc.fields?.businessName) || 'העסק שלי';
 
+  // Test override — when ?test=1 is present, charge ₪1 instead of ₪50.
+  // Used during integration testing to verify the full Tranzila flow with
+  // minimal real money. Remove this branch once tested.
+  const reqUrl = new URL(request.url);
+  const isTest = reqUrl.searchParams.get('test') === '1';
+  const chargeSum = isTest ? 1 : PRICE_NIS;
+
   // Build Tranzila iframe URL.
   // tranmode=VK   = verify + create token (no immediate charge yet, OR small charge)
   // cred_type=8   = "standing order" (recurring) — Tranzila bills monthly via our cron
@@ -59,12 +66,12 @@ export async function handleCreatePaymentLink(request, env) {
   // myid          = our internal barber UID, returned in webhook for matching
   const origin = new URL(request.url).origin;
   const params = new URLSearchParams({
-    sum: String(PRICE_NIS),
+    sum: String(chargeSum),
     currency: '1',                  // 1 = ILS
     cred_type: '8',                 // recurring standing order
     tranmode: 'VK',
     TranzilaTK: '1',
-    pdesc: 'מנוי חודשי Pro — ניהול תורים',
+    pdesc: isTest ? 'בדיקת אינטגרציה — ₪1' : 'מנוי חודשי Pro — ניהול תורים',
     contact: businessName.slice(0, 100),
     email: claims.email || '',
     myid: claims.uid,
