@@ -30,6 +30,10 @@ html, body, #root {
   /* iOS safe area */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+  /* prevent any element from causing horizontal scroll on mobile */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 html { direction: rtl; }
@@ -83,6 +87,9 @@ input:focus { border-color: var(--accent); }
   margin: 0 auto;
   min-height: 100vh;
   padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .header {
@@ -176,7 +183,7 @@ input:focus { border-color: var(--accent); }
 .calendar-badge {
   position: absolute;
   top: -4px;
-  inset-inline-start: -4px;
+  right: -4px;
   background: var(--danger);
   color: white;
   font-size: 0.65rem;
@@ -358,7 +365,7 @@ input:focus { border-color: var(--accent); }
 .service-pkg-pill {
   position: absolute;
   top: 6px;
-  inset-inline-start: 6px;
+  right: 6px;
   background: var(--gold);
   color: white;
   font-size: 0.65rem;
@@ -695,17 +702,17 @@ input:focus { border-color: var(--accent); }
   padding: 12px;
 }
 
-/* Day timeline (visual blocks) */
+/* Day timeline (visual blocks) — explicit RTL: hour labels on right, blocks on left */
 .day-timeline {
   position: relative;
   margin: 12px 0 4px;
-  padding-inline-start: 60px;
-  padding-inline-end: 4px;
+  padding-right: 56px;
+  padding-left: 4px;
 }
 .dt-hour {
   position: absolute;
-  inset-inline-start: 0;
-  inset-inline-end: 0;
+  right: 0;
+  left: 0;
   height: 0;
   pointer-events: none;
   z-index: 0;
@@ -714,17 +721,16 @@ input:focus { border-color: var(--accent); }
   position: absolute;
   font-size: 0.7rem;
   color: var(--text-dim);
-  inset-inline-start: 0;
+  right: 0;
   top: -8px;
   width: 50px;
   text-align: center;
 }
 .dt-hour-line {
   border-top: 1px dashed rgba(0,0,0,0.06);
-  margin-inline-start: 56px;
   position: absolute;
-  inset-inline-start: 0;
-  inset-inline-end: 0;
+  right: 56px;
+  left: 0;
   top: 0;
 }
 .dt-booking,
@@ -732,8 +738,8 @@ input:focus { border-color: var(--accent); }
 .dt-break,
 .dt-free {
   position: absolute;
-  inset-inline-start: 56px;
-  inset-inline-end: 4px;
+  right: 56px;
+  left: 4px;
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 0.85rem;
@@ -915,7 +921,7 @@ input:focus { border-color: var(--accent); }
 .nav-badge {
   position: absolute;
   top: 4px;
-  inset-inline-end: 18%;
+  left: 18%;
   background: var(--danger);
   color: white;
   font-size: 0.65rem;
