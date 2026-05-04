@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowLeft, Sparkles, Tag, XCircle } from 'lucide-react';
+import { Check, ArrowLeft, Sparkles, Tag, XCircle, Gift, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -24,16 +24,20 @@ export default function PricingPage() {
 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [showCommitmentTerms, setShowCommitmentTerms] = useState(false);
 
-  async function startCheckout() {
+  async function startCheckout(plan = 'monthly') {
     if (!user) return;
     setBusy(true);
     setMsg('');
     try {
       const idToken = await user.getIdToken();
-      // Forward ?test=1 from the page URL to the worker → ₪1 instead of ₪50
       const isTest = new URLSearchParams(window.location.search).get('test') === '1';
-      const endpoint = isTest ? '/api/create-payment-link?test=1' : '/api/create-payment-link';
+      const params = new URLSearchParams();
+      if (isTest) params.set('test', '1');
+      if (plan === 'studio') params.set('plan', 'studio');
+      const queryString = params.toString();
+      const endpoint = '/api/create-payment-link' + (queryString ? `?${queryString}` : '');
       const r = await fetch(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
@@ -153,45 +157,88 @@ export default function PricingPage() {
         </div>
       )}
 
-      <div className="card card-feature">
-        <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 700 }}>Pro</h2>
-        <p className="muted" style={{ margin: '4px 0 16px', fontSize: '0.9rem' }}>הכל פתוח. בלי מגבלות.</p>
+      <div className="pricing-grid">
 
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 18 }}>
-          <span style={{ fontSize: '3rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--gold)', lineHeight: 1 }}>
-            ₪{PRICE_NIS}
-          </span>
-          <span className="muted" style={{ fontSize: '1rem' }}>/חודש</span>
+        {/* Pro Monthly — flexible */}
+        <div className="card pricing-plan-card">
+          <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 700 }}>Pro חודשי</h2>
+          <p className="muted" style={{ margin: '4px 0 16px', fontSize: '0.9rem' }}>גמיש. בלי התחייבות.</p>
+
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 18 }}>
+            <span style={{ fontSize: '2.6rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--gold)', lineHeight: 1 }}>
+              ₪{PRICE_NIS}
+            </span>
+            <span className="muted" style={{ fontSize: '1rem' }}>/חודש</span>
+          </div>
+
+          <ul className="pricing-features">
+            <li><Check size={16} />יומן בלתי מוגבל</li>
+            <li><Check size={16} />הזמנות אונליין מלקוחות</li>
+            <li><Check size={16} />תזכורות וואטסאפ</li>
+            <li><Check size={16} />סוכן חכם</li>
+            <li><Check size={16} />דוחות מלאים</li>
+            <li><Check size={16} />ביטול בכל זמן</li>
+          </ul>
+
+          <button
+            className="btn-secondary"
+            style={{ width: '100%', fontSize: '0.98rem', padding: '13px' }}
+            onClick={() => startCheckout('monthly')}
+            disabled={busy || (access.granted && access.reason !== 'trial' && access.reason !== 'no-sub' && access.reason !== 'expired')}
+          >
+            {busy ? 'פותח…' :
+              (access.reason === 'active'
+                ? 'מנוי פעיל'
+                : `התחל — ₪${PRICE_NIS}/חודש`)}
+          </button>
+          <p className="muted text-center" style={{ fontSize: '0.74rem', marginTop: 8, marginBottom: 0 }}>
+            ביטול חופשי. בלי טאבלט.
+          </p>
         </div>
 
-        <ul className="pricing-features">
-          <li><Check size={16} />יומן בלתי מוגבל</li>
-          <li><Check size={16} />הזמנות אונליין מלקוחות (לינק ציבורי)</li>
-          <li><Check size={16} />תזכורות וואטסאפ אוטומטיות</li>
-          <li><Check size={16} />סוכן חכם לסידור היום</li>
-          <li><Check size={16} />ביקורות בגוגל אוטומטיות</li>
-          <li><Check size={16} />דוחות + סטטיסטיקות</li>
-          <li><Check size={16} />Push notifications לטלפון</li>
-          <li><Check size={16} />ביטול בכל זמן</li>
-        </ul>
+        {/* Studio — committed + tablet */}
+        <div className="card pricing-plan-card pricing-plan-card--featured">
+          <div className="pricing-badge">🎁 הכי שווה</div>
+          <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 700 }}>Studio</h2>
+          <p className="muted" style={{ margin: '4px 0 16px', fontSize: '0.9rem' }}>התחייבות לשנתיים</p>
 
-        <button
-          className="btn-gold"
-          style={{ width: '100%', fontSize: '1.05rem', padding: '15px' }}
-          onClick={startCheckout}
-          disabled={busy || (access.granted && access.reason !== 'trial' && access.reason !== 'no-sub' && access.reason !== 'expired')}
-        >
-          <Sparkles size={18} className="icon-inline" />
-          {busy ? 'פותח תשלום…' :
-            (access.reason === 'trial' || access.reason === 'no-sub' || access.reason === 'expired'
-              ? `התחל חיוב — ₪${PRICE_NIS}/חודש`
-              : access.reason === 'active'
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: '2.6rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--gold)', lineHeight: 1 }}>
+              ₪{PRICE_NIS}
+            </span>
+            <span className="muted" style={{ fontSize: '1rem' }}>/חודש</span>
+          </div>
+          <p className="muted" style={{ margin: '0 0 14px', fontSize: '0.85rem', color: 'var(--gold-deep)' }}>
+            <Gift size={14} className="icon-inline" />כולל טאבלט מקצועי במתנה
+          </p>
+
+          <ul className="pricing-features">
+            <li><Check size={16} />כל מה שיש ב-Pro</li>
+            <li><Gift size={16} style={{ color: 'var(--gold)' }} />טאבלט 10/11 אינץ׳ + סטנד</li>
+            <li><Gift size={16} style={{ color: 'var(--gold)' }} />משלוח חינם</li>
+            <li><Gift size={16} style={{ color: 'var(--gold)' }} />הגדרה מראש</li>
+            <li><Calendar size={16} />התחייבות לשנתיים</li>
+          </ul>
+
+          <button
+            className="btn-gold"
+            style={{ width: '100%', fontSize: '1.02rem', padding: '14px' }}
+            onClick={() => startCheckout('studio')}
+            disabled={busy || (access.granted && access.reason === 'active')}
+          >
+            <Sparkles size={18} className="icon-inline" />
+            {busy ? 'פותח…' :
+              (access.reason === 'active' && access.status === 'studio-24'
                 ? 'מנוי פעיל'
-                : `שדרג ל-Pro — ₪${PRICE_NIS}/חודש`)}
-        </button>
-        <p className="muted text-center" style={{ fontSize: '0.78rem', marginTop: 10, marginBottom: 0 }}>
-          חיוב חודשי. ביטול בכל זמן מהדף הזה. בלי התחייבות.
-        </p>
+                : 'הזמן את החבילה')}
+          </button>
+          <p className="muted text-center" style={{ fontSize: '0.74rem', marginTop: 8, marginBottom: 0 }}>
+            <a onClick={() => setShowCommitmentTerms(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>
+              פרטי התחייבות »
+            </a>
+          </p>
+        </div>
+
       </div>
 
       <div className="card">
@@ -230,6 +277,48 @@ export default function PricingPage() {
           <strong>טריאל ראשון:</strong> כל ספר/ית חדש/ה מקבל/ת {TRIAL_DAYS} ימי שימוש מלאים בחינם, ללא צורך בכרטיס אשראי. אחרי תקופת הניסיון, חיוב חודשי דרך Tranzila עם חשבונית-מס אוטומטית.
         </p>
       </div>
+
+      <div className="legal-footer">
+        <a onClick={() => navigate('/terms')}>תקנון השירות</a>
+        <span>·</span>
+        <a onClick={() => navigate('/accessibility')}>נגישות</a>
+      </div>
+
+      {showCommitmentTerms && (
+        <div className="modal-backdrop" onClick={() => setShowCommitmentTerms(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+            <h2><Calendar size={20} className="icon-inline" />פרטי התחייבות לשנתיים</h2>
+            <div style={{ fontSize: '0.92rem', lineHeight: 1.7 }}>
+              <p style={{ margin: '0 0 12px' }}>
+                המסלול כולל טאבלט מקצועי במתנה (10/11 אינץ׳, סטנד והגדרה ראשונית).
+                התחייבות לתשלום של ₪50/חודש למשך 24 חודשים.
+              </p>
+              <p style={{ margin: '0 0 12px' }}>
+                <strong>סך התחייבות:</strong> ₪1,200 (לפני מע"מ נכלל).
+              </p>
+              <p style={{ margin: '0 0 12px' }}>
+                <strong>ביטול:</strong> ניתן בכל זמן בתשלום דמי יציאה — ₪30 לכל
+                חודש שנותר עד תום ההתחייבות. הטאבלט נשאר אצלך.
+              </p>
+              <p style={{ margin: '0 0 12px' }}>
+                <strong>תקופת צינון:</strong> 14 יום ממועד הקבלה (החזר מלא בכפוף
+                להחזרת הטאבלט באריזה מקורית, ללא שימוש).
+              </p>
+              <p style={{ margin: '0 0 12px' }}>
+                <strong>אחרי 24 חודשים:</strong> ממשיך ב-₪50/חודש ללא התחייבות,
+                ניתן לבטל בכל זמן ללא קנס.
+              </p>
+              <p className="muted" style={{ fontSize: '0.82rem', margin: '14px 0 0' }}>
+                התקנון המלא ב-<a onClick={() => navigate('/terms')} style={{ cursor: 'pointer', textDecoration: 'underline' }}>עמוד התקנון</a>.
+              </p>
+            </div>
+            <div className="spacer" />
+            <button className="btn-secondary" onClick={() => setShowCommitmentTerms(false)} style={{ width: '100%' }}>
+              הבנתי
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

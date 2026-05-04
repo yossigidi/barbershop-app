@@ -1947,6 +1947,51 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 }
 
 /* ─── Pricing page ──────────────────────────────────────────────────────── */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (min-width: 700px) {
+  .pricing-grid { grid-template-columns: 1fr 1.05fr; }
+}
+.pricing-plan-card {
+  margin-bottom: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.pricing-plan-card--featured {
+  border: 2px solid var(--gold);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, var(--gold-soft), transparent 70%),
+    var(--surface);
+  box-shadow: 0 8px 24px rgba(184, 137, 58, 0.16);
+}
+.pricing-plan-card--featured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+}
+.pricing-badge {
+  position: absolute;
+  top: -10px;
+  inset-inline-start: 16px;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold), var(--gold-deep));
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 10px rgba(184, 137, 58, 0.30);
+}
 .pricing-features {
   list-style: none;
   margin: 0 0 18px;
@@ -1954,6 +1999,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   display: grid;
   gap: 8px;
   font-size: 0.95rem;
+  flex: 1;
 }
 .pricing-features li {
   display: flex;
@@ -1963,6 +2009,71 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .pricing-features li svg {
   flex: none;
   color: var(--gold);
+}
+
+/* Legal pages — Terms + Accessibility */
+.legal-page .legal-content {
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.legal-page section {
+  margin: 22px 0;
+}
+.legal-page h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+}
+.legal-page h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 14px 0 6px;
+  color: var(--text);
+}
+.legal-page ul, .legal-page ol {
+  padding-inline-start: 22px;
+  margin: 8px 0;
+}
+.legal-page li { margin: 4px 0; }
+.legal-page p { margin: 8px 0; }
+.legal-page .legal-note {
+  background: var(--gold-soft);
+  border-inline-start: 3px solid var(--gold);
+  padding: 12px 14px;
+  margin: 14px 0;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+.legal-page code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.88em;
+}
+
+.legal-footer {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.legal-footer a {
+  color: var(--text-dim);
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px dotted transparent;
+}
+.legal-footer a:hover {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
 }
 
 /* Honor user motion preference */
