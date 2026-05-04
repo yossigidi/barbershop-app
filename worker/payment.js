@@ -76,8 +76,12 @@ export async function handleCreatePaymentLink(request, env) {
     pdesc: isTest ? 'בדיקת אינטגרציה — ₪1' : 'מנוי חודשי Pro — ניהול תורים',
     contact: businessName.slice(0, 100),
     email: claims.email || '',
-    lang: 'il',
-    nologo: '1',
+    // Removed `lang: 'il'` — Tranzila's Hebrew iframe template is more
+    // minimal and renders RTL labels poorly. The English iframe shows the
+    // Tranzila green logo + security badges (3D Secure / Firewall / SSL /
+    // PCI Level 1) which are valuable trust signals for the customer.
+    // Removed `nologo: '1'` for the same reason — we WANT Tranzila's logo
+    // visible to reassure the customer about who's processing the payment.
     // Custom field — returned to us in the webhook for matching the user.
     // NOT `myid` (Tranzila reserves that as the Israeli ID field — using it
     // would auto-fill the ID box on the form with our Firebase UID).
