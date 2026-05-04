@@ -150,23 +150,7 @@ export default function SettingsPage() {
   const access = getAccessState(barberData);
   if (!access.granted) return <PaywallModal access={access} />;
 
-  async function cancelSubscription() {
-    if (!confirm('לבטל את המנוי? תשמור על גישה עד סוף תקופת התשלום הנוכחית, ולא תחויב יותר.')) return;
-    try {
-      const idToken = await user.getIdToken();
-      const r = await fetch('/api/cancel-subscription', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || 'הביטול נכשל');
-      alert('המנוי בוטל. תהיה לך גישה עד ' + new Date(data.accessUntil).toLocaleDateString('he-IL'));
-      window.location.reload();
-    } catch (e) {
-      alert('שגיאה: ' + e.message);
-    }
-  }
-
+  // Subscription management lives on /pricing — settings just shows status.
   const sub = barberData?.subscription || {};
   const periodEnd = sub.currentPeriodEnd?.toDate
     ? sub.currentPeriodEnd.toDate()
@@ -181,41 +165,24 @@ export default function SettingsPage() {
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />מנוי</h3>
-        {access.reason === 'grandfathered' && (
-          <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
-            🎁 משתמש/ת ותיק/ה — הגישה חינם לתמיד.
-          </p>
-        )}
-        {access.reason === 'trial' && (
-          <>
-            <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.9rem' }}>
-              נותרו <strong>{access.daysLeft}</strong> ימי ניסיון. אחרי כן ייתחיל חיוב חודשי של ₪50.
-            </p>
-            <button className="btn-gold" style={{ width: '100%' }} onClick={() => navigate('/pricing')}>
-              <Sparkles size={16} className="icon-inline" />שדרג עכשיו
-            </button>
-          </>
-        )}
-        {access.reason === 'active' && (
-          <>
-            <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.9rem' }}>
-              ✓ מנוי פעיל. החיוב הבא: <strong>{periodEnd?.toLocaleDateString('he-IL')}</strong>
-              {sub.last4 && <> (כרטיס {sub.last4})</>}
-            </p>
-            <button className="btn-secondary" style={{ width: '100%' }} onClick={cancelSubscription}>
-              <XCircle size={16} className="icon-inline" />ביטול מנוי
-            </button>
-          </>
-        )}
-        {access.reason === 'cancelled-pending' && (
-          <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
-            ⏳ המנוי בוטל. גישה עד <strong>{periodEnd?.toLocaleDateString('he-IL')}</strong>, ואז ייסגר אוטומטית.
-          </p>
-        )}
-        {access.reason === 'past-due-grace' && (
-          <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--danger)' }}>
-            ⚠ בעיה בחיוב — מנסה שוב יומית. עדכן/י כרטיס ב-<a href="/pricing" style={{ textDecoration: 'underline' }}>עמוד התשלום</a>.
-          </p>
+        <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.9rem' }}>
+          {access.reason === 'grandfathered' && '🎁 משתמש/ת ותיק/ה — הגישה חינם לתמיד.'}
+          {access.reason === 'trial' && <>תקופת ניסיון — נותרו <strong>{access.daysLeft}</strong> ימים.</>}
+          {access.reason === 'active' && (
+            <>✓ מנוי פעיל. החיוב הבא: <strong>{periodEnd?.toLocaleDateString('he-IL')}</strong>
+            {sub.last4 && <> (כרטיס {sub.last4})</>}</>
+          )}
+          {access.reason === 'cancelled-pending' && (
+            <>⏳ המנוי בוטל. גישה עד <strong>{periodEnd?.toLocaleDateString('he-IL')}</strong>.</>
+          )}
+          {access.reason === 'past-due-grace' && (
+            <span style={{ color: 'var(--danger)' }}>⚠ בעיה בחיוב — מנסה שוב יומית.</span>
+          )}
+        </p>
+        {access.reason !== 'grandfathered' && (
+          <button className="btn-secondary" style={{ width: '100%' }} onClick={() => navigate('/pricing')}>
+            <Sparkles size={14} className="icon-inline" />ניהול מנוי וחיוב →
+          </button>
         )}
       </div>
 

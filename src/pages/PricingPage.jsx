@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowLeft, Sparkles, Tag } from 'lucide-react';
+import { Check, ArrowLeft, Sparkles, Tag, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -48,6 +48,28 @@ export default function PricingPage() {
     }
   }
 
+  async function cancelSubscription() {
+    if (!confirm('לבטל את המנוי? תשמור על גישה עד סוף תקופת התשלום הנוכחית, ולא תחויב יותר.')) return;
+    if (!user) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      const idToken = await user.getIdToken();
+      const r = await fetch('/api/cancel-subscription', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'הביטול נכשל');
+      const accessUntil = data.accessUntil ? new Date(data.accessUntil).toLocaleDateString('he-IL') : '';
+      setMsg(`✓ המנוי בוטל. גישה עד ${accessUntil}.`);
+    } catch (e) {
+      setMsg('שגיאה: ' + e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function applyPromo() {
     const code = (promo || '').trim().toUpperCase();
     if (!code || !user) return;
@@ -88,9 +110,46 @@ export default function PricingPage() {
           <p className="muted" style={{ margin: '4px 0 0', fontSize: '0.9rem' }}>
             {access.reason === 'grandfathered' && 'את/ה משתמש/ת ותיק/ה — הגישה חינם לתמיד 🎁'}
             {access.reason === 'trial' && `נותרו ${access.daysLeft} ימים בתקופת הניסיון.`}
-            {access.reason === 'active' && `המנוי שלך פעיל. החיוב הבא בעוד ${access.daysLeft} ימים.`}
+            {access.reason === 'active' && (() => {
+              const sub = barber?.subscription || {};
+              const periodEnd = sub.currentPeriodEnd?.toDate
+                ? sub.currentPeriodEnd.toDate()
+                : (sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : null);
+              const dateStr = periodEnd?.toLocaleDateString('he-IL') || '';
+              return (
+                <>
+                  המנוי שלך פעיל. החיוב הבא: <strong>{dateStr}</strong>
+                  {sub.last4 && <> (כרטיס {sub.last4})</>}
+                </>
+              );
+            })()}
+            {access.reason === 'cancelled-pending' && (() => {
+              const sub = barber?.subscription || {};
+              const periodEnd = sub.currentPeriodEnd?.toDate
+                ? sub.currentPeriodEnd.toDate()
+                : (sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : null);
+              return <>המנוי בוטל. גישה עד <strong>{periodEnd?.toLocaleDateString('he-IL')}</strong>.</>;
+            })()}
             {access.reason === 'cancelled-grace' && `המנוי בוטל. עוד ${access.daysLeft} ימי גישה ואז ייסגר.`}
           </p>
+        </div>
+      )}
+
+      {/* Cancel subscription — visible only when actively paying */}
+      {access.reason === 'active' && (
+        <div className="card" style={{ borderColor: 'rgba(220, 38, 38, 0.20)' }}>
+          <h3 style={{ marginTop: 0 }}>ביטול מנוי</h3>
+          <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+            תשמור על גישה עד סוף תקופת התשלום הנוכחית. אחרי כן האפליקציה תינעל ולא תחויב יותר.
+          </p>
+          <button
+            className="btn-danger"
+            style={{ width: '100%' }}
+            onClick={cancelSubscription}
+            disabled={busy}
+          >
+            <XCircle size={16} className="icon-inline" />{busy ? 'מבטל…' : 'ביטול מנוי'}
+          </button>
         </div>
       )}
 
@@ -131,7 +190,7 @@ export default function PricingPage() {
                 : `שדרג ל-Pro — ₪${PRICE_NIS}/חודש`)}
         </button>
         <p className="muted text-center" style={{ fontSize: '0.78rem', marginTop: 10, marginBottom: 0 }}>
-          חיוב חודשי. ביטול בכל זמן בהגדרות. בלי התחייבות.
+          חיוב חודשי. ביטול בכל זמן מהדף הזה. בלי התחייבות.
         </p>
       </div>
 
