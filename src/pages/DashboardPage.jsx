@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import {
   collection, doc, onSnapshot, query, updateDoc, where,
-  addDoc, deleteDoc, getDocs, arrayUnion, arrayRemove, serverTimestamp,
+  addDoc, deleteDoc, getDocs, setDoc, arrayUnion, arrayRemove, serverTimestamp,
 } from 'firebase/firestore';
 import {
   dateToISO, formatDateHe, nextNDays, DAY_LABELS_HE, dayKeyFromDate,
@@ -25,6 +25,7 @@ import QrModal from '../components/QrModal.jsx';
 import DayTimeline from '../components/DayTimeline.jsx';
 import BookingActionSheet from '../components/BookingActionSheet.jsx';
 import TomorrowReminders from '../components/TomorrowReminders.jsx';
+import QuickBookModal from '../components/QuickBookModal.jsx';
 import MorningSummaryCard from '../components/MorningSummaryCard.jsx';
 import BreakSuggestions from '../components/BreakSuggestions.jsx';
 import WeeklyReportCard from '../components/WeeklyReportCard.jsx';
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   const [showTomorrow, setShowTomorrow] = useState(false);
   const [showYesterday, setShowYesterday] = useState(false);
   const [actionFor, setActionFor] = useState(null);
+  const [quickBook, setQuickBook] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -183,6 +185,28 @@ export default function DashboardPage() {
       });
     } catch (e) { alert('שגיאה: ' + e.message); }
   }
+  async function quickBookSlot({ date, time, duration, clientName, clientPhone }) {
+    await addDoc(collection(db, 'barbers', user.uid, 'bookings'), {
+      date,
+      time,
+      duration,
+      clientName,
+      clientPhone: clientPhone || '',
+      status: 'booked',
+      serviceName: '',
+      price: barber.defaultPrice || 0,
+      createdAt: serverTimestamp(),
+    });
+    if (clientPhone) {
+      const parts = clientName.split(/\s+/);
+      await setDoc(doc(db, 'barbers', user.uid, 'clients', clientPhone), {
+        firstName: parts[0] || clientName,
+        lastName: parts.slice(1).join(' ') || '',
+        phone: clientPhone,
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+    }
+  }
   async function unblockSlot(blockId) {
     try { await deleteDoc(doc(db, 'barbers', user.uid, 'blocks', blockId)); }
     catch (e) { alert('שגיאה: ' + e.message); }
@@ -306,7 +330,7 @@ export default function DashboardPage() {
           bookings={todayBookings}
           blocks={todayBlocks}
           onBookingTap={(b) => setActionFor(b)}
-          onFreeSlotTap={(time) => { if (confirm(`לחסום את השעה ${time}?`)) blockSlot(time, todayISO); }}
+          onFreeSlotTap={(time) => setQuickBook({ time, date: todayISO })}
           onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
         />
       </>
@@ -343,7 +367,7 @@ export default function DashboardPage() {
             bookings={dayBookings}
             blocks={dayBlocks}
             onBookingTap={(b) => setActionFor(b)}
-            onFreeSlotTap={(time) => { if (confirm(`לחסום את השעה ${time}?`)) blockSlot(time, selectedISO); }}
+            onFreeSlotTap={(time) => setQuickBook({ time, date: selectedISO })}
             onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
           />
         </div>
@@ -492,6 +516,14 @@ export default function DashboardPage() {
           onComplete={() => completeBooking(actionFor)}
           onEdit={() => setRescheduling(actionFor)}
           onCancel={() => cancelBooking(actionFor)}
+        />
+      )}
+      {quickBook && (
+        <QuickBookModal
+          slot={quickBook}
+          onClose={() => setQuickBook(null)}
+          onBook={quickBookSlot}
+          onBlock={(s) => blockSlot(s.time, s.date)}
         />
       )}
       {vacationSaved && (
