@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { dayKeyFromDate, timeToMin, minToTime, addMinToTime } from '../utils/slots';
 
-const PX_PER_MIN = 1.6;
+const PX_PER_MIN = 1.0; // 60 min = 60 px tall — compact mobile-first
 
 export default function DayTimeline({ date, workingHours, bookings, blocks, onBookingTap, onFreeSlotTap, onBlockTap }) {
   const dayKey = dayKeyFromDate(date);

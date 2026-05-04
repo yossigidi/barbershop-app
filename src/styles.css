@@ -130,7 +130,7 @@ input:focus { border-color: var(--accent); }
 .calendar-row,
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
 }
 .calendar-headers {
@@ -145,6 +145,10 @@ input:focus { border-color: var(--accent); }
 .calendar-cell {
   position: relative;
   aspect-ratio: 1;
+  max-width: 64px;
+  max-height: 64px;
+  margin: 0 auto;
+  width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -153,7 +157,7 @@ input:focus { border-color: var(--accent); }
   justify-content: center;
   cursor: pointer;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text);
   padding: 0;
@@ -200,7 +204,7 @@ input:focus { border-color: var(--accent); }
 
 .slots {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .slot {
@@ -310,7 +314,7 @@ input:focus { border-color: var(--accent); }
 
 .service-list {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 .service-card {
@@ -508,7 +512,7 @@ input:focus { border-color: var(--accent); }
 }
 .morning-stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -574,7 +578,7 @@ input:focus { border-color: var(--accent); }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .stat-cell {
