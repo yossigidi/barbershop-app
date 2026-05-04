@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ArrowLeft, Sparkles, Tag, XCircle, Gift, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -25,6 +25,21 @@ export default function PricingPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [showCommitmentTerms, setShowCommitmentTerms] = useState(false);
+  const [showCancelStudio, setShowCancelStudio] = useState(false);
+
+  // Live exit-fee calculation for committed (Studio) plans
+  const sub = barber?.subscription || {};
+  const isStudioActive = sub.plan === 'studio-24' && sub.status === 'active';
+  const studioExit = useMemo(() => {
+    if (!isStudioActive) return null;
+    const commitEnd = sub.commitmentEndsAt?.toDate
+      ? sub.commitmentEndsAt.toDate()
+      : (sub.commitmentEndsAt ? new Date(sub.commitmentEndsAt) : null);
+    if (!commitEnd) return null;
+    const monthsLeft = Math.max(0, Math.ceil((commitEnd - new Date()) / (30 * 86_400_000)));
+    const perMonth = Number(sub.exitFeePerMonth) || 30;
+    return { monthsLeft, perMonth, fee: monthsLeft * perMonth, commitEnd };
+  }, [sub, isStudioActive]);
 
   async function startCheckout(plan = 'monthly') {
     if (!user) return;
@@ -53,6 +68,12 @@ export default function PricingPage() {
   }
 
   async function cancelSubscription() {
+    // Studio plan goes through the dedicated exit-fee modal — see
+    // confirmCancelStudio. This function only handles flexible monthly.
+    if (sub.plan === 'studio-24') {
+      setShowCancelStudio(true);
+      return;
+    }
     if (!confirm('לבטל את המנוי? תשמור על גישה עד סוף תקופת התשלום הנוכחית, ולא תחויב יותר.')) return;
     if (!user) return;
     setBusy(true);
@@ -67,6 +88,27 @@ export default function PricingPage() {
       if (!r.ok) throw new Error(data.error || 'הביטול נכשל');
       const accessUntil = data.accessUntil ? new Date(data.accessUntil).toLocaleDateString('he-IL') : '';
       setMsg(`✓ המנוי בוטל. גישה עד ${accessUntil}.`);
+    } catch (e) {
+      setMsg('שגיאה: ' + e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmCancelStudio() {
+    if (!user || !studioExit) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      const idToken = await user.getIdToken();
+      const r = await fetch('/api/cancel-studio', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'הביטול נכשל');
+      setMsg(`✓ המנוי בוטל. חויבת בסך ₪${data.exitFeePaid} דמי יציאה.`);
+      setShowCancelStudio(false);
     } catch (e) {
       setMsg('שגיאה: ' + e.message);
     } finally {
@@ -143,9 +185,16 @@ export default function PricingPage() {
       {access.reason === 'active' && (
         <div className="card" style={{ borderColor: 'rgba(220, 38, 38, 0.20)' }}>
           <h3 style={{ marginTop: 0 }}>ביטול מנוי</h3>
-          <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
-            תשמור על גישה עד סוף תקופת התשלום הנוכחית. אחרי כן האפליקציה תינעל ולא תחויב יותר.
-          </p>
+          {sub.plan === 'studio-24' && studioExit ? (
+            <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+              המסלול שלך כולל התחייבות לשנתיים. ביטול מוקדם כרוך בדמי יציאה
+              של <strong>₪{studioExit.fee}</strong> ({studioExit.monthsLeft} חודשים נותרו × ₪{studioExit.perMonth}).
+            </p>
+          ) : (
+            <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+              תשמור על גישה עד סוף תקופת התשלום הנוכחית. אחרי כן האפליקציה תינעל ולא תחויב יותר.
+            </p>
+          )}
           <button
             className="btn-danger"
             style={{ width: '100%' }}
@@ -283,6 +332,61 @@ export default function PricingPage() {
         <span>·</span>
         <a onClick={() => navigate('/accessibility')}>נגישות</a>
       </div>
+
+      {showCancelStudio && studioExit && (
+        <div className="modal-backdrop" onClick={() => !busy && setShowCancelStudio(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+            <h2><XCircle size={20} className="icon-inline" style={{ color: 'var(--danger)' }} />ביטול מנוי Studio</h2>
+            <p className="muted" style={{ marginTop: -6, fontSize: '0.92rem' }}>
+              המסלול שלך הוא בהתחייבות לשנתיים. כדי לבטל לפני תום ההתחייבות,
+              עליך לשלם דמי יציאה.
+            </p>
+
+            <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 16, margin: '14px 0' }}>
+              <div className="row" style={{ marginBottom: 8 }}>
+                <span className="muted">חודשים שנותרו עד תום ההתחייבות:</span>
+                <strong style={{ flex: 'none', textAlign: 'end' }}>{studioExit.monthsLeft}</strong>
+              </div>
+              <div className="row" style={{ marginBottom: 8 }}>
+                <span className="muted">דמי יציאה לחודש:</span>
+                <strong style={{ flex: 'none', textAlign: 'end' }}>₪{studioExit.perMonth}</strong>
+              </div>
+              <div className="row" style={{ paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                <strong>סה"כ לתשלום:</strong>
+                <strong style={{ flex: 'none', textAlign: 'end', fontSize: '1.4rem', color: 'var(--danger)', fontFamily: 'var(--font-display)' }}>
+                  ₪{studioExit.fee}
+                </strong>
+              </div>
+            </div>
+
+            <p className="muted" style={{ fontSize: '0.82rem', lineHeight: 1.5, margin: '12px 0' }}>
+              בלחיצה על "אישור" — נחייב את הכרטיס השמור שלך ב-₪{studioExit.fee}, נסיים את החיובים החודשיים, וזה ייכנס לתוקף מיידית. הטאבלט נשאר אצלך.
+            </p>
+
+            {msg && (
+              <p style={{ fontSize: '0.88rem', color: msg.startsWith('✓') ? 'var(--success)' : 'var(--danger)', fontWeight: 600, margin: '8px 0' }}>{msg}</p>
+            )}
+
+            <div className="spacer" />
+            <button
+              className="btn-danger"
+              onClick={confirmCancelStudio}
+              disabled={busy}
+              style={{ width: '100%', marginBottom: 8 }}
+            >
+              {busy ? 'מחייב…' : `אישור — חייב כרטיס ב-₪${studioExit.fee} ובטל`}
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => setShowCancelStudio(false)}
+              disabled={busy}
+              style={{ width: '100%' }}
+            >
+              ביטול
+            </button>
+          </div>
+        </div>
+      )}
 
       {showCommitmentTerms && (
         <div className="modal-backdrop" onClick={() => setShowCommitmentTerms(false)}>

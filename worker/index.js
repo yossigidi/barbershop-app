@@ -9,7 +9,7 @@
 import { handleNotify } from './notify.js';
 import {
   handleCreatePaymentLink, handleTranzilaWebhook, handleCancelSubscription,
-  handleTranzilaSuccess, handleTranzilaFail,
+  handleCancelStudio, handleTranzilaSuccess, handleTranzilaFail,
 } from './payment.js';
 import { handleRedeemPromo } from './promo.js';
 import { handleCronBilling } from './cron.js';
@@ -21,6 +21,7 @@ const apiHandlers = {
   '/api/tranzila-success': handleTranzilaSuccess,
   '/api/tranzila-fail': handleTranzilaFail,
   '/api/cancel-subscription': handleCancelSubscription,
+  '/api/cancel-studio': handleCancelStudio,
   '/api/redeem-promo': handleRedeemPromo,
 };
 

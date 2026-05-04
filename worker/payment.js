@@ -20,6 +20,8 @@ const TRANZILA_BASE = 'https://direct.tranzila.com';
 // Single source of truth for plan price + cycle
 const PRICE_NIS = 50;
 const RENEWAL_DAYS = 30;
+const STUDIO_INSTALLMENTS = 24;       // 2-year commitment
+const STUDIO_EXIT_FEE_PER_MONTH = 30; // ₪ per remaining month on early cancel
 
 // ─── POST /api/create-payment-link ────────────────────────────────────────
 export async function handleCreatePaymentLink(request, env) {
@@ -52,11 +54,10 @@ export async function handleCreatePaymentLink(request, env) {
 
   const businessName = fieldVal(barberDoc.fields?.businessName) || 'העסק שלי';
 
-  // Test override — when ?test=1 is present, charge ₪1 instead of ₪50.
-  // Used during integration testing to verify the full Tranzila flow with
-  // minimal real money. Remove this branch once tested.
+  // Plan + test override flags from query string
   const reqUrl = new URL(request.url);
   const isTest = reqUrl.searchParams.get('test') === '1';
+  const isStudio = reqUrl.searchParams.get('plan') === 'studio';
   const chargeSum = isTest ? 1 : PRICE_NIS;
 
   // Build Tranzila iframe URL.
@@ -65,33 +66,40 @@ export async function handleCreatePaymentLink(request, env) {
   // TranzilaTK=1  = issue token in response so we can charge again next cycle
   // myid          = our internal barber UID, returned in webhook for matching
   const origin = new URL(request.url).origin;
-  // Match the Engleez pattern: cred_type=1 (regular charge) + TranzilaTK=1
-  // (issue token for future cron-based monthly charges). The recurring is
-  // handled by our daily cron (worker/cron.js), not by Tranzila itself.
-  const params = new URLSearchParams({
-    sum: chargeSum.toFixed(2),
-    currency: '1',
-    cred_type: '1',
-    TranzilaTK: '1',
-    pdesc: isTest ? 'בדיקת אינטגרציה — ₪1' : 'מנוי חודשי Pro — ניהול תורים',
-    contact: businessName.slice(0, 100),
-    email: claims.email || '',
-    // Removed `lang: 'il'` — Tranzila's Hebrew iframe template is more
-    // minimal and renders RTL labels poorly. The English iframe shows the
-    // Tranzila green logo + security badges (3D Secure / Firewall / SSL /
-    // PCI Level 1) which are valuable trust signals for the customer.
-    // Removed `nologo: '1'` for the same reason — we WANT Tranzila's logo
-    // visible to reassure the customer about who's processing the payment.
-    // Custom field — returned to us in the webhook for matching the user.
-    // NOT `myid` (Tranzila reserves that as the Israeli ID field — using it
-    // would auto-fill the ID box on the form with our Firebase UID).
-    firebaseUid: claims.uid,
-    notify_url_address: `${origin}/api/tranzila-webhook`,
-    // Tranzila POSTs to success/fail URLs — SPAs can't handle POST.
-    // Route through worker endpoints that 302-redirect to the SPA.
-    success_url_address: `${origin}/api/tranzila-success`,
-    fail_url_address: `${origin}/api/tranzila-fail`,
-  });
+  // Two flow paths:
+  //   • Monthly (default) — cred_type=1, single charge per month, our cron handles renewal
+  //   • Studio committed — cred_type=6 with installments=24 — Tranzila auto-charges
+  //     the same sum every month for 24 months. No cron needed for these.
+  const params = isStudio
+    ? new URLSearchParams({
+        sum: chargeSum.toFixed(2),
+        currency: '1',
+        cred_type: '6',                                // installments
+        installments: String(STUDIO_INSTALLMENTS),     // 24 monthly charges
+        TranzilaTK: '1',                               // store token (for later cancellation fee)
+        pdesc: 'מסלול Studio — שנתיים + טאבלט',
+        contact: businessName.slice(0, 100),
+        email: claims.email || '',
+        firebaseUid: claims.uid,
+        plan: 'studio-24',
+        notify_url_address: `${origin}/api/tranzila-webhook`,
+        success_url_address: `${origin}/api/tranzila-success`,
+        fail_url_address: `${origin}/api/tranzila-fail`,
+      })
+    : new URLSearchParams({
+        sum: chargeSum.toFixed(2),
+        currency: '1',
+        cred_type: '1',
+        TranzilaTK: '1',
+        pdesc: isTest ? 'בדיקת אינטגרציה — ₪1' : 'מנוי חודשי Pro — ניהול תורים',
+        contact: businessName.slice(0, 100),
+        email: claims.email || '',
+        firebaseUid: claims.uid,
+        plan: 'pro-monthly',
+        notify_url_address: `${origin}/api/tranzila-webhook`,
+        success_url_address: `${origin}/api/tranzila-success`,
+        fail_url_address: `${origin}/api/tranzila-fail`,
+      });
 
   // Use the modern responsive iframe (iframenew.php) — better RTL, mobile,
   // and Tranzila branding than the older newiframe.php form.
@@ -145,18 +153,34 @@ export async function handleTranzilaWebhook(request, env) {
   try {
     const svc = await loadServiceAccount(env);
     const accessToken = await getAccessToken(svc);
-    const periodEnd = new Date(Date.now() + RENEWAL_DAYS * 86_400_000);
+    const now = new Date();
+    const plan = body.plan || 'pro-monthly';
+    const isStudio = plan === 'studio-24';
+
+    // Period end: monthly = 30 days; studio = 24 months from signup
+    const periodEnd = isStudio
+      ? addMonths(now, 24)
+      : new Date(now.getTime() + RENEWAL_DAYS * 86_400_000);
 
     const subscriptionMap = {
       status: fs.str('active'),
+      plan: fs.str(plan),
       currentPeriodEnd: fs.ts(periodEnd),
       tranzilaToken: fs.str(tranzilaToken),
       last4: fs.str(last4),
       cardExpiry: fs.str(expdate),
-      activatedAt: fs.ts(new Date()),
+      activatedAt: fs.ts(now),
       indexId: fs.str(indexId),
       sumPaid: fs.str(sumPaid),
     };
+
+    if (isStudio) {
+      // Commitment ends 24 months from signup. After that the user is free
+      // to cancel without exit fees.
+      subscriptionMap.commitmentEndsAt = fs.ts(addMonths(now, 24));
+      subscriptionMap.commitmentMonths = fs.num(24);
+      subscriptionMap.exitFeePerMonth = fs.num(STUDIO_EXIT_FEE_PER_MONTH);
+    }
 
     await firestorePatch(
       svc,
@@ -166,12 +190,148 @@ export async function handleTranzilaWebhook(request, env) {
       ['subscription'],
     );
 
-    console.log('TRANZILA_WEBHOOK activated', { uid, last4, sumPaid, periodEnd: periodEnd.toISOString() });
+    console.log('TRANZILA_WEBHOOK activated', { uid, plan, last4, sumPaid });
   } catch (e) {
     console.error('TRANZILA_WEBHOOK Firestore error', e?.message, e?.stack);
   }
 
   return new Response('OK', { status: 200 });
+}
+
+function addMonths(date, n) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + n);
+  return d;
+}
+
+// ─── POST /api/cancel-studio ──────────────────────────────────────────────
+// Special cancel endpoint for committed (studio) plans. The committed
+// customer can't just walk away — they signed for 24 monthly installments
+// and got a tablet for it. Cancelling requires paying the exit fee:
+//   fee = remaining_months × STUDIO_EXIT_FEE_PER_MONTH (₪30)
+// We charge this as a one-time charge against the stored Tranzila token.
+// On success, we mark the subscription cancelled AND attempt to halt
+// future installments at Tranzila (best-effort).
+//
+// NOTE: there's no Firestore access here unless the charge itself
+// succeeds — we don't want a partial state where DB says cancelled but
+// the customer is still being charged.
+export async function handleCancelStudio(request, env) {
+  if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+  if (request.method !== 'POST') return err('Method not allowed', 405);
+
+  let claims;
+  try {
+    const token = getBearerToken(request);
+    const svc0 = await loadServiceAccount(env);
+    claims = await verifyIdToken(token, svc0.project_id);
+  } catch (e) {
+    return err('Unauthorized: ' + e.message, 401);
+  }
+
+  const svc = await loadServiceAccount(env);
+  const accessToken = await getAccessToken(svc);
+  const barberDoc = await firestoreGet(svc, accessToken, `barbers/${claims.uid}`);
+  if (!barberDoc) return err('Barber not found', 404);
+
+  const sub = fieldVal(barberDoc.fields?.subscription) || {};
+  if (sub.plan !== 'studio-24') return err('Not a Studio plan', 400);
+  if (sub.status !== 'active') return err('Subscription not active', 400);
+  if (!sub.tranzilaToken) return err('No payment token on file', 400);
+
+  // Calculate remaining months until commitment ends
+  const now = new Date();
+  const commitEnd = sub.commitmentEndsAt instanceof Date ? sub.commitmentEndsAt : new Date(sub.commitmentEndsAt);
+  const msLeft = commitEnd.getTime() - now.getTime();
+  const monthsLeft = Math.max(0, Math.ceil(msLeft / (30 * 86_400_000)));
+
+  if (monthsLeft === 0) {
+    // Commitment already over → free cancel via the regular cancel endpoint
+    return err('Commitment already ended — use regular cancel', 400);
+  }
+
+  const exitFee = monthsLeft * STUDIO_EXIT_FEE_PER_MONTH;
+
+  // Charge the exit fee against the stored token
+  if (!env.TRANZILA_TERMINAL || !env.TRANZILA_PRIVATE_KEY) {
+    return err('Server not configured', 500);
+  }
+
+  let chargeResult;
+  try {
+    const chargeParams = new URLSearchParams({
+      supplier: env.TRANZILA_TERMINAL,
+      TranzilaPW: env.TRANZILA_PRIVATE_KEY,
+      TranzilaTK: sub.tranzilaToken,
+      sum: exitFee.toFixed(2),
+      currency: '1',
+      cred_type: '1',
+      contact: fieldVal(barberDoc.fields?.email) || '',
+      pdesc: `דמי יציאה Studio — ${monthsLeft} חודשים`,
+      myid: 'exit-' + claims.uid,
+    });
+    const r = await fetch('https://secure5.tranzila.com/cgi-bin/tranzila71u.cgi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: chargeParams.toString(),
+    });
+    const text = await r.text();
+    chargeResult = Object.fromEntries(new URLSearchParams(text));
+    console.log('CANCEL_STUDIO charge', { uid: claims.uid, exitFee, response: chargeResult.Response, body: text.slice(0, 200) });
+  } catch (e) {
+    console.error('CANCEL_STUDIO charge error', e?.message);
+    return err('שגיאה בחיוב דמי היציאה: ' + e.message, 500);
+  }
+
+  if (chargeResult.Response !== '000') {
+    return err(`חיוב דמי היציאה נכשל (קוד ${chargeResult.Response}). המנוי לא בוטל.`, 400);
+  }
+
+  // Best-effort: try to halt the remaining Tranzila installments via token delete.
+  // Even if this fails, the cancellation flag we write to Firestore prevents
+  // us from honoring the subscription, and the customer's bank can dispute
+  // unauthorized charges with Tranzila.
+  try {
+    const stopParams = new URLSearchParams({
+      supplier: env.TRANZILA_TERMINAL,
+      TranzilaPW: env.TRANZILA_PRIVATE_KEY,
+      TranzilaTK: sub.tranzilaToken,
+      op: 'delete',
+    });
+    await fetch('https://secure5.tranzila.com/cgi-bin/tranzila71u.cgi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: stopParams.toString(),
+    });
+  } catch (e) {
+    console.warn('CANCEL_STUDIO halt-future failed (non-fatal):', e?.message);
+  }
+
+  // Update subscription state: mark cancelled, record exit fee paid
+  const merged = {
+    ...mapBack(sub),
+    status: fs.str('cancelled'),
+    cancelledAt: fs.ts(now),
+    cancelReason: fs.str('studio-early-exit'),
+    exitFeePaid: fs.num(exitFee),
+    exitFeeMonthsLeft: fs.num(monthsLeft),
+    exitFeeIndexId: fs.str(chargeResult.index || ''),
+  };
+
+  await firestorePatch(
+    svc,
+    accessToken,
+    `barbers/${claims.uid}`,
+    { subscription: fs.map(merged) },
+    ['subscription'],
+  );
+
+  return ok({
+    cancelled: true,
+    exitFeePaid: exitFee,
+    monthsLeft,
+    indexId: chargeResult.index || null,
+  });
 }
 
 // ─── Success/fail redirect handlers ───────────────────────────────────────
