@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
 import { PROFESSION_LIST, readProfessions } from '../utils/professions';
 import { getAccessState } from '../utils/subscription';
@@ -44,11 +44,18 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      const snap = await getDoc(doc(db, 'barbers', user.uid));
-      if (snap.exists()) {
-        const data = snap.data();
-        setBarberData(data);
+    // Live-subscribe to the barber doc so the subscription card reflects
+    // webhook-driven updates (e.g. payment just succeeded → status flips
+    // to 'active' and the cancel button appears without a manual refresh).
+    let initialized = false;
+    return onSnapshot(doc(db, 'barbers', user.uid), (snap) => {
+      if (!snap.exists()) { setLoaded(true); return; }
+      const data = snap.data();
+      setBarberData(data);
+      // Form fields are initialized ONCE — otherwise typing into them
+      // would be overwritten by every snapshot tick.
+      if (!initialized) {
+        initialized = true;
         setBusinessName(data.businessName || '');
         setLogoUrl(data.logoUrl || '');
         setBitPhone(data.bitPhone || '');
@@ -65,7 +72,7 @@ export default function SettingsPage() {
         setGoogleReviewUrl(data.googleReviewUrl || '');
       }
       setLoaded(true);
-    })();
+    });
   }, [user]);
 
   function updateDay(day, patch) {
