@@ -28,6 +28,7 @@ import DayTimeline from '../components/DayTimeline.jsx';
 import BookingActionSheet from '../components/BookingActionSheet.jsx';
 import TomorrowReminders from '../components/TomorrowReminders.jsx';
 import QuickBookModal from '../components/QuickBookModal.jsx';
+import TrialExpiryBanner from '../components/TrialExpiryBanner.jsx';
 import MorningSummaryCard from '../components/MorningSummaryCard.jsx';
 import BreakSuggestions from '../components/BreakSuggestions.jsx';
 import WeeklyReportCard from '../components/WeeklyReportCard.jsx';
@@ -476,6 +477,8 @@ export default function DashboardPage() {
         )}
         <h1>{barber.businessName || 'העסק שלי'}</h1>
       </div>
+
+      <TrialExpiryBanner access={access} />
 
       <div className="tab-content">
         {tab === 'today' && <TodayTab />}

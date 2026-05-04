@@ -1717,6 +1717,124 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   border-style: solid;
 }
 
+/* ─── Trial expiry banner (shown at top of dashboard, last 7 days) ─────── */
+.trial-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  margin: 0 0 16px;
+  border: 1px solid;
+  position: relative;
+  animation: fade-in 0.3s var(--ease);
+}
+.trial-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex: none;
+}
+.trial-banner-text { flex: 1; min-width: 0; }
+.trial-banner-headline {
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: -0.005em;
+  margin-bottom: 2px;
+}
+.trial-banner-sub {
+  font-size: 0.83rem;
+  opacity: 0.85;
+  line-height: 1.4;
+}
+.trial-banner-cta {
+  flex: none;
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.trial-banner-cta:hover { transform: translateY(-1px); }
+.trial-banner-dismiss {
+  flex: none;
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.55;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.trial-banner-dismiss:hover { opacity: 1; }
+
+/* Tone variants */
+.trial-banner--warning {
+  background: linear-gradient(135deg, var(--gold-soft), var(--surface));
+  border-color: var(--gold);
+  color: var(--text);
+}
+.trial-banner--warning .trial-banner-icon {
+  background: var(--gold);
+  color: white;
+}
+.trial-banner--warning .trial-banner-cta {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold), var(--gold-deep));
+  color: white;
+  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.30);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.18);
+}
+
+.trial-banner--critical {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.10), var(--surface));
+  border-color: var(--danger);
+  color: var(--text);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.12);
+  animation: fade-in 0.3s var(--ease), critical-pulse 2.5s ease-in-out 0.5s infinite;
+}
+.trial-banner--critical .trial-banner-icon {
+  background: var(--danger);
+  color: white;
+}
+.trial-banner--critical .trial-banner-cta {
+  background: linear-gradient(180deg, #ef4444, var(--danger));
+  color: white;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.30);
+}
+@keyframes critical-pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(220, 38, 38, 0.12); }
+  50% { box-shadow: 0 4px 22px rgba(220, 38, 38, 0.25); }
+}
+
+.trial-banner--info {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+.trial-banner--info .trial-banner-icon {
+  background: var(--text);
+  color: white;
+}
+.trial-banner--info .trial-banner-cta {
+  background: var(--accent);
+  color: white;
+}
+
+/* Mobile — stack the CTA below */
+@media (max-width: 480px) {
+  .trial-banner {
+    flex-wrap: wrap;
+  }
+  .trial-banner-text { width: calc(100% - 60px); }
+  .trial-banner-cta { width: 100%; margin-top: 4px; padding: 12px; }
+}
+
 /* ─── Paywall (full-screen, can't dismiss without action) ──────────────── */
 .paywall-fullscreen {
   position: fixed;
