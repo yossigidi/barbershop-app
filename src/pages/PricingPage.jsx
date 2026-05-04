@@ -22,15 +22,50 @@ export default function PricingPage() {
 
   const access = useSubscription(barber);
 
-  function startCheckout() {
-    // Stage 2 — wire to Cloudflare Worker /api/create-payment-link
-    // which creates a Tranzila iframe URL and redirects.
-    alert('התשלום ייפתח בקרוב — מתחברים ל-Tranzila.');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  async function startCheckout() {
+    if (!user) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      const idToken = await user.getIdToken();
+      const r = await fetch('/api/create-payment-link', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+      });
+      const data = await r.json();
+      if (!r.ok || !data.url) throw new Error(data.error || 'נכשל ליצור קישור תשלום');
+      window.location.href = data.url;
+    } catch (e) {
+      setMsg('שגיאה: ' + e.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function applyPromo() {
-    // Stage 2 — Worker validates code + extends trial via Admin SDK
-    alert('קודי הנחה ייתאפשרו בקרוב.');
+  async function applyPromo() {
+    const code = (promo || '').trim().toUpperCase();
+    if (!code || !user) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      const idToken = await user.getIdToken();
+      const r = await fetch('/api/redeem-promo', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'הקוד לא נקלט');
+      setMsg(`✓ נוספו ${data.daysAdded} ימי שימוש בחינם!`);
+      setPromo('');
+    } catch (e) {
+      setMsg('שגיאה: ' + e.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -82,14 +117,15 @@ export default function PricingPage() {
           className="btn-gold"
           style={{ width: '100%', fontSize: '1.05rem', padding: '15px' }}
           onClick={startCheckout}
-          disabled={access.granted && access.reason !== 'trial' && access.reason !== 'no-sub'}
+          disabled={busy || (access.granted && access.reason !== 'trial' && access.reason !== 'no-sub' && access.reason !== 'expired')}
         >
           <Sparkles size={18} className="icon-inline" />
-          {access.reason === 'trial' || access.reason === 'no-sub'
-            ? `התחל חיוב — ₪${PRICE_NIS}/חודש`
-            : access.reason === 'active'
-              ? 'מנוי פעיל'
-              : `שדרג ל-Pro — ₪${PRICE_NIS}/חודש`}
+          {busy ? 'פותח תשלום…' :
+            (access.reason === 'trial' || access.reason === 'no-sub' || access.reason === 'expired'
+              ? `התחל חיוב — ₪${PRICE_NIS}/חודש`
+              : access.reason === 'active'
+                ? 'מנוי פעיל'
+                : `שדרג ל-Pro — ₪${PRICE_NIS}/חודש`)}
         </button>
         <p className="muted text-center" style={{ fontSize: '0.78rem', marginTop: 10, marginBottom: 0 }}>
           חיוב חודשי. ביטול בכל זמן בהגדרות. בלי התחייבות.
@@ -112,11 +148,19 @@ export default function PricingPage() {
             className="btn-secondary"
             style={{ flex: 'none', padding: '12px 20px' }}
             onClick={applyPromo}
-            disabled={!promo.trim()}
+            disabled={!promo.trim() || busy}
           >
-            הפעל
+            {busy ? '…' : 'הפעל'}
           </button>
         </div>
+        {msg && (
+          <p style={{
+            marginTop: 10,
+            fontSize: '0.88rem',
+            color: msg.startsWith('✓') ? 'var(--success)' : 'var(--danger)',
+            fontWeight: 600,
+          }}>{msg}</p>
+        )}
       </div>
 
       <div className="card" style={{ background: 'var(--surface-2)' }}>

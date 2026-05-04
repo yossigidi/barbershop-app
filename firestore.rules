@@ -90,5 +90,12 @@ service cloud.firestore {
       allow update, delete: if request.auth != null
                             && resource.data.uid == request.auth.uid;
     }
+
+    // Promo codes — read-only for clients (validation happens server-side via Worker).
+    // Writes are done only by the Cloudflare Worker with Admin SDK credentials.
+    match /promoCodes/{code} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
   }
 }
