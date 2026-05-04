@@ -512,11 +512,18 @@ export default function DashboardPage() {
         <TomorrowReminders bookings={bookings} businessName={barber.businessName || 'העסק שלי'} onClose={() => setShowTomorrow(false)} />
       )}
       {showYesterday && (
-        <YesterdayFollowUp uid={user.uid} businessName={barber.businessName || 'העסק שלי'} onClose={() => setShowYesterday(false)} />
+        <YesterdayFollowUp
+          uid={user.uid}
+          businessName={barber.businessName || 'העסק שלי'}
+          googleReviewUrl={barber.googleReviewUrl || ''}
+          onClose={() => setShowYesterday(false)}
+        />
       )}
       {actionFor && (
         <BookingActionSheet
           booking={actionFor}
+          businessName={barber.businessName || 'העסק שלי'}
+          googleReviewUrl={barber.googleReviewUrl || ''}
           onClose={() => setActionFor(null)}
           onStart={() => startBooking(actionFor)}
           onComplete={() => completeBooking(actionFor)}

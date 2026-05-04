@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MessageCircle, Check } from 'lucide-react';
+import { MessageCircle, Check, Star } from 'lucide-react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { dateToISO, formatDateHe } from '../utils/slots';
@@ -7,10 +7,11 @@ import { whatsappUrl } from '../utils/whatsapp';
 
 // One-tap follow-up messages for clients who came yesterday.
 // Queries completed bookings (and unmarked booked from yesterday) once when opened.
-export default function YesterdayFollowUp({ uid, businessName, onClose }) {
+export default function YesterdayFollowUp({ uid, businessName, googleReviewUrl, onClose }) {
   const [bookings, setBookings] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [sentSet, setSentSet] = useState(() => new Set());
+  const [includeReview, setIncludeReview] = useState(!!googleReviewUrl);
 
   const yesterdayISO = useMemo(() => {
     const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 1);
@@ -38,10 +39,14 @@ export default function YesterdayFollowUp({ uid, businessName, onClose }) {
   }
 
   function send(b) {
+    const willIncludeReview = includeReview && googleReviewUrl;
+    const reviewBlock = willIncludeReview
+      ? `\n\n⭐ אם נהנית — נשמח אם תכתוב/תכתבי ביקורת קצרה ב-Google. זה לוקח דקה ועוזר לי המון:\n${googleReviewUrl}`
+      : '';
     const msg =
       `שלום ${firstName(b.clientName)}! 🙏\n\n` +
       `תודה שהגעת אתמול ל-${businessName}.\n` +
-      `איך יצא? נשמח לדעת.\n\n` +
+      `איך יצא? נשמח לדעת.${reviewBlock}\n\n` +
       `מחכים לראות אותך שוב — אני כאן.`;
     window.open(whatsappUrl(msg, b.clientPhone), '_blank');
     setSentSet((s) => new Set(s).add(b.id));
@@ -54,6 +59,20 @@ export default function YesterdayFollowUp({ uid, businessName, onClose }) {
         <p className="muted">
           הודעות נשלחות מ-WhatsApp שלך, בשמך — לא כ"מערכת". טקסט מוכן, שולחים לפי הצורך.
         </p>
+
+        {googleReviewUrl && (
+          <label className="row" style={{ alignItems: 'center', cursor: 'pointer', gap: 10, padding: '10px 12px', background: 'var(--gold-soft)', border: '1px solid var(--gold)', borderRadius: 'var(--radius-sm)', marginBottom: 14 }}>
+            <input
+              type="checkbox"
+              checked={includeReview}
+              onChange={(e) => setIncludeReview(e.target.checked)}
+              style={{ width: 22, height: 22, flex: 'none', accentColor: 'var(--gold)' }}
+            />
+            <span style={{ flex: 1, fontWeight: 600 }}>
+              <Star size={14} className="icon-inline" />כלול בקשה לביקורת בגוגל
+            </span>
+          </label>
+        )}
 
         {!loaded ? (
           <div className="loading">טוען…</div>

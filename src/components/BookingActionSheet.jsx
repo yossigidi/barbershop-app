@@ -1,9 +1,22 @@
-import { Phone, Play, Check, Edit3 } from 'lucide-react';
+import { Phone, Play, Check, Edit3, Star } from 'lucide-react';
 import { addMinToTime } from '../utils/slots';
+import { whatsappUrl } from '../utils/whatsapp';
 
-export default function BookingActionSheet({ booking, onClose, onStart, onComplete, onEdit, onCancel }) {
+export default function BookingActionSheet({ booking, businessName, googleReviewUrl, onClose, onStart, onComplete, onEdit, onCancel }) {
   const inProgress = booking.status === 'inProgress';
   const completed = booking.status === 'completed';
+
+  function sendReviewRequest() {
+    if (!googleReviewUrl || !booking.clientPhone) return;
+    const firstName = (booking.clientName || '').split(/\s+/)[0] || booking.clientName || '';
+    const msg =
+      `שלום ${firstName}! 🙏\n\n` +
+      `תודה שהגעת ל-${businessName || 'אצלי'}!\n\n` +
+      `⭐ אם נהנית, נשמח מאוד אם תוכל/י לכתוב ביקורת קצרה ב-Google. זה לוקח דקה ועוזר לי המון:\n` +
+      `${googleReviewUrl}\n\n` +
+      `מחכים לראות אותך שוב 🙏`;
+    window.open(whatsappUrl(msg, booking.clientPhone), '_blank');
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -32,6 +45,9 @@ export default function BookingActionSheet({ booking, onClose, onStart, onComple
         )}
         {!completed && (
           <button className="btn-secondary" onClick={() => { onEdit(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Edit3 size={18} className="icon-inline" />העבר לזמן/יום אחר</button>
+        )}
+        {completed && googleReviewUrl && (
+          <button className="btn-gold" onClick={() => { sendReviewRequest(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Star size={18} className="icon-inline" />שלח בקשת ביקורת בגוגל</button>
         )}
         {!completed && (
           <button className="btn-danger" onClick={() => { onCancel(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}>בטל תור</button>

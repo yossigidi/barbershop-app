@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -35,6 +35,7 @@ export default function SettingsPage() {
   const [defaultDuration, setDefaultDuration] = useState(20);
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [professions, setProfessions] = useState(['barber']);
+  const [googleReviewUrl, setGoogleReviewUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -57,6 +58,7 @@ export default function SettingsPage() {
         setDefaultDuration(data.defaultDuration || 20);
         setDefaultPrice(data.defaultPrice || 0);
         setProfessions(readProfessions(data));
+        setGoogleReviewUrl(data.googleReviewUrl || '');
       }
       setLoaded(true);
     })();
@@ -123,6 +125,7 @@ export default function SettingsPage() {
         defaultPrice: Number(defaultPrice) || 0,
         professions,
         profession: professions[0],
+        googleReviewUrl: (googleReviewUrl || '').trim(),
       });
       navigate('/dashboard');
     } catch (e) {
@@ -185,6 +188,27 @@ export default function SettingsPage() {
             ✨ נבחרו {professions.length} תחומים — בקטלוג יוצגו שירותים מכל אחד.
           </p>
         )}
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Star size={18} className="icon-inline" />ביקורות בגוגל</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+          הדבק את הקישור שגוגל נותן לך ב-"שתף את הביקורת". המערכת תשלב אותו אוטומטית בהודעת התודה ללקוחות יום אחרי התור — דרך מצוינת לקבל ביקורות חיוביות.
+        </p>
+        <div className="field">
+          <label>לינק לביקורת</label>
+          <input
+            type="url"
+            value={googleReviewUrl}
+            onChange={(e) => setGoogleReviewUrl(e.target.value)}
+            placeholder="https://g.page/r/..."
+            dir="ltr"
+            style={{ direction: 'ltr', textAlign: 'left' }}
+          />
+          <p className="muted" style={{ fontSize: '0.75rem', marginTop: 6 }}>
+            איך משיגים? Google Business Profile → "Get more reviews" → "Share review form" → העתק את הקישור.
+          </p>
+        </div>
       </div>
 
       <div className="card">
