@@ -197,14 +197,20 @@ export default function DashboardPage() {
       price: barber.defaultPrice || 0,
       createdAt: serverTimestamp(),
     });
+    // Upsert a client record only if a phone was provided. Don't let it fail
+    // the booking flow if it errors (e.g. permissions or transient issue).
     if (clientPhone) {
-      const parts = clientName.split(/\s+/);
-      await setDoc(doc(db, 'barbers', user.uid, 'clients', clientPhone), {
-        firstName: parts[0] || clientName,
-        lastName: parts.slice(1).join(' ') || '',
-        phone: clientPhone,
-        createdAt: serverTimestamp(),
-      }, { merge: true });
+      try {
+        const parts = clientName.split(/\s+/);
+        await setDoc(doc(db, 'barbers', user.uid, 'clients', clientPhone), {
+          firstName: parts[0] || clientName,
+          lastName: parts.slice(1).join(' ') || '',
+          phone: clientPhone,
+          createdAt: serverTimestamp(),
+        }, { merge: true });
+      } catch (e) {
+        console.warn('client upsert failed (booking still saved):', e);
+      }
     }
   }
   async function unblockSlot(blockId) {

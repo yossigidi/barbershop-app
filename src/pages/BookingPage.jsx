@@ -140,7 +140,8 @@ export default function BookingPage() {
     [selectedDate, barber, occupied, totalDuration],
   );
 
-  // Group slots by period of day: morning < 12:00, afternoon < 17:00, evening ≥ 17:00
+  // Group AVAILABLE slots by period of day: morning < 12:00, afternoon < 17:00, evening ≥ 17:00.
+  // Booked/blocked slots are hidden — clients only see what they can actually book.
   const slotGroups = useMemo(() => {
     const groups = [
       { key: 'morning', label: 'בוקר', items: [] },
@@ -148,6 +149,7 @@ export default function BookingPage() {
       { key: 'evening', label: 'ערב', items: [] },
     ];
     for (const s of slots) {
+      if (!s.available) continue;
       const h = parseInt(s.time.slice(0, 2), 10);
       if (h < 12) groups[0].items.push(s);
       else if (h < 17) groups[1].items.push(s);

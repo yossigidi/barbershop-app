@@ -29,6 +29,9 @@ service cloud.firestore {
       match /clients/{phone} {
         allow read, list: if isOwner(uid);
         allow get: if true;
+        // Owner: full create freedom (dashboard quick-book may have one-word names, etc.)
+        allow create: if isOwner(uid);
+        // Public booking page: strict validation
         allow create: if isString(request.resource.data.firstName, 50)
                       && isString(request.resource.data.lastName, 50)
                       && isPhone(request.resource.data.phone)
@@ -41,6 +44,9 @@ service cloud.firestore {
       match /bookings/{bookingId} {
         allow read: if true;
         allow list: if isOwner(uid);
+        // Owner: can create any booking (manual dashboard entries — phone may be empty)
+        allow create: if isOwner(uid);
+        // Public booking page: strict validation
         allow create: if isDateStr(request.resource.data.date)
                       && isTimeStr(request.resource.data.time)
                       && isString(request.resource.data.clientName, 100)
