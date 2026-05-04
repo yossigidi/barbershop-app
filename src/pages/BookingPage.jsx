@@ -140,6 +140,45 @@ export default function BookingPage() {
     [selectedDate, barber, occupied, totalDuration],
   );
 
+  // Group slots by period of day: morning < 12:00, afternoon < 17:00, evening ≥ 17:00
+  const slotGroups = useMemo(() => {
+    const groups = [
+      { key: 'morning', label: 'בוקר', items: [] },
+      { key: 'afternoon', label: 'צהריים', items: [] },
+      { key: 'evening', label: 'ערב', items: [] },
+    ];
+    for (const s of slots) {
+      const h = parseInt(s.time.slice(0, 2), 10);
+      if (h < 12) groups[0].items.push(s);
+      else if (h < 17) groups[1].items.push(s);
+      else groups[2].items.push(s);
+    }
+    return groups.filter((g) => g.items.length > 0);
+  }, [slots]);
+
+  // Today's open status — for the brand-header tagline
+  const todayStatus = useMemo(() => {
+    if (!barber?.workingHours) return null;
+    const today = new Date();
+    const dayKey = dayKeyFromDate(today);
+    const cfg = barber.workingHours[dayKey];
+    if (!cfg?.active) return { open: false, text: 'סגור היום' };
+    const nowMin = today.getHours() * 60 + today.getMinutes();
+    const startMin = timeToMin(cfg.start);
+    const endMin = timeToMin(cfg.end);
+    if (nowMin < startMin) return { open: false, text: `פותח ב-${cfg.start}` };
+    if (nowMin >= endMin) return { open: false, text: 'סגור עכשיו' };
+    return { open: true, text: `פתוח עד ${cfg.end}` };
+  }, [barber]);
+
+  // Initials for wordmark fallback when no logo
+  const initials = useMemo(() => {
+    const name = (barber?.businessName || '').trim();
+    if (!name) return '';
+    const parts = name.split(/\s+/).filter(Boolean);
+    return (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
+  }, [barber]);
+
   function pickSlot(time) {
     setPickedTime(time);
     if (client) setShowConfirm(true);
@@ -352,16 +391,18 @@ export default function BookingPage() {
     return (
       <div className="app">
         <div className="brand-header">
-          {barber.logoUrl && (
+          {barber.logoUrl ? (
             <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
+          ) : (
+            <div className="brand-wordmark" aria-hidden="true">{initials}</div>
           )}
           <h1 className="brand-title">{barber.businessName}</h1>
         </div>
-        <div className="card text-center">
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+        <div className="card success-card">
+          <div className="success-check">
             <CheckCircle2 size={56} color="var(--success)" strokeWidth={1.75} />
           </div>
-          <h2>{success.createdCount > 1 ? `${success.createdCount} תורים נקבעו!` : 'התור נקבע!'}</h2>
+          <h2 className="success-headline">{success.createdCount > 1 ? `${success.createdCount} תורים נקבעו!` : 'התור נקבע!'}</h2>
           <p className="muted">
             {formatDateHe(selectedDate)} ({DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}) בשעה <strong>{success.time}</strong>
             {totalDuration ? ` • ${totalDuration} דק׳` : ''}
@@ -456,10 +497,18 @@ export default function BookingPage() {
   return (
     <div className="app">
       <div className="brand-header">
-        {barber.logoUrl && (
+        {barber.logoUrl ? (
           <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
+        ) : (
+          <div className="brand-wordmark" aria-hidden="true">{initials}</div>
         )}
         <h1 className="brand-title">{barber.businessName}</h1>
+        {todayStatus && (
+          <div className={`brand-tagline ${todayStatus.open ? '' : 'closed'}`}>
+            <span className="dot" />
+            {todayStatus.text}
+          </div>
+        )}
       </div>
 
       <LiveStatusBanner barberId={barberId} barberName={barber.businessName} />
@@ -604,20 +653,25 @@ export default function BookingPage() {
             )}
           </>
         ) : (
-          <div className="slots">
-            {slots.map((s) => (
-              <div
-                key={s.time}
-                className={`slot ${!s.available ? 'booked' : ''} ${pickedTime === s.time ? 'selected' : ''}`}
-                onClick={() => s.available && pickSlot(s.time)}
-              >
-                {s.time}
-                {s.available && pickedService?.duration > 20 && (
-                  <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
-                )}
+          slotGroups.map((g) => (
+            <div key={g.key} className="slots-section">
+              <div className="slot-group-label">{g.label}</div>
+              <div className="slots">
+                {g.items.map((s) => (
+                  <div
+                    key={s.time}
+                    className={`slot ${!s.available ? 'booked' : ''} ${pickedTime === s.time ? 'selected' : ''}`}
+                    onClick={() => s.available && pickSlot(s.time)}
+                  >
+                    {s.time}
+                    {s.available && pickedService?.duration > 20 && (
+                      <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))
         )}
       </div>
 
