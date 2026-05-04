@@ -312,6 +312,15 @@ export default function DashboardPage() {
   function CalendarTab() {
     return (
       <>
+        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'הספרות שלי'} />
+
+        <MorningSummaryCard
+          displayName={barber.displayName}
+          businessName={barber.businessName}
+          todayBookings={todayBookings}
+          onTapBooking={setActionFor}
+        />
+
         <div className="card">
           <div className="muted text-center" style={{ marginBottom: 8, fontSize: '0.85rem' }}>{upcomingTotal} תורים צפויים בשבועיים הקרובים</div>
           <Calendar

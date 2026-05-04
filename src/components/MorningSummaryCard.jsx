@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { timeToMin } from '../utils/slots';
+import { whatsappUrl } from '../utils/whatsapp';
 
 function greetingFor(hour, name) {
   let greeting, emoji;
@@ -35,11 +36,45 @@ export default function MorningSummaryCard({ displayName, businessName, todayBoo
     return [b.serviceName, b.addons?.length ? `+ ${b.addons.length} תוספות` : ''].filter(Boolean).join(' ');
   }
 
+  function share() {
+    const dateLabel = now.toLocaleDateString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit' });
+    const lines = [`☀️ סיכום היום — ${dateLabel}`, ''];
+    if (todayBookings.length === 0) {
+      lines.push('🌤 יום שקט — אין תורים');
+    } else {
+      lines.push(`🪒 ${active.length} תורים פעילים`);
+      if (totalRevenue > 0) lines.push(`💰 ${totalRevenue}₪ הכנסה צפויה`);
+      if (completedCount > 0) lines.push(`✓ ${completedCount} כבר הסתיימו`);
+      if (inProgress) lines.push('', `🪒 כעת: ${inProgress.clientName}`);
+      else if (next) {
+        lines.push('', `⏭ הבא: ${next.clientName} ב-${next.time}`);
+      }
+      const upcomingList = upcoming.filter((b) => timeToMin(b.time) >= nowMin).slice(0, 5);
+      if (upcomingList.length > 0) {
+        lines.push('', '📋 לוח היום:');
+        for (const b of upcomingList) {
+          lines.push(`• ${b.time} — ${b.clientName}`);
+        }
+      }
+    }
+    window.open(whatsappUrl(lines.join('\n')), '_blank');
+  }
+
   return (
     <div className="card morning-card">
       <div className="morning-greeting">
         <span className="morning-emoji">{emoji}</span>
-        <span>{greeting}!</span>
+        <span style={{ flex: 1 }}>{greeting}!</span>
+        {todayBookings.length > 0 && (
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ padding: '4px 10px', fontSize: '0.8rem' }}
+            onClick={share}
+          >
+            📤 שתף
+          </button>
+        )}
       </div>
 
       {todayBookings.length === 0 ? (
