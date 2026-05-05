@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarDays, Trophy, PartyPopper, HeartCrack, Sparkles, Phone } from 'lucide-react';
+import { BarChart3, CalendarDays, Trophy, PartyPopper, HeartCrack, Sparkles, Phone, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { getAccessState } from '../utils/subscription';
 import PaywallModal from '../components/PaywallModal.jsx';
@@ -10,6 +10,7 @@ import { collection, doc, onSnapshot, query } from 'firebase/firestore';
 import { dateToISO, DAY_LABELS_HE, DAYS_OF_WEEK } from '../utils/slots';
 import { upcomingHolidays, holidayOn } from '../utils/holidays';
 import { findDormantClients } from '../utils/clientMemory';
+import { sumExpenses } from '../utils/expenses';
 
 function startOfWeek(d) {
   const x = new Date(d);
@@ -50,6 +51,7 @@ export default function ReportsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [barberData, setBarberData] = useState(null);
   const [winbackTarget, setWinbackTarget] = useState(null);
 
@@ -62,10 +64,14 @@ export default function ReportsPage() {
     const unsub = onSnapshot(q, (snap) => {
       setBookings(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
+    const qExp = query(collection(db, 'barbers', user.uid, 'expenses'));
+    const unsubExp = onSnapshot(qExp, (snap) => {
+      setExpenses(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
     const unsubBarber = onSnapshot(doc(db, 'barbers', user.uid), (snap) => {
       if (snap.exists()) setBarberData(snap.data());
     });
-    return () => { unsub(); unsubBarber(); };
+    return () => { unsub(); unsubExp(); unsubBarber(); };
   }, [user]);
 
   const access = getAccessState(barberData);
@@ -150,6 +156,20 @@ export default function ReportsPage() {
     }
     const maxHour = Math.max(1, ...hourCount);
 
+    // Net-profit math — pair this month's revenue (from `month`) with this
+    // month's expenses (sum from the expenses subscription). Same window
+    // for last month. Margin = profit / revenue. Stored as nullable so the
+    // UI can hide the card cleanly when there's nothing to show.
+    const monthExpenses = sumExpenses(expenses, monthStartISO, todayISO);
+    const lastMonthExpenses = sumExpenses(
+      expenses, dateToISO(lastMonthStart), dateToISO(lastMonthEnd),
+    );
+    const monthProfit = month.revenue - monthExpenses;
+    const lastMonthProfit = lastMonth.revenue - lastMonthExpenses;
+    const monthMargin = month.revenue > 0
+      ? Math.round((monthProfit / month.revenue) * 100)
+      : null;
+
     // Dormant clients — driven by per-client memory (visits, avg cycle,
     // days-since-last). Sorted longest-gap first.
     const dormants = findDormantClients(bookings, todayISO);
@@ -159,8 +179,9 @@ export default function ReportsPage() {
       dowCount, dowRev, last7, max7, holidays, total,
       topCustomers, hourCount, maxHour,
       dormants,
+      monthExpenses, lastMonthExpenses, monthProfit, lastMonthProfit, monthMargin,
     };
-  }, [bookings]);
+  }, [bookings, expenses]);
 
   return (
     <div className="app">
@@ -175,6 +196,38 @@ export default function ReportsPage() {
         <Compare label="השבוע מול השבוע שעבר" curr={data.week} prev={data.lastWeek} />
         <Compare label="החודש מול החודש שעבר" curr={data.month} prev={data.lastMonth} />
       </div>
+
+      {(data.monthExpenses > 0 || data.month.revenue > 0) && (
+        <div className="card profit-card">
+          <h3 style={{ marginTop: 0 }}>
+            <TrendingUp size={18} className="icon-inline" />רווח נטו (החודש)
+          </h3>
+          <div className="profit-grid">
+            <div className="profit-cell">
+              <div className="profit-label">הכנסות</div>
+              <div className="profit-num is-positive">₪{data.month.revenue.toLocaleString('he-IL')}</div>
+            </div>
+            <div className="profit-cell">
+              <div className="profit-label">הוצאות</div>
+              <div className="profit-num is-negative">₪{data.monthExpenses.toLocaleString('he-IL')}</div>
+            </div>
+            <div className="profit-cell profit-cell-net">
+              <div className="profit-label">רווח נטו</div>
+              <div className={`profit-num ${data.monthProfit >= 0 ? 'is-profit' : 'is-loss'}`}>
+                ₪{data.monthProfit.toLocaleString('he-IL')}
+              </div>
+              {data.monthMargin != null && (
+                <div className="profit-margin">{data.monthMargin}% רווחיות</div>
+              )}
+            </div>
+          </div>
+          {data.lastMonthProfit !== 0 && (
+            <div className="profit-prev">
+              חודש שעבר: ₪{data.lastMonthProfit.toLocaleString('he-IL')} רווח · ₪{data.lastMonthExpenses.toLocaleString('he-IL')} הוצאות
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}><CalendarDays size={18} className="icon-inline" />7 ימים אחרונים</h3>

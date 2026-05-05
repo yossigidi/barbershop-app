@@ -1432,6 +1432,13 @@ h1 { font-family: var(--font-display); font-weight: 700; }
 .nav-icon svg { width: 22px; height: 22px; }
 .nav-label { font-size: 0.72rem; }
 
+/* 5-tab variant — tighten paddings so labels stay readable */
+.bottom-nav.nav-5 .nav-tab { padding: 9px 2px 7px; }
+.bottom-nav.nav-5 .nav-label { font-size: 0.66rem; }
+.bottom-nav.nav-5 .nav-tab.active::before { width: 24px; }
+.bottom-nav.nav-5 .nav-icon { width: 20px; height: 20px; }
+.bottom-nav.nav-5 .nav-icon svg { width: 20px; height: 20px; }
+
 /* Inline icon helper — pairs Lucide icons with text in headings/buttons */
 .icon-inline {
   display: inline-flex;
@@ -2070,6 +2077,208 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   outline: none;
   border-color: var(--gold);
   box-shadow: 0 0 0 3px var(--gold-soft);
+}
+
+/* ─── Expenses tab ─────────────────────────────────────────────────────── */
+.expense-summary {
+  background:
+    radial-gradient(ellipse 80% 60% at 100% 0%, var(--gold-soft), transparent 60%),
+    var(--surface);
+  border: 1px solid var(--gold);
+  position: relative;
+}
+.expense-summary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.expense-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.expense-month-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  flex: 1;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.expense-month-badge {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  border: 1px solid var(--gold);
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.expense-total {
+  text-align: center;
+  padding: 6px 0 4px;
+}
+.expense-total-label {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.expense-total-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2rem;
+  color: var(--gold-deep);
+  font-variant-numeric: tabular-nums;
+}
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.cat-row:first-of-type { border-top: none; }
+.cat-emoji { font-size: 1.3rem; flex: none; }
+.cat-info { flex: 1; min-width: 0; }
+.cat-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+  margin-bottom: 4px;
+}
+.cat-line strong { font-variant-numeric: tabular-nums; }
+.cat-bar {
+  height: 5px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.cat-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-2), var(--gold-deep));
+  border-radius: 999px;
+}
+.cat-pct {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  flex: none;
+  width: 38px;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.exp-group { margin-bottom: 14px; }
+.exp-group:last-child { margin-bottom: 0; }
+.exp-group-date {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  font-weight: 600;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.exp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  text-align: start;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.exp-row:hover {
+  border-color: var(--gold);
+  background: var(--surface);
+}
+.exp-emoji { font-size: 1.15rem; flex: none; }
+.exp-info {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.exp-desc { color: var(--text-soft); }
+.exp-amount {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  flex: none;
+}
+.exp-edit-icon { color: var(--text-soft); flex: none; }
+
+/* ─── Profit card on Reports ───────────────────────────────────────────── */
+.profit-card {
+  border: 1px solid var(--gold);
+  background:
+    radial-gradient(ellipse 70% 50% at 0% 0%, var(--gold-soft), transparent 60%),
+    var(--surface);
+  position: relative;
+}
+.profit-card h3 svg { color: var(--gold); }
+.profit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.profit-cell {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  text-align: center;
+}
+.profit-cell-net {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, var(--gold-soft), var(--surface));
+  border: 1px solid var(--gold);
+}
+.profit-label {
+  font-size: 0.74rem;
+  color: var(--text-soft);
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+.profit-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.profit-num.is-positive { color: var(--accent); }
+.profit-num.is-negative { color: #b91c1c; }
+.profit-num.is-profit { color: var(--gold-deep); font-size: 1.7rem; }
+.profit-num.is-loss { color: #b91c1c; font-size: 1.7rem; }
+.profit-margin {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-top: 4px;
+}
+.profit-prev {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
 }
 
 /* ─── Win-back batch (Reports → לקוחות שנעלמו) ────────────────────────── */

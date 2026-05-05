@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
   MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X, Sparkles,
+  Wallet,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useSubscription } from '../hooks/useSubscription';
@@ -34,6 +35,7 @@ import AIBriefingCard from '../components/AIBriefingCard.jsx';
 import BreakSuggestions from '../components/BreakSuggestions.jsx';
 import WeeklyReportCard from '../components/WeeklyReportCard.jsx';
 import YesterdayFollowUp from '../components/YesterdayFollowUp.jsx';
+import ExpensesTab from '../components/ExpensesTab.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -489,10 +491,11 @@ export default function DashboardPage() {
         {tab === 'today' && <TodayTab />}
         {tab === 'calendar' && <CalendarTab />}
         {tab === 'reports' && <ReportsTab />}
+        {tab === 'expenses' && <ExpensesTab />}
         {tab === 'more' && <MoreTab />}
       </div>
 
-      <nav className="bottom-nav">
+      <nav className="bottom-nav nav-5">
         <button className={`nav-tab ${tab === 'calendar' ? 'active' : ''}`} onClick={() => setTab('calendar')}>
           <span className="nav-icon"><CalendarIcon size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">יומן</span>
@@ -505,6 +508,10 @@ export default function DashboardPage() {
         <button className={`nav-tab ${tab === 'reports' ? 'active' : ''}`} onClick={() => setTab('reports')}>
           <span className="nav-icon"><BarChart3 size={22} strokeWidth={1.75} /></span>
           <span className="nav-label">דוחות</span>
+        </button>
+        <button className={`nav-tab ${tab === 'expenses' ? 'active' : ''}`} onClick={() => setTab('expenses')}>
+          <span className="nav-icon"><Wallet size={22} strokeWidth={1.75} /></span>
+          <span className="nav-label">הוצאות</span>
         </button>
         <button className={`nav-tab ${tab === 'more' ? 'active' : ''}`} onClick={() => setTab('more')}>
           <span className="nav-icon"><MoreHorizontal size={22} strokeWidth={1.75} /></span>

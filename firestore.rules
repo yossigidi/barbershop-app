@@ -81,6 +81,12 @@ service cloud.firestore {
         allow create, update, delete: if isOwner(uid);
       }
 
+      // Expenses: business expense tracking. Owner only — never exposed publicly.
+      match /expenses/{expenseId} {
+        allow read, list: if isOwner(uid);
+        allow create, update, delete: if isOwner(uid);
+      }
+
       // Waitlist: client can subscribe (create); only owner reads/lists/deletes
       match /waitlist/{entryId} {
         allow read, list: if isOwner(uid);
