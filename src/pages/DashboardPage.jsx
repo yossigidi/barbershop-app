@@ -58,6 +58,16 @@ export default function DashboardPage() {
   const [showTomorrow, setShowTomorrow] = useState(false);
   const [showYesterday, setShowYesterday] = useState(false);
   const [actionFor, setActionFor] = useState(null);
+
+  // Keep the action-sheet's booking in sync with Firestore changes — when
+  // the user completes/starts a booking the listener updates `bookings`,
+  // and we want the open sheet to re-render against the new status (e.g.
+  // "סיים תור" → "✓ Send review" appears) instead of closing or going stale.
+  useEffect(() => {
+    if (!actionFor) return;
+    const fresh = bookings.find((b) => b.id === actionFor.id);
+    if (fresh && fresh !== actionFor) setActionFor(fresh);
+  }, [bookings, actionFor]);
   const [quickBook, setQuickBook] = useState(null);
 
   useEffect(() => {

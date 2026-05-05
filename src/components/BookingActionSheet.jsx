@@ -180,7 +180,7 @@ export default function BookingActionSheet({
           <button className="btn-primary" onClick={() => { onStart(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Play size={18} className="icon-inline" />התחל תור</button>
         )}
         {inProgress && (
-          <button className="btn-primary" onClick={() => { onComplete(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Check size={18} className="icon-inline" />סיים תור</button>
+          <button className="btn-primary" onClick={onComplete} style={{ width: '100%', marginBottom: 8 }}><Check size={18} className="icon-inline" />סיים תור</button>
         )}
         {!completed && (
           <button className="btn-secondary" onClick={() => { onEdit(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Edit3 size={18} className="icon-inline" />העבר לזמן/יום אחר</button>
