@@ -370,9 +370,12 @@ export default function HomePage() {
                 <strong>ביטול לפני תום ההתחייבות:</strong> דמי יציאה של ₪30 לכל חודש שנותר.
                 <br />
                 <span className="muted" style={{ fontSize: '0.82rem' }}>
-                  ב-14 ימי ה-cooling-off הראשונים — ביטול ללא עלות.
-                  פגם בציוד או חוסר התאמה — ביטול מלא.
-                  <Link to="/refund" style={{ color: 'var(--gold-deep)', fontWeight: 600 }}>פרטי המדיניות המלאים →</Link>
+                  זכות ביטול 14 יום (cooling-off) — קיימת. בעת ביטול במסגרת זו, הטאבלט יוחזר במצב מקורי
+                  ללא תוספת חיוב; אם לא יוחזר או נגרם נזק — ייגבה מחירו המלא.
+                  פגם בציוד או חוסר התאמה לתיאור — ביטול מלא ללא עלות.
+                  <Link to="/refund" style={{ color: 'var(--gold-deep)', fontWeight: 600, display: 'block', marginTop: 4 }}>
+                    פרטי המדיניות המלאים →
+                  </Link>
                 </span>
               </div>
             </div>
