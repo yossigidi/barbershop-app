@@ -225,6 +225,7 @@ export default function HomePage() {
                 <li><Check size={14} className="icon-inline" />כל הפיצ'רים</li>
                 <li><Check size={14} className="icon-inline" />טאבלט בעסק שלך</li>
                 <li><Check size={14} className="icon-inline" />ניהול היומן והעסק על מסך גדול בקבע</li>
+                <li><Check size={14} className="icon-inline" />סטטיסטיקות והכנסות בזמן אמת</li>
                 <li><Check size={14} className="icon-inline" />עדיפות תמיכה</li>
               </ul>
               <button
@@ -354,6 +355,7 @@ export default function HomePage() {
               <li><Check size={14} className="icon-inline" />טאבלט 10" איכותי לעסק (במתנה)</li>
               <li><Check size={14} className="icon-inline" />כל הפיצ'רים של Pro — בלי הגבלה</li>
               <li><Check size={14} className="icon-inline" />ניהול היומן, התורים והלקוחות במסך גדול קבוע בעסק</li>
+              <li><Check size={14} className="icon-inline" />סטטיסטיקות, הכנסות והוצאות בזמן אמת</li>
               <li><Check size={14} className="icon-inline" />עדיפות בתמיכה</li>
               <li><Check size={14} className="icon-inline" />30 ימי ניסיון חינם לפני שמתחיל החיוב</li>
             </ul>
