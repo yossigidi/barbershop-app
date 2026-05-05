@@ -21,6 +21,17 @@ import { buildIcs, downloadIcs } from '../utils/ics';
 
 const PHONE_KEY = 'bs_phone';
 
+// 20-char URL-safe random token — uses crypto.getRandomValues for true
+// randomness, base36-style alphabet (lowercase + digits)
+function generateManageToken() {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = new Uint8Array(20);
+  crypto.getRandomValues(bytes);
+  let out = '';
+  for (let i = 0; i < bytes.length; i++) out += chars[bytes[i] % chars.length];
+  return out;
+}
+
 function normalizePhone(raw) {
   return (raw || '').replace(/[^\d]/g, '');
 }
@@ -346,13 +357,31 @@ export default function BookingPage() {
         });
         if (conflict) { skipped.push(d); continue; }
 
+        // 20-char token unique per booking — used by the client to view,
+        // cancel, or reschedule via /manage/<token> without logging in
+        const manageToken = generateManageToken();
+
         const ref = await addDoc(collection(db, 'barbers', barberId, 'bookings'), {
           ...baseDoc,
           date: d,
           recurringId: recurringId || null,
+          manageToken,
           createdAt: serverTimestamp(),
         });
-        created.push({ id: ref.id, date: d });
+        created.push({ id: ref.id, date: d, manageToken });
+
+        // Cross-reference: token → {uid, bookingId} so /manage/<token> can
+        // resolve the booking path without authentication.
+        try {
+          await setDoc(doc(db, 'manageTokens', manageToken), {
+            uid: barberId,
+            bookingId: ref.id,
+            createdAt: serverTimestamp(),
+          });
+        } catch (e) {
+          // Non-fatal — booking was still created. Log for visibility.
+          console.warn('manageTokens write failed', e?.message);
+        }
       }
 
       fetch('/api/notify', {
@@ -373,6 +402,7 @@ export default function BookingPage() {
 
       setSuccess({
         id: created[0]?.id,
+        manageToken: created[0]?.manageToken,
         time,
         date: iso,
         addons: selectedAddons,
@@ -414,6 +444,11 @@ export default function BookingPage() {
     alert(`📋 המספר הועתק: ${cleanPhone}\n💰 סכום: ₪${amount}\n\nפתח את ${appName} ידנית והדבק את המספר.`);
   }
 
+  function manageUrl() {
+    if (!success?.manageToken) return '';
+    return `${window.location.origin}/manage/${success.manageToken}`;
+  }
+
   function downloadCalendarInvite() {
     if (!success) return;
     const summary = `${barber.businessName} — ${pickedService?.name || 'תור'}`;
@@ -423,6 +458,8 @@ export default function BookingPage() {
       `אורך: ${totalDuration} דק׳`,
       totalPrice ? `מחיר: ₪${totalPrice}` : '',
     ].filter(Boolean);
+    const link = manageUrl();
+    if (link) lines.push('', `לעריכה / ביטול: ${link}`);
     const ics = buildIcs({
       dateISO: success.date,
       time: success.time,
@@ -433,6 +470,17 @@ export default function BookingPage() {
       uid: success.id,
     });
     downloadIcs(`${barber.businessName || 'תור'}-${success.date}-${success.time}.ics`, ics);
+  }
+
+  function copyManageLink() {
+    const link = manageUrl();
+    if (!link) return;
+    try {
+      navigator.clipboard.writeText(link);
+      alert('הלינק הועתק! 📋');
+    } catch {
+      prompt('העתק את הלינק:', link);
+    }
   }
 
   if (error) return <div className="app"><div className="card text-center text-danger">{error}</div></div>;
@@ -471,6 +519,19 @@ export default function BookingPage() {
             </p>
           )}
           <div className="spacer" />
+
+          {success.manageToken && (
+            <div className="manage-link-box">
+              <div className="muted" style={{ fontSize: '0.78rem', marginBottom: 4 }}>לניהול התור (שינוי / ביטול):</div>
+              <div className="copy-link" onClick={copyManageLink} title="לחץ להעתקה">
+                {manageUrl()}
+              </div>
+              <div className="muted text-center" style={{ fontSize: '0.74rem', marginTop: 6 }}>
+                שמור את הלינק. דרכו תוכל לשנות או לבטל את התור בכל עת.
+              </div>
+            </div>
+          )}
+
           <button className="btn-primary" onClick={downloadCalendarInvite} style={{ width: '100%', marginBottom: 8 }}>
             <CalendarPlus size={18} className="icon-inline" />הוסף ליומן (תזכורת אוטומטית)
           </button>

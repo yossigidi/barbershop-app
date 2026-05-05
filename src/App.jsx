@@ -9,6 +9,7 @@ import ReportsPage from './pages/ReportsPage.jsx';
 import PricingPage from './pages/PricingPage.jsx';
 import TermsPage from './pages/TermsPage.jsx';
 import AccessibilityPage from './pages/AccessibilityPage.jsx';
+import ManageBookingPage from './pages/ManageBookingPage.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/accessibility" element={<AccessibilityPage />} />
       <Route path="/b/:code" element={<BookingPage />} />
+      <Route path="/manage/:token" element={<ManageBookingPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

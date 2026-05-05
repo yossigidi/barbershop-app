@@ -97,5 +97,16 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if false;
     }
+
+    // Manage tokens — public read (the token IS the credential), public
+    // create with strict structure validation. No update/delete from
+    // clients. The token's secrecy + length (20 random chars) prevents
+    // guessing.
+    match /manageTokens/{token} {
+      allow read: if true;
+      allow create: if request.resource.data.uid is string
+                    && request.resource.data.bookingId is string;
+      allow update, delete: if false;
+    }
   }
 }
