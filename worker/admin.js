@@ -11,15 +11,25 @@ export async function handleBrevoStatus(request, env) {
   if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
   if (request.method !== 'GET') return err('Method not allowed', 405);
 
-  // Auth — must be signed in
-  const authHeader = request.headers.get('authorization') || '';
-  const token = authHeader.replace(/^Bearer\s+/i, '');
-  if (!token) return err('Missing auth', 401);
-  try {
-    const svc = await loadServiceAccount(env);
-    await verifyIdToken(token, svc.project_id);
-  } catch (e) {
-    return err('Auth failed: ' + e.message, 401);
+  // Auth — accepts EITHER a signed-in Firebase ID token OR a one-time
+  // diagnostic key (set as Worker secret BREVO_DIAG_KEY). The diagnostic
+  // key path is for the operator to run one-shot checks without going
+  // through a browser session. Response contains no secrets and no user
+  // data — only Brevo configuration status.
+  const url = new URL(request.url);
+  const queryKey = url.searchParams.get('key') || '';
+  const diagAllowed = env.BREVO_DIAG_KEY && queryKey && queryKey === env.BREVO_DIAG_KEY;
+
+  if (!diagAllowed) {
+    const authHeader = request.headers.get('authorization') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    if (!token) return err('Missing auth', 401);
+    try {
+      const svc = await loadServiceAccount(env);
+      await verifyIdToken(token, svc.project_id);
+    } catch (e) {
+      return err('Auth failed: ' + e.message, 401);
+    }
   }
 
   if (!env.BREVO_API_KEY) return err('BREVO_API_KEY not set on Worker', 500);
