@@ -39,7 +39,7 @@ export default function HomePage() {
 
       <header className="landing-bar" role="banner">
         <Link to="/" className="brand-link" aria-label="Toron — דף הבית">
-          <span className="brand-mark">T</span>
+          <img src="/logo-mark.png" alt="" aria-hidden="true" className="brand-mark-img" />
           <span className="brand-name">Toron</span>
         </Link>
         <nav className="landing-nav" role="navigation" aria-label="ניווט ראשי">
@@ -299,7 +299,7 @@ export default function HomePage() {
         <div className="footer-cols">
           <div className="footer-col">
             <div className="brand-link" style={{ marginBottom: 12 }}>
-              <span className="brand-mark">T</span>
+              <img src="/logo-mark.png" alt="" aria-hidden="true" className="brand-mark-img" />
               <span className="brand-name">Toron</span>
             </div>
             <p className="footer-tag">ניהול תורים חכם לבעלי מקצוע בישראל.</p>

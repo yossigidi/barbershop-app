@@ -169,7 +169,7 @@ export default function AuthPage() {
 
       <div className="auth-card">
         <div className="auth-brand">
-          <div className="brand-mark">T</div>
+          <img src="/logo-mark.png" alt="" aria-hidden="true" className="brand-mark-img brand-mark-lg" />
           <span className="brand-name">Toron</span>
         </div>
 
