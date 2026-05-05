@@ -19,41 +19,94 @@ const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const SCENARIOS = {
   'reminder': {
     label: 'תזכורת',
-    instruction: 'Write a friendly WhatsApp reminder for an appointment tomorrow. Tone: warm, casual, brief (2-3 lines max). Include the date, time, and service. End with something like "נתראה!" or "מחכה לך!".',
+    instruction:
+`Write 3 short, friendly WhatsApp reminders for tomorrow's appointment.
+- 2-3 lines each.
+- Mention the service in 1-2 words ("תספורת", "מניקור ג'ל", "טיפול פנים"). DO NOT list the add-ons individually.
+- Mention only the time. Date is "מחר".
+- End with something natural like "נתראה" or "מחכה לך".
+
+GOOD example: "היי דני, תזכורת קטנה — מחר ב-10:00 לתספורת. נתראה! ✂️"
+BAD example: "מה שבוע היה! דני, תזכורת לתור המצחיק שלך מחר תספורת + זקן + שעווה באוזניים..."`,
   },
   'thank-you': {
     label: 'תודה אחרי תור',
-    instruction: 'Write a warm WhatsApp thank-you message to a client who came yesterday. Tone: appreciative, personal, brief. If the business has a Google review URL, gently invite them to leave a review.',
+    instruction:
+`Write 3 short thank-you messages to a client who came yesterday.
+- 2-3 lines each.
+- DO NOT list services or add-ons. The client knows what they got.
+- DO NOT use awkward openings like "מה שבוע היה" or "התור המצחיק".
+- If a Google review URL is provided in context, mention naturally — "אם בא לך, אשמח לביקורת קצרה ב-Google" — and put the URL on its own line.
+- The 3 variations differ in tone: warm / brief-and-professional / friendly-casual.
+
+GOOD example: "תודה שהיית היום אצלי, דני. שמחתי לראות אותך 🙏"
+BAD example: "מה שבוע היה! דני, תודה על התור המצחיק אתמול, תספורת + זקן + שעווה באוזניים..."`,
   },
   'winback': {
     label: 'חזרה ללקוח שנעלם',
-    instruction: 'Write a soft win-back WhatsApp message to a client who has not booked in several weeks. Tone: caring, low-pressure, no guilt-tripping. Mention you noticed and would love to see them again.',
+    instruction:
+`Write 3 soft win-back messages to a client who hasn't booked in a while.
+- 2-3 lines each.
+- Caring, low-pressure. No guilt-tripping ("איפה היית?" is forbidden).
+- Mention casually that some time has passed.
+- End with an open invitation ("אשמח לראות אותך שוב" / "אם בא לך לקבוע — אני כאן").
+
+GOOD example: "היי דני, חשבתי עליך — עבר זמן. אם בא לך לקבוע, אני כאן 🌸"
+BAD example: "דני! איפה אתה? כבר 8 שבועות לא ראיתי אותך, התגעגעתי..."`,
   },
   'reschedule': {
     label: 'בקשה להעברת תור',
-    instruction: 'Write a polite WhatsApp message asking the client to reschedule their appointment because the business owner cannot make it. Tone: apologetic, professional. Suggest you will offer alternative times soon.',
+    instruction:
+`Write 3 polite messages to a client asking to reschedule their appointment because the business owner cannot make it.
+- 2-3 lines each.
+- Apologetic but not over-the-top. Don't share personal medical details.
+- Suggest you'll offer new times soon.
+
+GOOD example: "היי דני, מצטערת — נאלצת לבטל את התור של מחר. אצור איתך קשר לתאם זמן חדש."
+BAD example: "אני חולה במיגרנה רעה ולא יכולה לתספר אף אחד..."`,
   },
   'vip-welcome': {
     label: 'ברכת VIP',
-    instruction: 'Write a special WhatsApp message acknowledging a loyal repeat client. Tone: warm, personal, makes them feel valued. Brief.',
+    instruction:
+`Write 3 short messages acknowledging a loyal repeat client (5+ visits).
+- 2-3 lines each.
+- Make them feel seen. Not "you are a VIP" (cringe), but personal.
+- Optional: mention something small (kept-aside time, priority).
+
+GOOD example: "תמיד שמחה לראות אותך אצלי, דני. עוד פעם הצלחת לעשות לי את היום 💛"
+BAD example: "ברוך הבא, לקוח VIP יקר! מסלול הזהב שלנו..."`,
   },
   'holiday': {
     label: 'ברכת חג',
-    instruction: 'Write a warm WhatsApp holiday greeting from the business to a client. Tone: festive, brief, personal. Mention the upcoming holiday name if provided.',
+    instruction:
+`Write 3 short holiday greetings.
+- 2-3 lines each.
+- Mention the holiday by name (passed in context).
+- Warm but brief. One emoji.
+
+GOOD example: "חג פסח שמח, דני! מאחלת לך וולמשפחה ימים טובים 🌸"
+BAD example: "שלום ולברכה. בכל יום ויום אנו מודים על הזכות..."`,
   },
 };
 
-const SYSTEM_PROMPT = `You write short, warm, personal WhatsApp messages for an Israeli service professional (barber, manicurist, pedicurist, cosmetician, or similar appointment-based business) to send to their clients.
-Rules:
-- Hebrew only. Natural everyday Hebrew, not formal.
-- Adapt vocabulary to the profession from context — e.g. "תספורת" for barber, "מניקור" for manicurist, "טיפול" generic.
-- Use grammatical gender appropriately: barber/cosmetician is often female, sometimes male; client is also gender-aware. Default to neutral phrasing when unsure.
-- Short (2-4 lines). One emoji max per message.
-- First-person voice (the business owner speaking).
-- Personal: use the client's first name if provided.
-- No marketing buzzwords. No "Dear customer". No "We at X".
-- Output ONLY a valid JSON array of exactly 3 strings. No prose, no markdown, no commentary, no code fences.
-- Each string should differ in tone slightly: warm / professional / casual+playful.`;
+// One general system prompt — the per-scenario instructions stack on top.
+const SYSTEM_PROMPT =
+`You write short, warm, personal WhatsApp messages in Hebrew for an Israeli service professional (barber, manicurist, pedicurist, cosmetician, or similar appointment-based business) to send to their clients.
+
+GENERAL RULES (apply to every scenario):
+- Hebrew only. Use natural everyday Hebrew, like a friendly text between people who know each other.
+- Short. 2-3 lines per message. NEVER more than 4 lines.
+- First-person voice — the business owner is speaking directly.
+- Use the client's first name when provided.
+- Use grammatical gender from context: business owner ("contact" field) — default female unless the name is clearly male; client — same.
+- DO NOT list services and add-ons mechanically. If the service name is needed, say it in 1-2 words ("תספורת", "מניקור ג'ל", "טיפול פנים"). NEVER write "תספורת + זקן + שעווה באוזניים" as a list.
+- DO NOT use the literal English word "appointment" or its mistranslation "תור מצחיק". The Hebrew word is "תור".
+- DO NOT open with awkward phrases: "מה שבוע היה", "מה שלום", "אהוי", "ברוך הבא", "Dear customer", "We at", "אנו ב".
+- DO NOT use marketing speak: "המסלול הזהבי", "חוויה בלתי נשכחת", "אקסקלוסיבי".
+- One emoji per message AT MOST. Pick one that's clearly relevant (✂️🌸💅💆🎉🙏✨💛). DO NOT end the message mid-emoji.
+- Output ONLY a valid JSON array of exactly 3 strings. No prose, no markdown, no code fences, no commentary.
+- The 3 variations should be DISTINCT — different opening, slightly different tone (warm / professional / playful).
+- Keep each variation under 220 characters so it fits comfortably in a WhatsApp preview.`;
 
 export async function handleAiCompose(request, env) {
   if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
@@ -85,18 +138,24 @@ export async function handleAiCompose(request, env) {
   const b = body.booking || {};
   const biz = body.business || {};
 
+  // Build context — service is condensed to ONE field (no separate addons list)
+  // so the LLM doesn't mechanically dump them all into the message.
+  const serviceLine = b.service
+    ? (b.addons && b.addons.length ? `${b.service} + ${b.addons.length} תוספות` : b.service)
+    : '';
+
   const contextLines = [];
-  if (c.firstName || c.fullName) contextLines.push(`שם הלקוח: ${c.firstName || c.fullName}`);
-  if (c.visits) contextLines.push(`מספר ביקורים בעבר: ${c.visits}`);
-  if (c.weeksSinceLastVisit) contextLines.push(`עברו ${c.weeksSinceLastVisit} שבועות מהביקור האחרון`);
-  if (b.date) contextLines.push(`תאריך התור: ${b.date}`);
-  if (b.time) contextLines.push(`שעה: ${b.time}`);
-  if (b.service) contextLines.push(`שירות: ${b.service}`);
-  if (b.addons && b.addons.length) contextLines.push(`תוספות: ${b.addons.join(', ')}`);
-  if (biz.name) contextLines.push(`שם העסק: ${biz.name}`);
-  if (biz.profession) contextLines.push(`תחום: ${biz.profession}`);
-  if (biz.googleReviewUrl) contextLines.push(`לינק ביקורת Google: ${biz.googleReviewUrl}`);
-  if (body.holidayName) contextLines.push(`שם החג: ${body.holidayName}`);
+  if (c.firstName || c.fullName) contextLines.push(`Client first name: ${(c.firstName || c.fullName).split(/\s+/)[0]}`);
+  if (c.visits) contextLines.push(`Client previous visits: ${c.visits}`);
+  if (c.weeksSinceLastVisit) contextLines.push(`Weeks since last visit: ${c.weeksSinceLastVisit}`);
+  if (b.date) contextLines.push(`Appointment date: ${b.date} (refer to it as "מחר" if it's tomorrow)`);
+  if (b.time) contextLines.push(`Appointment time: ${b.time}`);
+  if (serviceLine) contextLines.push(`Service (do NOT list add-ons individually): ${serviceLine}`);
+  if (biz.name) contextLines.push(`Business name: ${biz.name}`);
+  if (biz.profession) contextLines.push(`Profession: ${biz.profession} (adapt vocabulary)`);
+  if (biz.contact) contextLines.push(`Sender (business owner) name: ${biz.contact}`);
+  if (biz.googleReviewUrl) contextLines.push(`Google review URL: ${biz.googleReviewUrl}`);
+  if (body.holidayName) contextLines.push(`Holiday name: ${body.holidayName}`);
 
   const userPrompt = [
     `תרחיש: ${scenario.label}`,
@@ -121,8 +180,13 @@ export async function handleAiCompose(request, env) {
       },
       body: JSON.stringify({
         model: GROQ_MODEL,
-        temperature: 0.85,
-        max_tokens: 700,
+        // Lower temperature — 0.85 made the model "creative" in bad ways
+        // ("מה שבוע היה", "התור המצחיק"). 0.55 gives natural variation
+        // without hallucinated openers.
+        temperature: 0.55,
+        // Up max_tokens so the third message + closing emoji never gets
+        // truncated mid-character (caused stray � in earlier outputs).
+        max_tokens: 900,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userPrompt },
