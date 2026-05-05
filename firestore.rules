@@ -58,9 +58,19 @@ service cloud.firestore {
                       && isPhone(request.resource.data.clientPhone)
                       && request.resource.data.status == 'booked';
         allow update: if isOwner(uid);
+        // Public cancellation — anyone with the booking path can switch
+        // status booked → cancelled (clientPhone must be preserved)
         allow update: if resource.data.clientPhone == request.resource.data.clientPhone
                       && request.resource.data.status == 'cancelled'
                       && resource.data.status == 'booked';
+        // Public reschedule — anyone with the booking path (i.e., the
+        // client who has their manage token) can change date and/or time
+        // while keeping the booking active and clientPhone unchanged.
+        allow update: if resource.data.clientPhone == request.resource.data.clientPhone
+                      && resource.data.status == 'booked'
+                      && request.resource.data.status == 'booked'
+                      && isDateStr(request.resource.data.date)
+                      && isTimeStr(request.resource.data.time);
         allow delete: if isOwner(uid);
       }
 
