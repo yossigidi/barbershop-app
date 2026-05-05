@@ -85,6 +85,66 @@ export function computeClientMemory(allBookings, clientPhone, todayISO) {
   };
 }
 
+// Find clients who haven't booked in a long time relative to their pattern.
+// Returns sorted (longest-gap first) list of:
+//   { phone, name, memory, sample }
+// where `sample` is the last fulfilled booking object — used to seed a
+// synthetic booking shape for the AI composer.
+//
+// Dormancy criteria:
+//   - Has at least one fulfilled past visit (a relationship to win back)
+//   - Has NO upcoming booking (status='booked' and date >= today)
+//   - Days since last visit ≥ max(56, 1.5 × average cycle)
+//     → multi-visit returners trigger after ~150% of their normal gap
+//     → one-time clients trigger after a flat 8 weeks
+export function findDormantClients(allBookings, todayISO) {
+  if (!Array.isArray(allBookings)) return [];
+
+  const byPhone = new Map();
+  for (const b of allBookings) {
+    if (!b.clientPhone) continue;
+    const list = byPhone.get(b.clientPhone) || [];
+    list.push(b);
+    byPhone.set(b.clientPhone, list);
+  }
+
+  const dormants = [];
+  for (const [phone, list] of byPhone) {
+    const memory = computeClientMemory(list, phone, todayISO);
+    if (!memory || memory.visits === 0) continue;
+
+    const hasUpcoming = list.some(
+      (b) => (b.date || '') >= todayISO && b.status === 'booked',
+    );
+    if (hasUpcoming) continue;
+
+    const threshold = memory.avgCycleDays
+      ? Math.max(56, Math.round(memory.avgCycleDays * 1.5))
+      : 56;
+
+    if ((memory.daysSinceLastVisit || 0) < threshold) continue;
+
+    // Pick the most-recent fulfilled booking as the sample (for client info)
+    const fulfilled = list
+      .filter((b) => b.status !== 'cancelled' && (b.date || '') <= todayISO)
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const sample = fulfilled[fulfilled.length - 1];
+    if (!sample) continue;
+
+    dormants.push({
+      phone,
+      name: sample.clientName || '',
+      memory,
+      sample,
+    });
+  }
+
+  dormants.sort(
+    (a, b) => (b.memory.daysSinceLastVisit || 0) - (a.memory.daysSinceLastVisit || 0),
+  );
+  return dormants;
+}
+
 function daysBetween(isoA, isoB) {
   if (!isoA || !isoB) return 0;
   const a = parseISO(isoA);

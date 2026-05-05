@@ -2072,6 +2072,33 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   box-shadow: 0 0 0 3px var(--gold-soft);
 }
 
+/* ─── Win-back batch (Reports → לקוחות שנעלמו) ────────────────────────── */
+.winback-card { position: relative; }
+.winback-card h3 { display: flex; align-items: center; gap: 8px; }
+.winback-card h3 svg { color: #b91c1c; }
+.winback-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+.winback-row:first-of-type { border-top: none; }
+.winback-info { flex: 1; min-width: 0; }
+.winback-meta {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.winback-gap { color: #b91c1c; font-weight: 600; }
+.winback-btn {
+  flex: none;
+  padding: 8px 12px !important;
+  font-size: 0.82rem !important;
+  white-space: nowrap;
+}
+
 /* ─── AI Daily Briefing card ────────────────────────────────────────────── */
 .briefing-insights {
   list-style: none;

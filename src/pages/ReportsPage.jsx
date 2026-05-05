@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarDays, Trophy, PartyPopper } from 'lucide-react';
+import { BarChart3, CalendarDays, Trophy, PartyPopper, HeartCrack, Sparkles, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { getAccessState } from '../utils/subscription';
 import PaywallModal from '../components/PaywallModal.jsx';
+import AIComposeModal from '../components/AIComposeModal.jsx';
 import { db } from '../firebase';
-import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query } from 'firebase/firestore';
 import { dateToISO, DAY_LABELS_HE, DAYS_OF_WEEK } from '../utils/slots';
 import { upcomingHolidays, holidayOn } from '../utils/holidays';
+import { findDormantClients } from '../utils/clientMemory';
 
 function startOfWeek(d) {
   const x = new Date(d);
@@ -49,13 +51,14 @@ export default function ReportsPage() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [barberData, setBarberData] = useState(null);
+  const [winbackTarget, setWinbackTarget] = useState(null);
 
   useEffect(() => {
     if (!user) return;
-    const q = query(
-      collection(db, 'barbers', user.uid, 'bookings'),
-      where('status', '==', 'booked'),
-    );
+    // Load all bookings (including completed and cancelled). Each section
+    // below filters to the statuses it cares about — dormant detection
+    // needs cancelled visits to compute risk, top customers want completed too.
+    const q = query(collection(db, 'barbers', user.uid, 'bookings'));
     const unsub = onSnapshot(q, (snap) => {
       setBookings(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
@@ -147,10 +150,15 @@ export default function ReportsPage() {
     }
     const maxHour = Math.max(1, ...hourCount);
 
+    // Dormant clients — driven by per-client memory (visits, avg cycle,
+    // days-since-last). Sorted longest-gap first.
+    const dormants = findDormantClients(bookings, todayISO);
+
     return {
       day, yesterday, week, lastWeek, month, lastMonth,
       dowCount, dowRev, last7, max7, holidays, total,
       topCustomers, hourCount, maxHour,
+      dormants,
     };
   }, [bookings]);
 
@@ -224,6 +232,44 @@ export default function ReportsPage() {
         )}
       </div>
 
+      {data.dormants.length > 0 && (
+        <div className="card winback-card">
+          <h3 style={{ marginTop: 0 }}>
+            <HeartCrack size={18} className="icon-inline" />לקוחות שנעלמו ({data.dormants.length})
+          </h3>
+          <p className="muted" style={{ marginTop: -6, fontSize: '0.86rem' }}>
+            לקוחות שלא חזרו זמן רב מהקצב הרגיל שלהם — אין להם תור עתידי. AI יכתוב להם הודעה אישית בלחיצה אחת.
+          </p>
+          {data.dormants.slice(0, 12).map((d) => (
+            <div key={d.phone} className="winback-row">
+              <div className="winback-info">
+                <strong>{d.name || 'ללא שם'}</strong>
+                <a href={`tel:${d.phone}`} className="muted" style={{ fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: 4, marginInlineStart: 8 }}>
+                  <Phone size={11} />{d.phone}
+                </a>
+                <div className="winback-meta">
+                  <span>{d.memory.visits} ביקורים</span>
+                  {d.memory.revenue > 0 && <span> · ₪{d.memory.revenue}</span>}
+                  {d.memory.preferredService && <span> · {d.memory.preferredService}</span>}
+                  <span className="winback-gap"> · נעלם {d.memory.weeksSinceLastVisit} שבועות</span>
+                </div>
+              </div>
+              <button
+                className="btn-gold winback-btn"
+                onClick={() => setWinbackTarget(d)}
+              >
+                <Sparkles size={14} className="icon-inline" />כתב הודעה
+              </button>
+            </div>
+          ))}
+          {data.dormants.length > 12 && (
+            <p className="muted text-center" style={{ marginTop: 10, fontSize: '0.82rem' }}>
+              + {data.dormants.length - 12} לקוחות נוספים
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="card">
         <h3 style={{ marginTop: 0 }}>⏰ שעות עמוסות (6 חודשים)</h3>
         <div className="bars" style={{ height: 120 }}>
@@ -281,6 +327,24 @@ export default function ReportsPage() {
       </div>
 
       <div className="spacer" />
+
+      {winbackTarget && (
+        <AIComposeModal
+          open={true}
+          onClose={() => setWinbackTarget(null)}
+          booking={{
+            clientName: winbackTarget.name,
+            clientPhone: winbackTarget.phone,
+            serviceName: winbackTarget.memory.preferredService || '',
+            date: winbackTarget.memory.lastVisitDate || '',
+            time: '',
+            addons: [],
+          }}
+          businessName={barberData?.businessName || ''}
+          aiGender={barberData?.aiGender || 'neutral'}
+          defaultScenario="winback"
+        />
+      )}
     </div>
   );
 }
