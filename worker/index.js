@@ -12,6 +12,7 @@ import {
   handleCancelStudio, handleTranzilaSuccess, handleTranzilaFail,
 } from './payment.js';
 import { handleRedeemPromo } from './promo.js';
+import { handleAiCompose } from './ai.js';
 import { handleCronBilling } from './cron.js';
 
 const apiHandlers = {
@@ -23,6 +24,7 @@ const apiHandlers = {
   '/api/cancel-subscription': handleCancelSubscription,
   '/api/cancel-studio': handleCancelStudio,
   '/api/redeem-promo': handleRedeemPromo,
+  '/api/ai-compose': handleAiCompose,
 };
 
 export default {

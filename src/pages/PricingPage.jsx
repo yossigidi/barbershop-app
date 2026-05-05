@@ -323,7 +323,7 @@ export default function PricingPage() {
 
       <div className="card" style={{ background: 'var(--surface-2)' }}>
         <p className="muted" style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6 }}>
-          <strong>טריאל ראשון:</strong> כל ספר/ית חדש/ה מקבל/ת {TRIAL_DAYS} ימי שימוש מלאים בחינם, ללא צורך בכרטיס אשראי. אחרי תקופת הניסיון, חיוב חודשי דרך Tranzila עם חשבונית-מס אוטומטית.
+          <strong>טריאל ראשון:</strong> כל בעל/ת מקצוע חדש/ה מקבל/ת {TRIAL_DAYS} ימי שימוש מלאים בחינם, ללא צורך בכרטיס אשראי. אחרי תקופת הניסיון, חיוב חודשי דרך Tranzila עם חשבונית-מס אוטומטית.
         </p>
       </div>
 

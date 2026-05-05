@@ -1,10 +1,19 @@
-import { Phone, Play, Check, Edit3, Star } from 'lucide-react';
+import { useState } from 'react';
+import { Phone, Play, Check, Edit3, Star, Sparkles } from 'lucide-react';
 import { addMinToTime } from '../utils/slots';
 import { whatsappUrl } from '../utils/whatsapp';
+import AIComposeModal from './AIComposeModal.jsx';
 
 export default function BookingActionSheet({ booking, businessName, googleReviewUrl, onClose, onStart, onComplete, onEdit, onCancel }) {
   const inProgress = booking.status === 'inProgress';
   const completed = booking.status === 'completed';
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiScenario, setAiScenario] = useState('reminder');
+
+  function openAi(scenario) {
+    setAiScenario(scenario);
+    setAiOpen(true);
+  }
 
   function sendReviewRequest() {
     if (!googleReviewUrl || !booking.clientPhone) return;
@@ -49,6 +58,23 @@ export default function BookingActionSheet({ booking, businessName, googleReview
         {completed && googleReviewUrl && (
           <button className="btn-gold" onClick={() => { sendReviewRequest(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Star size={18} className="icon-inline" />שלח בקשת ביקורת בגוגל</button>
         )}
+
+        {/* AI message composer — relevant for any booking status */}
+        <button
+          className="btn-secondary"
+          onClick={() => openAi(completed ? 'thank-you' : 'reminder')}
+          style={{ width: '100%', marginBottom: 8 }}
+        >
+          <Sparkles size={18} className="icon-inline" />כתב הודעה חכמה ב-AI
+        </button>
+
+        <AIComposeModal
+          open={aiOpen}
+          onClose={() => setAiOpen(false)}
+          booking={booking}
+          defaultScenario={aiScenario}
+          businessName={businessName}
+        />
         {!completed && (
           <button className="btn-danger" onClick={() => { onCancel(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}>בטל תור</button>
         )}

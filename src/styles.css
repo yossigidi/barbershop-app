@@ -1946,6 +1946,27 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   font-weight: 700;
 }
 
+/* ─── AI compose — variation cards ─────────────────────────────────────── */
+.ai-variation {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  line-height: 1.6;
+}
+.ai-variation:hover {
+  border-color: var(--gold);
+  background: var(--surface);
+}
+.ai-variation.picked {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.16), inset 0 0 0 1px var(--gold);
+}
+
 /* ─── Pricing page ──────────────────────────────────────────────────────── */
 .pricing-grid {
   display: grid;
