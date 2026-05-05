@@ -7,6 +7,81 @@
 
 import { verifyIdToken, ok, err, corsHeaders, loadServiceAccount } from './_lib.js';
 
+// Mint an OAuth access token from the service account with the
+// `cloud-platform` scope so we can hit the Identity Toolkit Admin API.
+async function getCloudPlatformToken(env) {
+  const svc = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  const now = Math.floor(Date.now() / 1000);
+  const claim = {
+    iss: svc.client_email,
+    scope: 'https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/firebase',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  };
+  const enc = (obj) => {
+    const s = btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(obj))));
+    return s.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  };
+  const unsigned = `${enc({ alg: 'RS256', typ: 'JWT' })}.${enc(claim)}`;
+  const pem = svc.private_key.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const sigBuf = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(unsigned));
+  const sig = btoa(String.fromCharCode(...new Uint8Array(sigBuf))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=${encodeURIComponent('urn:ietf:params:oauth:grant-type:jwt-bearer')}&assertion=${unsigned}.${sig}`,
+  });
+  if (!r.ok) throw new Error(`token exchange ${r.status}: ${await r.text()}`);
+  return (await r.json()).access_token;
+}
+
+export async function handleAuthDomainsStatus(request, env) {
+  if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+
+  // Same dual-auth pattern as brevo-status — diag key OR signed-in user
+  const url = new URL(request.url);
+  const queryKey = url.searchParams.get('key') || '';
+  const diagAllowed = env.AUTH_DIAG_KEY && queryKey && queryKey === env.AUTH_DIAG_KEY;
+
+  if (!diagAllowed) {
+    const authHeader = request.headers.get('authorization') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    if (!token) return err('Missing auth', 401);
+    try {
+      const svc = await loadServiceAccount(env);
+      await verifyIdToken(token, svc.project_id);
+    } catch (e) {
+      return err('Auth failed: ' + e.message, 401);
+    }
+  }
+
+  const svc = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT_JSON);
+  const projectId = svc.project_id;
+  let token;
+  try {
+    token = await getCloudPlatformToken(env);
+  } catch (e) {
+    return err('Token mint failed: ' + e.message, 500);
+  }
+
+  const r = await fetch(`https://identitytoolkit.googleapis.com/admin/v2/projects/${projectId}/config`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!r.ok) return err(`Admin API ${r.status}: ${(await r.text()).slice(0, 300)}`, 500);
+  const cfg = await r.json();
+  return ok({
+    projectId,
+    authorizedDomains: cfg.authorizedDomains || [],
+    signIn: cfg.signIn || null,
+    multiTenant: cfg.multiTenant || null,
+    toron_in_list: (cfg.authorizedDomains || []).includes('toron.co.il'),
+    www_toron_in_list: (cfg.authorizedDomains || []).includes('www.toron.co.il'),
+  });
+}
+
 export async function handleBrevoStatus(request, env) {
   if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
   if (request.method !== 'GET') return err('Method not allowed', 405);
