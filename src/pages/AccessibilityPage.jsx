@@ -35,8 +35,10 @@ export default function AccessibilityPage() {
         <section>
           <h2>רמת תאימות</h2>
           <p>
-            השירות מותאם לרמת תאימות <strong>WCAG 2.1 ברמה AA</strong>
-            במידה האפשרית, לרבות בעמודי הניהול ובדפי ההזמנה הציבוריים.
+            השירות מותאם לתקן הישראלי <strong>ת"י 5568:2020</strong> ולקווים
+            המנחים <strong>WCAG 2.1 ברמה AA</strong>, בהתאם לתקנות שוויון זכויות
+            לאנשים עם מוגבלות (התאמות נגישות לשירות), תשע"ג-2013.
+            ההתאמה מתבצעת בעמודי הניהול ובדפי ההזמנה הציבוריים כאחד.
           </p>
         </section>
 
@@ -74,8 +76,10 @@ export default function AccessibilityPage() {
             ניתן לפנות אל רכז הנגישות:
           </p>
           <ul>
-            <li><strong>אימייל:</strong> accessibility@barbershop-app.com (תוקן בקרוב)</li>
+            <li><strong>רכז/ת נגישות:</strong> Toron — צוות התמיכה</li>
+            <li><strong>אימייל:</strong> <a href="mailto:accessibility@toron.co.il">accessibility@toron.co.il</a></li>
             <li><strong>זמן תגובה:</strong> עד 14 ימי עסקים</li>
+            <li><strong>שעות מענה:</strong> ימים א'–ה', 09:00–17:00</li>
           </ul>
         </section>
 
