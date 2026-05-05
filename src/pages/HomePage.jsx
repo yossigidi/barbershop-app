@@ -224,7 +224,7 @@ export default function HomePage() {
               <ul className="price-features">
                 <li><Check size={14} className="icon-inline" />כל הפיצ'רים</li>
                 <li><Check size={14} className="icon-inline" />טאבלט בעסק שלך</li>
-                <li><Check size={14} className="icon-inline" />לקוחות קובעים תור במקום על הטאבלט</li>
+                <li><Check size={14} className="icon-inline" />ניהול היומן והעסק על מסך גדול בקבע</li>
                 <li><Check size={14} className="icon-inline" />עדיפות תמיכה</li>
               </ul>
               <button
@@ -353,7 +353,7 @@ export default function HomePage() {
             <ul className="studio-list">
               <li><Check size={14} className="icon-inline" />טאבלט 10" איכותי לעסק (במתנה)</li>
               <li><Check size={14} className="icon-inline" />כל הפיצ'רים של Pro — בלי הגבלה</li>
-              <li><Check size={14} className="icon-inline" />לקוחות קובעים תור במקום על הטאבלט (תור הבא ביציאה)</li>
+              <li><Check size={14} className="icon-inline" />ניהול היומן, התורים והלקוחות במסך גדול קבוע בעסק</li>
               <li><Check size={14} className="icon-inline" />עדיפות בתמיכה</li>
               <li><Check size={14} className="icon-inline" />30 ימי ניסיון חינם לפני שמתחיל החיוב</li>
             </ul>
