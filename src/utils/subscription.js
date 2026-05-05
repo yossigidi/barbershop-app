@@ -42,35 +42,35 @@ export function getAccessState(barber) {
 
   if (sub.status === 'active') {
     const end = msFromTimestamp(sub.currentPeriodEnd);
-    const days = Math.ceil((end - now) / 86_400_000);
+    const days = Math.floor((end - now) / 86_400_000);
     if (end > now) {
       // Soft-cancel state: still active, but cron will stop charging at period end
       if (sub.cancelAtPeriodEnd) {
-        return { granted: true, reason: 'cancelled-pending', daysLeft: days, status: sub.status };
+        return { granted: true, reason: 'cancelled-pending', daysLeft: days, periodEnd: end, status: sub.status };
       }
-      return { granted: true, reason: 'active', daysLeft: days, status: sub.status };
+      return { granted: true, reason: 'active', daysLeft: days, periodEnd: end, status: sub.status };
     }
   }
 
   if (sub.status === 'past_due') {
     // Cron is retrying — keep access until period end OR show payment problem warning
     const end = msFromTimestamp(sub.currentPeriodEnd);
-    const days = Math.ceil((end - now) / 86_400_000);
-    if (end > now) return { granted: true, reason: 'past-due-grace', daysLeft: days, status: sub.status };
+    const days = Math.floor((end - now) / 86_400_000);
+    if (end > now) return { granted: true, reason: 'past-due-grace', daysLeft: days, periodEnd: end, status: sub.status };
     return { granted: false, reason: 'past-due-expired', daysLeft: 0, status: sub.status };
   }
 
   if (sub.status === 'trialing') {
     const end = msFromTimestamp(sub.trialEndsAt);
-    const days = Math.ceil((end - now) / 86_400_000);
-    if (end > now) return { granted: true, reason: 'trial', daysLeft: days, status: sub.status };
+    const days = Math.floor((end - now) / 86_400_000);
+    if (end > now) return { granted: true, reason: 'trial', daysLeft: days, periodEnd: end, status: sub.status };
   }
 
   if (sub.status === 'cancelled') {
     // Grace until end of paid period
     const end = msFromTimestamp(sub.currentPeriodEnd);
-    const days = Math.ceil((end - now) / 86_400_000);
-    if (end > now) return { granted: true, reason: 'cancelled-grace', daysLeft: days, status: sub.status };
+    const days = Math.floor((end - now) / 86_400_000);
+    if (end > now) return { granted: true, reason: 'cancelled-grace', daysLeft: days, periodEnd: end, status: sub.status };
     return { granted: false, reason: 'cancelled', daysLeft: days, status: sub.status };
   }
 

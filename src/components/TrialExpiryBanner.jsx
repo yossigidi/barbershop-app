@@ -55,7 +55,12 @@ export default function TrialExpiryBanner({ access }) {
   let icon, headline, subtext, ctaText;
   if (isCancelledPending) {
     icon = <Sparkles size={20} />;
-    headline = `המנוי בוטל. נותרו ${days} ימי גישה.`;
+    const endDate = access.periodEnd
+      ? new Date(access.periodEnd).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      : null;
+    headline = endDate
+      ? `המנוי בוטל. גישה עד ${endDate} (${days} ימים).`
+      : `המנוי בוטל. נותרו ${days} ימי גישה.`;
     subtext = 'אחרי כן האפליקציה תינעל. אפשר לחזור למסלול בכל זמן.';
     ctaText = 'חזור למסלול';
   } else if (isCritical) {
