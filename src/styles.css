@@ -3827,3 +3827,54 @@ body:has(.bottom-nav) .a11y-fab { bottom: calc(72px + env(safe-area-inset-bottom
 }
 .addons-chevron.is-open { transform: rotate(180deg); }
 .addons-card .addon-list { padding: 0 16px 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+
+/* ─── Studio plan details modal (HomePage) ────────────────────────────── */
+.studio-modal {
+  max-width: 520px;
+  padding: 22px;
+}
+.studio-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.studio-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.30);
+}
+.studio-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.studio-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.94rem;
+}
+.studio-list svg { color: var(--gold); flex: none; }
+.studio-warn {
+  display: flex;
+  align-items: flex-start;
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.20);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 14px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.studio-actions { margin-top: 18px; }

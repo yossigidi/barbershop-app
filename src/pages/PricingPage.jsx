@@ -332,6 +332,10 @@ export default function PricingPage() {
       <div className="legal-footer">
         <a onClick={() => navigate('/terms')}>תקנון השירות</a>
         <span>·</span>
+        <a onClick={() => navigate('/refund')}>תקנון ביטולים והחזרים</a>
+        <span>·</span>
+        <a onClick={() => navigate('/privacy')}>מדיניות פרטיות</a>
+        <span>·</span>
         <a onClick={() => navigate('/accessibility')}>נגישות</a>
       </div>
 
