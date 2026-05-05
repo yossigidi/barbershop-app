@@ -10,7 +10,7 @@ import { getAccessState } from '../utils/subscription';
 import LogoUploader from '../components/LogoUploader.jsx';
 import PaywallModal from '../components/PaywallModal.jsx';
 
-const DURATION_OPTIONS = [20, 40, 60, 80, 100, 120];
+const DURATION_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120];
 
 function emptyService() {
   return { id: Math.random().toString(36).slice(2, 9), name: '', description: '', duration: 20, price: 0 };
@@ -18,7 +18,7 @@ function emptyService() {
 function emptyAddon() {
   return { id: Math.random().toString(36).slice(2, 9), name: '', duration: 0, price: 0 };
 }
-const ADDON_DURATION_OPTIONS = [0, 5, 10, 15, 20, 30];
+const ADDON_DURATION_OPTIONS = [0, 10, 20, 30, 40, 50, 60];
 
 export default function SettingsPage() {
   const { user } = useAuth();

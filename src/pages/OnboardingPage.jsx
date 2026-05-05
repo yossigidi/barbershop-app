@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scissors, HandHeart, Trash2, Lightbulb, Save, Check, Sparkles } from 'lucide-react';
+import { Scissors, HandHeart, Trash2, Lightbulb, Save, Check, Sparkles, Plus, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -8,12 +8,34 @@ import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots
 import { PROFESSION_LIST, presetCatalogForMany, readProfessions, getProfession } from '../utils/professions';
 import LogoUploader from '../components/LogoUploader.jsx';
 
-function ServiceCard({ item, options, onToggle, onPrice, onDuration }) {
+function ServiceCard({ item, options, onToggle, onPrice, onDuration, onName, onDelete, placeholder }) {
+  const isCustom = !!item.custom;
   return (
     <div className={`onb-card ${item.offered ? 'active' : ''}`}>
       <label className="onb-toggle">
         <input type="checkbox" checked={item.offered} onChange={() => onToggle(item.id)} />
-        <span className="onb-name">{item.name}</span>
+        {isCustom && onName ? (
+          <input
+            type="text"
+            className="onb-name onb-name-input"
+            value={item.name}
+            onChange={(e) => onName(item.id, e.target.value)}
+            placeholder={placeholder || 'שם השירות'}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className="onb-name">{item.name}</span>
+        )}
+        {isCustom && onDelete && (
+          <button
+            type="button"
+            className="onb-delete"
+            onClick={(e) => { e.preventDefault(); onDelete(item.id); }}
+            aria-label="מחק"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </label>
       {item.offered && (
         <div className="row" style={{ marginTop: 10 }}>
@@ -158,6 +180,49 @@ export default function OnboardingPage() {
   }
   function durationAdd(id, d) {
     setAddons((list) => list.map((a) => (a.id === id ? { ...a, duration: Number(d) || 0 } : a)));
+  }
+
+  // Custom (user-added) services / addons — name editable + deletable.
+  function addCustomService() {
+    const newId = `custom_svc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    setServices((list) => [
+      ...list,
+      { id: newId, name: '', duration: serviceDurations[0] || 20, price: 0, offered: true, custom: true },
+    ]);
+  }
+  function renameCustomService(id, name) {
+    setServices((list) => list.map((s) => (s.id === id ? { ...s, name } : s)));
+  }
+  function deleteCustomService(id) {
+    setServices((list) => list.filter((s) => s.id !== id));
+  }
+  function addCustomAddon() {
+    const newId = `custom_add_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    setAddons((list) => [
+      ...list,
+      { id: newId, name: '', duration: addonDurations[0] || 0, price: 0, offered: true, custom: true },
+    ]);
+  }
+  function renameCustomAddon(id, name) {
+    setAddons((list) => list.map((a) => (a.id === id ? { ...a, name } : a)));
+  }
+  function deleteCustomAddon(id) {
+    setAddons((list) => list.filter((a) => a.id !== id));
+  }
+
+  // Toggle ALL — select-all helper. If anything is unselected, selects all;
+  // if everything is selected, unselects all.
+  function toggleAllServices() {
+    setServices((list) => {
+      const allOn = list.length > 0 && list.every((s) => s.offered);
+      return list.map((s) => ({ ...s, offered: !allOn }));
+    });
+  }
+  function toggleAllAddons() {
+    setAddons((list) => {
+      const allOn = list.length > 0 && list.every((a) => a.offered);
+      return list.map((a) => ({ ...a, offered: !allOn }));
+    });
   }
 
   // --- Packages ---
@@ -363,6 +428,13 @@ export default function OnboardingPage() {
         <p className="muted" style={{ marginTop: -6 }}>
           סמן ✓ כל שירות שאתה מציע, ועדכן מחיר ואורך. לקוחות יראו רק את אלה שתסמן.
         </p>
+        {services.length > 0 && (
+          <button type="button" className="onb-select-all" onClick={toggleAllServices}>
+            {services.every((s) => s.offered)
+              ? <><CheckSquare size={16} className="icon-inline" />בטל סימון מכולם</>
+              : <><Square size={16} className="icon-inline" />סמן הכל</>}
+          </button>
+        )}
         {services.map((s) => (
           <ServiceCard
             key={s.id}
@@ -371,8 +443,14 @@ export default function OnboardingPage() {
             onToggle={toggleSvc}
             onPrice={priceSvc}
             onDuration={durationSvc}
+            onName={renameCustomService}
+            onDelete={deleteCustomService}
+            placeholder="שם השירות (תספורת ילדים, צבע…)"
           />
         ))}
+        <button type="button" className="btn-secondary onb-add-custom" onClick={addCustomService}>
+          <Plus size={16} className="icon-inline" />הוסף שירות משלי
+        </button>
       </div>
 
       <div className="card">
@@ -380,6 +458,13 @@ export default function OnboardingPage() {
         <p className="muted" style={{ marginTop: -6 }}>
           תוספות שלקוח יכול להוסיף על השירות שלו (זקן, שעווה, גבות וכו׳). הלקוח רואה אותן כ-checkboxes ויכול לבחור כמה שירצה.
         </p>
+        {addons.length > 0 && (
+          <button type="button" className="onb-select-all" onClick={toggleAllAddons}>
+            {addons.every((a) => a.offered)
+              ? <><CheckSquare size={16} className="icon-inline" />בטל סימון מכולם</>
+              : <><Square size={16} className="icon-inline" />סמן הכל</>}
+          </button>
+        )}
         {addons.map((a) => (
           <ServiceCard
             key={a.id}
@@ -388,8 +473,14 @@ export default function OnboardingPage() {
             onToggle={toggleAdd}
             onPrice={priceAdd}
             onDuration={durationAdd}
+            onName={renameCustomAddon}
+            onDelete={deleteCustomAddon}
+            placeholder="שם התוספת (שעווה באף, צביעת ריסים…)"
           />
         ))}
+        <button type="button" className="btn-secondary onb-add-custom" onClick={addCustomAddon}>
+          <Plus size={16} className="icon-inline" />הוסף תוספת משלי
+        </button>
       </div>
 
       <div className="card">

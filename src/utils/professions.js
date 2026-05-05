@@ -14,8 +14,8 @@ export const PROFESSIONS = {
     defaultBusinessName: (name) => name ? `${name} — ספרות` : 'הספרות שלי',
     icon: 'Scissors',
     color: 'gold',
-    serviceDurations: [20, 40, 60, 80, 100, 120],
-    addonDurations: [0, 5, 10, 15, 20, 30],
+    serviceDurations: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120],
+    addonDurations: [0, 10, 20, 30, 40, 50, 60],
     services: [
       { name: 'תספורת רגילה', duration: 20, price: 0 },
       { name: 'תספורת + זקן', duration: 40, price: 0 },
@@ -39,8 +39,8 @@ export const PROFESSIONS = {
     defaultBusinessName: (name) => name ? `${name} — מניקור` : 'הסטודיו שלי',
     icon: 'Sparkles',
     color: 'rose',
-    serviceDurations: [20, 30, 45, 60, 75, 90, 120],
-    addonDurations: [0, 5, 10, 15, 20, 30],
+    serviceDurations: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120],
+    addonDurations: [0, 10, 20, 30, 40, 50, 60],
     services: [
       { name: 'מניקור רגיל', duration: 30, price: 0 },
       { name: 'מניקור ג׳ל', duration: 45, price: 0 },
@@ -65,8 +65,8 @@ export const PROFESSIONS = {
     defaultBusinessName: (name) => name ? `${name} — פדיקור` : 'הסטודיו שלי',
     icon: 'Sparkles',
     color: 'rose',
-    serviceDurations: [30, 45, 60, 75, 90, 120],
-    addonDurations: [0, 10, 15, 20, 30],
+    serviceDurations: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120],
+    addonDurations: [0, 10, 20, 30, 40, 50, 60],
     services: [
       { name: 'פדיקור רגיל', duration: 45, price: 0 },
       { name: 'פדיקור רפואי', duration: 60, price: 0 },
@@ -88,8 +88,8 @@ export const PROFESSIONS = {
     defaultBusinessName: (name) => name ? `${name} — קוסמטיקה` : 'הקליניקה שלי',
     icon: 'Sparkles',
     color: 'rose',
-    serviceDurations: [20, 30, 45, 60, 75, 90, 120],
-    addonDurations: [0, 10, 15, 20, 30],
+    serviceDurations: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120],
+    addonDurations: [0, 10, 20, 30, 40, 50, 60],
     services: [
       { name: 'ניקוי פנים בסיסי', duration: 60, price: 0 },
       { name: 'ניקוי פנים עומק', duration: 90, price: 0 },
