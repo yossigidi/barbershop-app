@@ -30,6 +30,7 @@ import TomorrowReminders from '../components/TomorrowReminders.jsx';
 import QuickBookModal from '../components/QuickBookModal.jsx';
 import TrialExpiryBanner from '../components/TrialExpiryBanner.jsx';
 import MorningSummaryCard from '../components/MorningSummaryCard.jsx';
+import AIBriefingCard from '../components/AIBriefingCard.jsx';
 import BreakSuggestions from '../components/BreakSuggestions.jsx';
 import WeeklyReportCard from '../components/WeeklyReportCard.jsx';
 import YesterdayFollowUp from '../components/YesterdayFollowUp.jsx';
@@ -288,6 +289,8 @@ export default function DashboardPage() {
       <>
         <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
 
+        <AIBriefingCard businessName={barber.businessName} />
+
         <MorningSummaryCard
           displayName={barber.displayName}
           businessName={barber.businessName}
@@ -355,6 +358,8 @@ export default function DashboardPage() {
     return (
       <>
         <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
+
+        <AIBriefingCard businessName={barber.businessName} />
 
         <MorningSummaryCard
           displayName={barber.displayName}

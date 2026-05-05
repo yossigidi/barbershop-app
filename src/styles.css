@@ -1946,6 +1946,64 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   font-weight: 700;
 }
 
+/* ─── AI Daily Briefing card ────────────────────────────────────────────── */
+.briefing-insights {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.briefing-insights li {
+  position: relative;
+  padding: 10px 14px 10px 14px;
+  padding-inline-start: 30px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.briefing-insights li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 12px;
+  top: 18px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.briefing-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+}
+.briefing-stat {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  text-align: center;
+}
+.briefing-stat-num {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.briefing-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  margin-top: 3px;
+}
+.briefing-stat.is-revenue .briefing-stat-num { color: var(--gold); }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* ─── AI compose — variation cards ─────────────────────────────────────── */
 .ai-variation {
   background: var(--surface-2);
