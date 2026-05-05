@@ -15,6 +15,7 @@ import { handleRedeemPromo } from './promo.js';
 import { handleAiCompose } from './ai.js';
 import { handleAiBriefing } from './briefing.js';
 import { handleSendConfirmationEmail } from './email.js';
+import { handleBrevoStatus } from './admin.js';
 import { handleCronBilling } from './cron.js';
 
 const apiHandlers = {
@@ -29,6 +30,7 @@ const apiHandlers = {
   '/api/ai-compose': handleAiCompose,
   '/api/ai-briefing': handleAiBriefing,
   '/api/send-confirmation-email': handleSendConfirmationEmail,
+  '/api/admin/brevo-status': handleBrevoStatus,
 };
 
 export default {
