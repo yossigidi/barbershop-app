@@ -13,6 +13,7 @@ import PrivacyPage from './pages/PrivacyPage.jsx';
 import RefundPage from './pages/RefundPage.jsx';
 import AccessibilityPage from './pages/AccessibilityPage.jsx';
 import ManageBookingPage from './pages/ManageBookingPage.jsx';
+import AccessibilityWidget from './components/AccessibilityWidget.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -23,21 +24,24 @@ function Protected({ children }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/onboarding" element={<Protected><OnboardingPage /></Protected>} />
-      <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
-      <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
-      <Route path="/reports" element={<Protected><ReportsPage /></Protected>} />
-      <Route path="/pricing" element={<Protected><PricingPage /></Protected>} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/refund" element={<RefundPage />} />
-      <Route path="/accessibility" element={<AccessibilityPage />} />
-      <Route path="/b/:code" element={<BookingPage />} />
-      <Route path="/manage/:token" element={<ManageBookingPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/onboarding" element={<Protected><OnboardingPage /></Protected>} />
+        <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
+        <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
+        <Route path="/reports" element={<Protected><ReportsPage /></Protected>} />
+        <Route path="/pricing" element={<Protected><PricingPage /></Protected>} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/refund" element={<RefundPage />} />
+        <Route path="/accessibility" element={<AccessibilityPage />} />
+        <Route path="/b/:code" element={<BookingPage />} />
+        <Route path="/manage/:token" element={<ManageBookingPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <AccessibilityWidget />
+    </>
   );
 }

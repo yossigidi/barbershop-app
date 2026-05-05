@@ -19,6 +19,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <title>Toron — ניהול תורים מקצועי</title>
+    <!-- Accessibility prefs FOUC bootstrap — applies persisted IS 5568 user prefs
+         to <html> classes synchronously before React hydrates. Keep in sync
+         with src/utils/a11yPrefs.js A11Y_BOOTSTRAP_SCRIPT. -->
+    <script>
+      (function(){try{var raw=localStorage.getItem("toron_a11y_prefs_v1");if(!raw)return;var p=JSON.parse(raw);if(p.version!==1)return;var c=document.documentElement.classList;c.toggle("a11y-links",!!p.links);c.toggle("a11y-contrast-high",p.contrast==='high');c.toggle("a11y-contrast-invert",p.contrast==='invert');c.toggle("a11y-contrast-mono",p.contrast==='mono');c.toggle("a11y-text-115",p.textSize===115);c.toggle("a11y-text-130",p.textSize===130);c.toggle("a11y-text-150",p.textSize===150);c.toggle("a11y-lines-16",p.lineSpacing==='16');c.toggle("a11y-lines-20",p.lineSpacing==='20');c.toggle("a11y-readable-font",!!p.readableFont);c.toggle("a11y-headings",!!p.headings);c.toggle("a11y-cursor-black",!!p.cursorBlack);c.toggle("a11y-cursor-large",!!p.cursorLarge);c.toggle("a11y-reduce-motion",!!p.reduceMotion);}catch(e){}})();
+    </script>
   </head>
   <body>
     <div id="root"></div>

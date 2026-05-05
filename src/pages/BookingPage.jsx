@@ -50,6 +50,7 @@ export default function BookingPage() {
   const [pickedTime, setPickedTime] = useState(null);
   const [pickedService, setPickedService] = useState(null);
   const [pickedAddonIds, setPickedAddonIds] = useState([]);
+  const [addonsOpen, setAddonsOpen] = useState(false);
   const [client, setClient] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
@@ -729,28 +730,44 @@ export default function BookingPage() {
       )}
 
       {addons.length > 0 && pickedService && !pickedService.isPackage && (
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>תוספות (אופציונלי)</h3>
-          <div className="addon-list">
-            {addons.map((a) => {
-              const checked = pickedAddonIds.includes(a.id);
-              return (
-                <label key={a.id} className={`addon-row ${checked ? 'active' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleAddon(a.id)}
-                  />
-                  <div className="addon-info">
-                    <div className="addon-name">{a.name}</div>
-                    <div className="muted" style={{ fontSize: '0.85rem' }}>
-                      {a.duration ? `+${a.duration} דק׳` : ''}{a.price ? ` • +₪${a.price}` : ''}
+        <div className="card addons-card">
+          <button
+            type="button"
+            className="addons-toggle"
+            aria-expanded={addonsOpen}
+            aria-controls="addons-list"
+            onClick={() => setAddonsOpen((o) => !o)}
+          >
+            <span className="addons-toggle-label">
+              ✨ תוספות
+              {pickedAddonIds.length > 0
+                ? <span className="addons-count">{pickedAddonIds.length} נבחרו</span>
+                : <span className="addons-hint">(אופציונלי)</span>}
+            </span>
+            <span className={`addons-chevron ${addonsOpen ? 'is-open' : ''}`} aria-hidden="true">▾</span>
+          </button>
+          {addonsOpen && (
+            <div id="addons-list" className="addon-list" style={{ marginTop: 10 }}>
+              {addons.map((a) => {
+                const checked = pickedAddonIds.includes(a.id);
+                return (
+                  <label key={a.id} className={`addon-row ${checked ? 'active' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleAddon(a.id)}
+                    />
+                    <div className="addon-info">
+                      <div className="addon-name">{a.name}</div>
+                      <div className="muted" style={{ fontSize: '0.85rem' }}>
+                        {a.duration ? `+${a.duration} דק׳` : ''}{a.price ? ` • +₪${a.price}` : ''}
+                      </div>
                     </div>
-                  </div>
-                </label>
-              );
-            })}
-          </div>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
