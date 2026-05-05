@@ -545,6 +545,8 @@ export default function DashboardPage() {
           businessName={barber.businessName || 'העסק שלי'}
           googleReviewUrl={barber.googleReviewUrl || ''}
           aiGender={barber.aiGender || 'neutral'}
+          allBookings={bookings}
+          barberId={user.uid}
           onClose={() => setActionFor(null)}
           onStart={() => startBooking(actionFor)}
           onComplete={() => completeBooking(actionFor)}

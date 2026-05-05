@@ -1946,6 +1946,132 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   font-weight: 700;
 }
 
+/* ─── Client Memory Card (inline in BookingActionSheet) ───────────────── */
+.cm-card {
+  background: var(--surface);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 14px 14px 12px;
+  margin-bottom: 12px;
+  background:
+    radial-gradient(ellipse 70% 50% at 0% 0%, var(--gold-soft), transparent 60%),
+    var(--surface);
+  position: relative;
+}
+.cm-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.cm-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.cm-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex: 1;
+}
+.cm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.cm-vip {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  color: white;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.18);
+  box-shadow: 0 2px 6px rgba(184, 137, 58, 0.30);
+}
+.cm-risky {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.30);
+}
+.cm-firsttime {
+  background: rgba(99, 102, 241, 0.10);
+  color: #4338ca;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+.cm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.cm-stat {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 8px 8px;
+  text-align: center;
+}
+.cm-stat-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--accent);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.cm-stat-label {
+  font-size: 0.66rem;
+  color: var(--text-soft);
+  margin-top: 2px;
+}
+.cm-stat.is-revenue .cm-stat-num { color: var(--gold); }
+.cm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  padding: 6px 0;
+}
+.cm-row-label { color: var(--text-soft); }
+.cm-row-warn {
+  background: rgba(220, 38, 38, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  color: #b91c1c;
+  font-size: 0.82rem;
+}
+.cm-notes-wrap { margin-top: 10px; }
+.cm-notes-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-bottom: 4px;
+}
+.cm-notes {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  background: var(--surface);
+  resize: vertical;
+  line-height: 1.5;
+}
+.cm-notes:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+
 /* ─── AI Daily Briefing card ────────────────────────────────────────────── */
 .briefing-insights {
   list-style: none;
