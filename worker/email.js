@@ -10,10 +10,11 @@
 import { ok, err, corsHeaders } from './_lib.js';
 
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
-// Sender — uses Engleez's verified domain since the user already owns it.
-// To use a different sender domain, set SENDER_EMAIL secret on the Worker.
-const DEFAULT_SENDER_EMAIL = 'noreply@engleez.co.il';
-const DEFAULT_SENDER_NAME = 'הזמנת תור';
+// Sender — Toron's own domain. The Brevo sender domain (toron.co.il) must
+// be verified in Brevo (DKIM + SPF DNS records). Override per-environment
+// via the SENDER_EMAIL Worker secret if needed.
+const DEFAULT_SENDER_EMAIL = 'noreply@toron.co.il';
+const DEFAULT_SENDER_NAME = 'Toron — אישור הזמנת תור';
 
 export async function handleSendConfirmationEmail(request, env) {
   if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
@@ -59,7 +60,7 @@ export async function handleSendConfirmationEmail(request, env) {
 
   const finalManageUrl = manageUrl || (request.headers.get('origin')
     ? `${request.headers.get('origin')}/manage/${manageToken}`
-    : `https://barbershop-app.yosigidi1979.workers.dev/manage/${manageToken}`);
+    : `https://toron.co.il/manage/${manageToken}`);
 
   const subject = `אישור הזמנת תור — ${businessName}`;
   const html = buildEmail({
