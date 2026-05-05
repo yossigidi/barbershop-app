@@ -4,7 +4,7 @@ import { addMinToTime } from '../utils/slots';
 import { whatsappUrl } from '../utils/whatsapp';
 import AIComposeModal from './AIComposeModal.jsx';
 
-export default function BookingActionSheet({ booking, businessName, googleReviewUrl, onClose, onStart, onComplete, onEdit, onCancel }) {
+export default function BookingActionSheet({ booking, businessName, googleReviewUrl, aiGender, onClose, onStart, onComplete, onEdit, onCancel }) {
   const inProgress = booking.status === 'inProgress';
   const completed = booking.status === 'completed';
   const [aiOpen, setAiOpen] = useState(false);
@@ -74,6 +74,7 @@ export default function BookingActionSheet({ booking, businessName, googleReview
           booking={booking}
           defaultScenario={aiScenario}
           businessName={businessName}
+          aiGender={aiGender}
         />
         {!completed && (
           <button className="btn-danger" onClick={() => { onCancel(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}>בטל תור</button>

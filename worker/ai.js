@@ -89,16 +89,38 @@ BAD example: "שלום ולברכה. בכל יום ויום אנו מודים ע
   },
 };
 
+// Grammatical-gender helper — Hebrew is gendered, the AI must match the
+// business owner's gender exactly or messages sound wrong (e.g. "הייתי
+// שמחה" from a male barber). Three modes:
+//   'male'   — use masculine present-tense adjectives/verbs
+//   'female' — use feminine
+//   'neutral' (default) — prefer past tense and gender-neutral phrasing
+function genderRules(g) {
+  if (g === 'male') return `
+- The business owner is MALE. Use MASCULINE first-person Hebrew throughout.
+  CORRECT: "שמחתי לראות אותך", "אני כאן", "אני שמח", "מחכה לך"
+  WRONG (female forms): "שמחה לראות", "אני שמחה", "הייתי שמחה"`;
+  if (g === 'female') return `
+- The business owner is FEMALE. Use FEMININE first-person Hebrew throughout.
+  CORRECT: "שמחה לראות אותך", "אני שמחה", "הייתי שמחה", "מחכה לך"
+  WRONG (male forms): "שמח לראות", "אני שמח", "הייתי שמח"`;
+  return `
+- The business owner's gender is unspecified — avoid gendered present-tense
+  adjectives. Prefer past-tense forms ("שמחתי", "ראיתי") and gender-neutral
+  phrasings. Do NOT write "שמחה לראות" or "שמח לראות" — instead "שמחתי
+  לראות אותך" works for both.`;
+}
+
 // One general system prompt — the per-scenario instructions stack on top.
-const SYSTEM_PROMPT =
-`You write short, warm, personal WhatsApp messages in Hebrew for an Israeli service professional (barber, manicurist, pedicurist, cosmetician, or similar appointment-based business) to send to their clients.
+function buildSystemPrompt(gender) {
+  return `You write short, warm, personal WhatsApp messages in Hebrew for an Israeli service professional (barber, manicurist, pedicurist, cosmetician, or similar appointment-based business) to send to their clients.
 
 GENERAL RULES (apply to every scenario):
 - Hebrew only. Use natural everyday Hebrew, like a friendly text between people who know each other.
 - Short. 2-3 lines per message. NEVER more than 4 lines.
 - First-person voice — the business owner is speaking directly.
 - Use the client's first name when provided.
-- Use grammatical gender from context: business owner ("contact" field) — default female unless the name is clearly male; client — same.
+${genderRules(gender)}
 - DO NOT list services and add-ons mechanically. If the service name is needed, say it in 1-2 words ("תספורת", "מניקור ג'ל", "טיפול פנים"). NEVER write "תספורת + זקן + שעווה באוזניים" as a list.
 - DO NOT use the literal English word "appointment" or its mistranslation "תור מצחיק". The Hebrew word is "תור".
 - DO NOT open with awkward phrases: "מה שבוע היה", "מה שלום", "אהוי", "ברוך הבא", "Dear customer", "We at", "אנו ב".
@@ -107,6 +129,7 @@ GENERAL RULES (apply to every scenario):
 - Output ONLY a valid JSON array of exactly 3 strings. No prose, no markdown, no code fences, no commentary.
 - The 3 variations should be DISTINCT — different opening, slightly different tone (warm / professional / playful).
 - Keep each variation under 220 characters so it fits comfortably in a WhatsApp preview.`;
+}
 
 export async function handleAiCompose(request, env) {
   if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
@@ -188,7 +211,7 @@ export async function handleAiCompose(request, env) {
         // truncated mid-character (caused stray � in earlier outputs).
         max_tokens: 900,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: buildSystemPrompt(biz.aiGender || 'neutral') },
           { role: 'user', content: userPrompt },
         ],
       }),

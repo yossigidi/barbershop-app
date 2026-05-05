@@ -22,6 +22,7 @@ const SCENARIOS = [
 export default function AIComposeModal({
   open, onClose, booking,
   businessName = '', profession = '', googleReviewUrl = '',
+  aiGender = 'neutral',
   defaultScenario = 'reminder',
 }) {
   const { user } = useAuth();
@@ -59,6 +60,7 @@ export default function AIComposeModal({
             name: businessName,
             profession,
             googleReviewUrl,
+            aiGender,
           },
         }),
       });

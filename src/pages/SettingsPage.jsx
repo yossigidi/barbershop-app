@@ -38,6 +38,7 @@ export default function SettingsPage() {
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [professions, setProfessions] = useState(['barber']);
   const [googleReviewUrl, setGoogleReviewUrl] = useState('');
+  const [aiGender, setAiGender] = useState('neutral');
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [barberData, setBarberData] = useState(null);
@@ -70,6 +71,7 @@ export default function SettingsPage() {
         setDefaultPrice(data.defaultPrice || 0);
         setProfessions(readProfessions(data));
         setGoogleReviewUrl(data.googleReviewUrl || '');
+        setAiGender(data.aiGender || 'neutral');
       }
       setLoaded(true);
     });
@@ -137,6 +139,7 @@ export default function SettingsPage() {
         professions,
         profession: professions[0],
         googleReviewUrl: (googleReviewUrl || '').trim(),
+        aiGender,
       });
       navigate('/dashboard');
     } catch (e) {
@@ -230,6 +233,35 @@ export default function SettingsPage() {
             ✨ נבחרו {professions.length} תחומים — בקטלוג יוצגו שירותים מכל אחד.
           </p>
         )}
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />הודעות AI</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+          ה-AI כותב הודעות עברית בגוף ראשון. בעברית הפעלים מקבלים מין דקדוקי (זכר/נקבה).
+          בחר/י איך לכתוב הודעות בשמך כדי שיישמעו טבעיות.
+        </p>
+        <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
+          {[
+            { v: 'female', label: 'נקבה', desc: '"שמחה לראות"' },
+            { v: 'male',   label: 'זכר',  desc: '"שמח לראות"' },
+            { v: 'neutral',label: 'נטרלי',desc: '"שמחתי לראות" (לשני המגדרים)' },
+          ].map((opt) => {
+            const on = aiGender === opt.v;
+            return (
+              <button
+                key={opt.v}
+                type="button"
+                onClick={() => setAiGender(opt.v)}
+                className={on ? 'btn-primary' : 'btn-secondary'}
+                style={{ flex: '1 0 130px', padding: '10px 8px', fontSize: '0.85rem', flexDirection: 'column', gap: 3 }}
+              >
+                <span style={{ fontWeight: 700 }}>{opt.label}</span>
+                <span style={{ fontSize: '0.7rem', opacity: 0.7, fontWeight: 400 }}>{opt.desc}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="card">
