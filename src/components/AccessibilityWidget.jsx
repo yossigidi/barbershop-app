@@ -74,7 +74,8 @@ export default function AccessibilityWidget() {
         aria-keyshortcuts="Alt+A"
         title="נגישות (Alt+A)"
       >
-        <Accessibility size={26} strokeWidth={2} aria-hidden="true" />
+        <Accessibility size={22} strokeWidth={2.2} aria-hidden="true" className="a11y-fab-icon" />
+        <span className="a11y-fab-text">נגישות</span>
         {active && <span className="a11y-fab-dot" aria-hidden="true" />}
       </button>
 

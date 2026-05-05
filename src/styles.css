@@ -3521,26 +3521,34 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
    Accessibility preferences widget — IS 5568:2020 / Reg 35
    ─────────────────────────────────────────────────────────────────────── */
 
-/* Floating trigger — bottom-start (RTL: bottom-right) */
+/* Floating trigger — pill with icon + Hebrew "נגישות" text label always
+   visible. Bottom-start (RTL: bottom-right). Recognizable as accessibility
+   button at a glance — Israeli compliance convention. */
 .a11y-fab {
   position: fixed;
   bottom: 18px;
   inset-inline-start: 18px;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
   background: linear-gradient(180deg, #2563eb 0%, #1d4fd6 100%);
   color: white;
   border: 2px solid rgba(255,255,255,0.85);
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45), 0 2px 6px rgba(0,0,0,0.18);
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
   cursor: pointer;
   z-index: 9000;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.92rem;
   transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
-.a11y-fab:hover { transform: scale(1.05); }
+.a11y-fab:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.55), 0 2px 6px rgba(0,0,0,0.22);
+}
 .a11y-fab:focus-visible {
   outline: 3px solid var(--gold);
   outline-offset: 4px;
@@ -3548,12 +3556,14 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .a11y-fab.is-active {
   background: linear-gradient(180deg, var(--gold-2) 0%, var(--gold-deep) 100%);
 }
+.a11y-fab-icon { flex: none; }
+.a11y-fab-text { white-space: nowrap; }
 .a11y-fab-dot {
   position: absolute;
-  top: 4px;
-  inset-inline-end: 4px;
-  width: 10px;
-  height: 10px;
+  top: -4px;
+  inset-inline-end: -4px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #f59e0b;
   border: 2px solid white;
@@ -3562,8 +3572,9 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   .a11y-fab {
     bottom: max(14px, env(safe-area-inset-bottom));
     inset-inline-start: 14px;
-    width: 46px;
-    height: 46px;
+    height: 40px;
+    padding: 0 14px;
+    font-size: 0.85rem;
   }
 }
 /* When the dashboard's bottom nav is visible (logged in) lift the FAB above it */
