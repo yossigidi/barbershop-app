@@ -24,9 +24,10 @@ const SCENARIOS = {
 - 2-3 lines each.
 - Mention the service in 1-2 words ("תספורת", "מניקור ג'ל", "טיפול פנים"). DO NOT list the add-ons individually.
 - Mention only the time. Date is "מחר".
-- End with something natural like "נתראה" or "מחכה לך".
+- If a "Manage URL" is in context, append it on its own line at the end with a short prefix: "לעריכה / ביטול: <url>".
+- End the body (before the URL) with something natural like "נתראה" or "מחכה לך".
 
-GOOD example: "היי דני, תזכורת קטנה — מחר ב-10:00 לתספורת. נתראה! ✂️"
+GOOD example: "היי דני, תזכורת קטנה — מחר ב-10:00 לתספורת. נתראה! ✂️\\nלעריכה / ביטול: <url>"
 BAD example: "מה שבוע היה! דני, תזכורת לתור המצחיק שלך מחר תספורת + זקן + שעווה באוזניים..."`,
   },
   'thank-you': {
@@ -178,6 +179,7 @@ export async function handleAiCompose(request, env) {
   if (biz.profession) contextLines.push(`Profession: ${biz.profession} (adapt vocabulary)`);
   if (biz.contact) contextLines.push(`Sender (business owner) name: ${biz.contact}`);
   if (biz.googleReviewUrl) contextLines.push(`Google review URL: ${biz.googleReviewUrl}`);
+  if (body.manageUrl) contextLines.push(`Manage URL (client can edit/cancel via this link): ${body.manageUrl}`);
   if (body.holidayName) contextLines.push(`Holiday name: ${body.holidayName}`);
 
   const userPrompt = [

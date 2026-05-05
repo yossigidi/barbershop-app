@@ -13,6 +13,7 @@ import {
 } from './payment.js';
 import { handleRedeemPromo } from './promo.js';
 import { handleAiCompose } from './ai.js';
+import { handleSendConfirmationEmail } from './email.js';
 import { handleCronBilling } from './cron.js';
 
 const apiHandlers = {
@@ -25,6 +26,7 @@ const apiHandlers = {
   '/api/cancel-studio': handleCancelStudio,
   '/api/redeem-promo': handleRedeemPromo,
   '/api/ai-compose': handleAiCompose,
+  '/api/send-confirmation-email': handleSendConfirmationEmail,
 };
 
 export default {

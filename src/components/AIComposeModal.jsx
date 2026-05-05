@@ -41,6 +41,12 @@ export default function AIComposeModal({
     setVariations([]);
     try {
       const idToken = await user.getIdToken();
+      // If the booking has a manage token, include the manage URL so the
+      // AI can append "לעריכה / ביטול: <link>" to reminder messages.
+      const manageUrl = booking?.manageToken
+        ? `${window.location.origin}/manage/${booking.manageToken}`
+        : '';
+
       const r = await fetch('/api/ai-compose', {
         method: 'POST',
         headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
@@ -62,6 +68,7 @@ export default function AIComposeModal({
             googleReviewUrl,
             aiGender,
           },
+          manageUrl,
         }),
       });
       const data = await r.json();

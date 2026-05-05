@@ -56,6 +56,7 @@ export default function BookingPage() {
   const [pendingPhone, setPendingPhone] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -287,6 +288,10 @@ export default function BookingPage() {
         phone,
         createdAt: new Date().toISOString(),
       };
+      const cleanEmail = (email || '').trim();
+      if (cleanEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+        data.email = cleanEmail;
+      }
       await setDoc(doc(db, 'barbers', barberId, 'clients', phone), data);
       setClient(data);
       localStorage.setItem(`${PHONE_KEY}_${barberId}`, phone);
@@ -316,6 +321,7 @@ export default function BookingPage() {
         addons: selectedAddons,
         clientName: `${c.firstName} ${c.lastName}`,
         clientPhone: c.phone,
+        clientEmail: c.email || '',
         status: 'booked',
       };
 
@@ -400,6 +406,22 @@ export default function BookingPage() {
         try { localStorage.setItem(`bs_lastBooking_${barberId}`, created[0].id); } catch {}
       }
 
+      // If the client provided an email, fire off a confirmation email for
+      // the FIRST booking only (recurring → still one summary email).
+      // Non-blocking; failure is logged but doesn't break the success flow.
+      if (c.email && created[0]?.manageToken) {
+        const origin = window.location.origin;
+        fetch('/api/send-confirmation-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            manageToken: created[0].manageToken,
+            email: c.email,
+            manageUrl: `${origin}/manage/${created[0].manageToken}`,
+          }),
+        }).catch((e) => console.warn('email send failed', e?.message));
+      }
+
       setSuccess({
         id: created[0]?.id,
         manageToken: created[0]?.manageToken,
@@ -408,6 +430,7 @@ export default function BookingPage() {
         addons: selectedAddons,
         createdCount: created.length,
         skipped: skipped.length,
+        emailSentTo: c.email || '',
       });
       setPickedTime(null);
       setPickedAddonIds([]);
@@ -483,6 +506,20 @@ export default function BookingPage() {
     }
   }
 
+  // "Send link to my own WhatsApp" — opens wa.me with the client's own
+  // phone, prefilled with the manage link. The client gets a chat with
+  // themselves containing the link; works as a backup if email isn't used.
+  function shareLinkToSelfWhatsApp() {
+    const link = manageUrl();
+    if (!link || !client?.phone) return;
+    const text = `התור שלי ב-${barber?.businessName || 'העסק'} 📅\n${formatDateHe(selectedDate)} ב-${success?.time}\n\nלעריכה / ביטול:\n${link}`;
+    const phone = (client.phone || '').replace(/[^\d]/g, '');
+    const intl = phone.startsWith('0') && (phone.length === 9 || phone.length === 10)
+      ? '972' + phone.substring(1)
+      : phone;
+    window.open(`https://wa.me/${intl}?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
   if (error) return <div className="app"><div className="card text-center text-danger">{error}</div></div>;
   if (!barber) return <div className="loading">טוען…</div>;
 
@@ -529,6 +566,21 @@ export default function BookingPage() {
               <div className="muted text-center" style={{ fontSize: '0.74rem', marginTop: 6 }}>
                 שמור את הלינק. דרכו תוכל לשנות או לבטל את התור בכל עת.
               </div>
+              {success.emailSentTo && (
+                <div className="text-center" style={{ fontSize: '0.78rem', marginTop: 8, color: 'var(--success)' }}>
+                  ✓ אישור נשלח גם ל-{success.emailSentTo}
+                </div>
+              )}
+              {client?.phone && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={shareLinkToSelfWhatsApp}
+                  style={{ width: '100%', marginTop: 10, fontSize: '0.88rem', padding: '10px' }}
+                >
+                  📲 שלח לי את הלינק בוואטסאפ
+                </button>
+              )}
             </div>
           )}
 
@@ -926,6 +978,17 @@ export default function BookingPage() {
             <div className="field">
               <label>טלפון</label>
               <input type="tel" value={pendingPhone} onChange={(e) => setPendingPhone(e.target.value)} />
+            </div>
+            <div className="field">
+              <label>אימייל (לקבלת אישור התור) — אופציונלי</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="example@gmail.com"
+                dir="ltr"
+                style={{ direction: 'ltr', textAlign: 'left' }}
+              />
             </div>
             <button className="btn-primary" onClick={signup} disabled={busy} style={{ width: '100%' }}>
               {busy ? 'שומר…' : 'אשר וקבע תור'}
