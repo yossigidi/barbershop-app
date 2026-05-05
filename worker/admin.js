@@ -63,12 +63,9 @@ export async function handleBrevoStatus(request, env) {
     active: s.active,
     id: s.id,
   }));
-  const domainList = (domains?.domains || []).map((d) => ({
-    domain: d.domain || d.name,
-    verified: d.verified === true || d.authenticated === true,
-    dkim: d.dkim_record || d.dkim || null,
-    spf: d.spf_record || d.spf || null,
-  }));
+  // Pass through every key Brevo returns so we can spot the real
+  // domain-name field (Brevo has used `domain`, `name`, `domain_name`)
+  const domainList = (domains?.domains || []).map((d) => ({ ...d }));
 
   const reqStatus = required.map((email) => {
     const found = senderList.find((s) => s.email?.toLowerCase() === email.toLowerCase());
@@ -79,17 +76,25 @@ export async function handleBrevoStatus(request, env) {
     };
   });
 
-  const toronDomain = domainList.find((d) => (d.domain || '').toLowerCase() === 'toron.co.il');
+  const toronDomain = domainList.find((d) => {
+    const candidates = [d.domain, d.name, d.domain_name].filter(Boolean).map((s) => String(s).toLowerCase());
+    return candidates.includes('toron.co.il');
+  });
+
+  const toronVerified = !!toronDomain && (toronDomain.verified === true || toronDomain.authenticated === true);
 
   return ok({
     summary: {
-      domain_toron_verified: !!toronDomain?.verified,
+      domain_toron_verified: toronVerified,
+      toron_domain_record: toronDomain || null,
       addresses_required: reqStatus,
-      verdict: toronDomain?.verified
+      verdict: toronVerified
         ? 'Domain toron.co.il is verified — any @toron.co.il address can send.'
-        : (reqStatus.every((r) => r.configured && r.active)
-            ? 'No domain auth, but all required addresses are configured as individual senders.'
-            : 'Action needed — see addresses_required for missing entries, OR verify the toron.co.il domain in Brevo Senders & IPs → Domains.'),
+        : toronDomain
+            ? 'toron.co.il is added to Brevo but NOT yet verified. Check DKIM/SPF DNS records.'
+            : (reqStatus.every((r) => r.configured && r.active)
+                ? 'No domain auth, but all required addresses are configured as individual senders.'
+                : 'Action needed — toron.co.il is not in Brevo yet. Senders & IPs → Domains → Add a domain.'),
     },
     senders: senderList,
     domains: domainList,
