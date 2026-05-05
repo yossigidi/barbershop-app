@@ -1,7 +1,7 @@
 {
-  "name": "Barbershop — ניהול תורים",
-  "short_name": "Barbershop",
-  "description": "קביעת תורים לספרים",
+  "name": "Toron — ניהול תורים מקצועי",
+  "short_name": "Toron",
+  "description": "ניהול תורים חכם לספרים, מניקור, פדיקור וקוסמטיקה — לוח זמנים, לקוחות, הוצאות ו-AI",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
