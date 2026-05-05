@@ -51,6 +51,14 @@ export async function handleRedeemPromo(request, env) {
   if (!barberDoc) return err('Barber not found', 404);
 
   const sub = fieldVal(barberDoc.fields?.subscription) || {};
+
+  // Promo codes are NOT valid for the Studio plan — that plan ships hardware
+  // (a tablet) at our cost, and any discount on top of that flips the
+  // unit economics. Only Pro monthly + trial accounts can redeem.
+  if (sub.plan === 'studio-24') {
+    return err('קודי הנחה אינם תקפים על מסלול Studio (כולל טאבלט). הקוד תקף רק על מסלול Pro חודשי.', 400);
+  }
+
   const currentEnd = sub.trialEndsAt instanceof Date ? sub.trialEndsAt
     : (sub.currentPeriodEnd instanceof Date ? sub.currentPeriodEnd : new Date());
   const baseline = currentEnd > now ? currentEnd : now;

@@ -290,36 +290,38 @@ export default function PricingPage() {
 
       </div>
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}><Tag size={18} className="icon-inline" />יש לך קוד הנחה?</h3>
-        <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
-          קוד מקנה תקופת חינם נוספת על המסלול שלך.
-        </p>
-        <div className="row" style={{ gap: 8 }}>
-          <input
-            value={promo}
-            onChange={(e) => setPromo(e.target.value.toUpperCase())}
-            placeholder="FREE2026"
-            style={{ flex: 1, fontFamily: 'ui-monospace, monospace', textAlign: 'center', letterSpacing: '0.1em' }}
-          />
-          <button
-            className="btn-secondary"
-            style={{ flex: 'none', padding: '12px 20px' }}
-            onClick={applyPromo}
-            disabled={!promo.trim() || busy}
-          >
-            {busy ? '…' : 'הפעל'}
-          </button>
+      {sub.plan !== 'studio-24' && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}><Tag size={18} className="icon-inline" />יש לך קוד הנחה?</h3>
+          <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+            קוד מקנה תקופת חינם נוספת על המסלול החודשי. לא תקף על מסלול Studio (כולל טאבלט).
+          </p>
+          <div className="row" style={{ gap: 8 }}>
+            <input
+              value={promo}
+              onChange={(e) => setPromo(e.target.value.toUpperCase())}
+              placeholder="FREE2026"
+              style={{ flex: 1, fontFamily: 'ui-monospace, monospace', textAlign: 'center', letterSpacing: '0.1em' }}
+            />
+            <button
+              className="btn-secondary"
+              style={{ flex: 'none', padding: '12px 20px' }}
+              onClick={applyPromo}
+              disabled={!promo.trim() || busy}
+            >
+              {busy ? '…' : 'הפעל'}
+            </button>
+          </div>
+          {msg && (
+            <p style={{
+              marginTop: 10,
+              fontSize: '0.88rem',
+              color: msg.startsWith('✓') ? 'var(--success)' : 'var(--danger)',
+              fontWeight: 600,
+            }}>{msg}</p>
+          )}
         </div>
-        {msg && (
-          <p style={{
-            marginTop: 10,
-            fontSize: '0.88rem',
-            color: msg.startsWith('✓') ? 'var(--success)' : 'var(--danger)',
-            fontWeight: 600,
-          }}>{msg}</p>
-        )}
-      </div>
+      )}
 
       <div className="card" style={{ background: 'var(--surface-2)' }}>
         <p className="muted" style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6 }}>
