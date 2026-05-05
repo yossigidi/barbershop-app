@@ -719,7 +719,6 @@ export default function BookingPage() {
                       >
                         <div className="slot-time-big">{s.time}</div>
                         <div className={`slot-badge tone-${r.tone}`}>{r.badge}</div>
-                        <div className="slot-reason">{r.label}</div>
                       </div>
                     );
                   })}
