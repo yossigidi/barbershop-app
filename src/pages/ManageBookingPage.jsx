@@ -190,11 +190,13 @@ export default function ManageBookingPage() {
 
   return (
     <div className="app">
-      <div className="brand-header">
+      <div className="brand-header brand-header-row">
         {barber?.logoUrl
           ? <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
           : <div className="brand-wordmark" aria-hidden="true">{initials}</div>}
-        <h1 className="brand-title">{barber?.businessName || 'העסק'}</h1>
+        <div className="brand-text">
+          <h1 className="brand-title">{barber?.businessName || 'העסק'}</h1>
+        </div>
       </div>
 
       <div className="card">

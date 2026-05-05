@@ -712,7 +712,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
 .brand-header {
   text-align: center;
   padding: 20px 16px 18px;
-  margin: -16px -16px 18px;
+  margin: -12px -12px 14px;
   background:
     radial-gradient(ellipse 70% 60% at 50% 0%, rgba(184, 137, 58, 0.22), transparent 70%),
     radial-gradient(ellipse 40% 30% at 20% 100%, rgba(184, 137, 58, 0.08), transparent 70%),
@@ -727,7 +727,46 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   gap: 4px;
 }
 @media (min-width: 540px) {
-  .brand-header { padding: 32px 20px 26px; margin-bottom: 22px; }
+  .brand-header { padding: 32px 20px 26px; margin: -16px -16px 22px; }
+}
+
+/* Horizontal row variant — logo + text side by side, much more compact */
+.brand-header-row {
+  flex-direction: row;
+  justify-content: flex-start;
+  text-align: start;
+  gap: 14px;
+  padding: 14px 16px;
+}
+.brand-header-row .brand-logo,
+.brand-header-row .brand-wordmark {
+  margin: 0;
+  width: 56px;
+  height: 56px;
+  flex: none;
+}
+.brand-header-row .brand-wordmark { font-size: 1.4rem; }
+.brand-header-row .brand-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.brand-header-row .brand-title {
+  font-size: 1.25rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brand-header-row .brand-tagline { margin: 0; font-size: 0.78rem; }
+@media (min-width: 540px) {
+  .brand-header-row { padding: 18px 22px; gap: 18px; }
+  .brand-header-row .brand-logo,
+  .brand-header-row .brand-wordmark { width: 72px; height: 72px; }
+  .brand-header-row .brand-wordmark { font-size: 1.7rem; }
+  .brand-header-row .brand-title { font-size: 1.55rem; }
 }
 /* Subtle texture — fine noise for premium feel */
 .brand-header::before {

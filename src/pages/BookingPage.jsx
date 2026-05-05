@@ -526,13 +526,15 @@ export default function BookingPage() {
   if (success) {
     return (
       <div className="app">
-        <div className="brand-header">
+        <div className="brand-header brand-header-row">
           {barber.logoUrl ? (
             <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
           ) : (
             <div className="brand-wordmark" aria-hidden="true">{initials}</div>
           )}
-          <h1 className="brand-title">{barber.businessName}</h1>
+          <div className="brand-text">
+            <h1 className="brand-title">{barber.businessName}</h1>
+          </div>
         </div>
         <div className="card success-card">
           <div className="success-check">
@@ -660,19 +662,21 @@ export default function BookingPage() {
 
   return (
     <div className="app">
-      <div className="brand-header">
+      <div className="brand-header brand-header-row">
         {barber.logoUrl ? (
           <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
         ) : (
           <div className="brand-wordmark" aria-hidden="true">{initials}</div>
         )}
-        <h1 className="brand-title">{barber.businessName}</h1>
-        {todayStatus && (
-          <div className={`brand-tagline ${todayStatus.open ? '' : 'closed'}`}>
-            <span className="dot" />
-            {todayStatus.text}
-          </div>
-        )}
+        <div className="brand-text">
+          <h1 className="brand-title">{barber.businessName}</h1>
+          {todayStatus && (
+            <div className={`brand-tagline ${todayStatus.open ? '' : 'closed'}`}>
+              <span className="dot" />
+              {todayStatus.text}
+            </div>
+          )}
+        </div>
       </div>
 
       <LiveStatusBanner barberId={barberId} barberName={barber.businessName} />
