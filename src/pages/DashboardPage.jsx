@@ -587,6 +587,7 @@ export default function DashboardPage() {
           open
           barberId={user.uid}
           businessName={barber.businessName || 'העסק שלי'}
+          shortLink={shortLink}
           onClose={() => setShowBroadcast(false)}
         />
       )}
