@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, onSnapshot, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
-import { PROFESSION_LIST, readProfessions } from '../utils/professions';
+import { PROFESSION_LIST, readProfessions, presetCatalogForMany } from '../utils/professions';
 import { nameToSlug, normalizeSlug, validateSlug } from '../utils/slugs';
 import { DEFAULT_THEME, getThemeKey } from '../utils/themes';
 import ThemePicker from '../components/ThemePicker.jsx';
@@ -375,7 +375,7 @@ export default function SettingsPage() {
       <div className="card">
         <h3 style={{ marginTop: 0 }}><Briefcase size={18} className="icon-inline" />תחומי העיסוק</h3>
         <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
-          סמן את כל מה שאתה/את מציע/ה. אפשר לבחור כמה מקצועות ביחד (למשל מניקור + פדיקור + קוסמטיקה). שינוי לא מוחק שירותים שכבר הגדרת — רק משפיע על ההצעות בקטלוג ה-onboarding.
+          סמן את כל מה שאתה/את מציע/ה. אפשר לבחור כמה מקצועות ביחד (למשל מניקור + פדיקור + קוסמטיקה). אחרי שינוי תוכל/י ללחוץ "טען שירותים מומלצים" כדי להחליף את רשימת השירותים בקטלוג של המקצוע החדש.
         </p>
         <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
           {PROFESSION_LIST.map((p) => {
@@ -402,9 +402,41 @@ export default function SettingsPage() {
         </div>
         {professions.length > 1 && (
           <p className="muted" style={{ fontSize: '0.78rem', marginTop: 10, marginBottom: 0 }}>
-            ✨ נבחרו {professions.length} תחומים — בקטלוג יוצגו שירותים מכל אחד.
+            <Sparkles size={12} className="icon-inline" />
+            נבחרו {professions.length} תחומים — בקטלוג יוצגו שירותים מכל אחד.
           </p>
         )}
+
+        <button
+          type="button"
+          className="btn-secondary"
+          style={{ width: '100%', marginTop: 12, fontSize: '0.92rem' }}
+          onClick={() => {
+            // Replace current services + addons with the catalog of the
+            // currently-selected professions. Confirm first because this
+            // wipes any custom services the user added — the change isn't
+            // persisted until they hit "שמור" anyway, so they can navigate
+            // away to undo.
+            const labelList = PROFESSION_LIST
+              .filter((p) => professions.includes(p.id))
+              .map((p) => p.label)
+              .join(' + ');
+            const ok = confirm(
+              `להחליף את רשימת השירותים והתוספות ברשימה המומלצת ל-${labelList}?\n\nהשירותים שהוספת ידנית יימחקו (השינוי ייכנס לתוקף רק אחרי "שמור").`
+            );
+            if (!ok) return;
+            const cat = presetCatalogForMany(professions);
+            setServices(
+              cat.services.map((s) => ({ id: s.id, name: s.name, description: '', duration: s.duration, price: s.price }))
+            );
+            setAddons(
+              cat.addons.map((a) => ({ id: a.id, name: a.name, duration: a.duration, price: a.price }))
+            );
+          }}
+        >
+          <Sparkles size={14} className="icon-inline" />
+          טען שירותים מומלצים למקצוע{professions.length > 1 ? 'ות' : ''} שנבחר{professions.length > 1 ? 'ו' : ''}
+        </button>
       </div>
 
       <div className="card">
