@@ -5024,17 +5024,17 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 
 /* ─────────────────────────────────────────────────────────────────────────
    Settings → custom slug live availability indicator
+   The wrap is a flex row in an RTL page; the input itself is dir="ltr".
+   The indicator sits as a real flex sibling at the inline-end of the row
+   (visual left in RTL) so it never overlaps the typed slug text.
    ─────────────────────────────────────────────────────────────────────── */
-.slug-input-wrap { position: relative; }
-.slug-input-wrap input { padding-inline-end: 88px; }
-
 .slug-indicator {
-  position: absolute;
-  inset-inline-end: 8px;
-  top: 50%;
-  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
+  flex: none;
+  padding: 0 10px;
+  background: var(--surface);
+  border-inline-start: 1px solid var(--border);
   pointer-events: none;
 }
 .slug-spin { animation: slug-spin 1s linear infinite; color: var(--text-dim); }
