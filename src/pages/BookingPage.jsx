@@ -25,16 +25,55 @@ import { buildIcs, downloadIcs } from '../utils/ics';
 
 const PHONE_KEY = 'bs_phone';
 
-// Default hero background per profession. The barber can override by setting
-// `heroImageUrl` on their barbers/{uid} doc. Hosted on Unsplash CDN — no
-// API key required, lazy-loaded by the browser; the dark overlay rendered
-// on top keeps the headline readable on top of any source image.
+// Default hero backgrounds per profession. Each profession has multiple
+// candidates so two barbers in the same field don't end up with identical
+// hero images — `pickHeroImage()` picks one deterministically based on the
+// barber's ID, so a given barber always sees the same image (no flicker
+// between renders) but different barbers get different images.
+//
+// All photo IDs were verified live against images.unsplash.com — replace
+// only with verified IDs to avoid 404s in production. The dark overlay
+// rendered on top keeps Hebrew text legible on any source image.
 const PROFESSION_HERO_BG = {
-  barber: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600&q=80&auto=format&fit=crop',
-  manicurist: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1600&q=80&auto=format&fit=crop',
-  pedicurist: 'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1600&q=80&auto=format&fit=crop',
-  cosmetician: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&q=80&auto=format&fit=crop',
+  barber: [
+    'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1504593811423-6dd665756598?w=1600&q=80&auto=format&fit=crop',
+  ],
+  manicurist: [
+    'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1607779097040-26e80aa78e66?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1600&q=80&auto=format&fit=crop',
+  ],
+  pedicurist: [
+    'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1559599101-f09722fb4948?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=1600&q=80&auto=format&fit=crop',
+  ],
+  cosmetician: [
+    'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=1600&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=1600&q=80&auto=format&fit=crop',
+  ],
 };
+
+// djb2-style hash on a string → returns a non-negative integer. Stable
+// across page loads so a given barber UID always maps to the same image.
+function hashString(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function pickHeroImage(profession, barberId) {
+  const list = PROFESSION_HERO_BG[profession] || PROFESSION_HERO_BG.barber;
+  if (!list || list.length === 0) return PROFESSION_HERO_BG.barber[0];
+  const i = barberId ? hashString(String(barberId)) % list.length : 0;
+  return list[i];
+}
 // Short business-type label for the hero eyebrow. Kept neutral and factual —
 // the actual service names appear in the sub-headline (`servicesPreview`).
 const PROFESSION_TAGLINE = {
@@ -285,10 +324,12 @@ export default function BookingPage() {
     return (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
   }, [barber]);
 
-  // Hero data — picks the profession-appropriate background image and tagline,
-  // unless the barber has set their own heroImageUrl on the barber doc.
+  // Hero data — picks the profession-appropriate background image and tagline.
+  // The image is hashed off the barber UID so two barbers in the same field
+  // get different images automatically, no upload needed. A barber can still
+  // override with `heroImageUrl` on their doc (for future settings UI).
   const heroProfession = barber?.profession || barber?.professions?.[0] || 'barber';
-  const heroBg = barber?.heroImageUrl || PROFESSION_HERO_BG[heroProfession] || PROFESSION_HERO_BG.barber;
+  const heroBg = barber?.heroImageUrl || pickHeroImage(heroProfession, barberId);
   const heroTagline = PROFESSION_TAGLINE[heroProfession] || PROFESSION_TAGLINE.barber;
   // Compact service preview line — shows up to the first 3 service names so the
   // hero communicates concretely what this business does.
