@@ -92,14 +92,14 @@ export default function ExpensesTab() {
       <div className="card expense-summary">
         <div className="expense-month-nav">
           <button className="btn-secondary" onClick={nextMonth} aria-label="חודש הבא" style={{ padding: '6px 10px' }}>
-            <ChevronRight size={16} />
+            <ChevronLeft size={16} aria-hidden="true" />
           </button>
           <div className="expense-month-label">
             {HEB_MONTHS[month]} {year}
             {isCurrentMonth && <span className="expense-month-badge">החודש</span>}
           </div>
           <button className="btn-secondary" onClick={prevMonth} aria-label="חודש קודם" style={{ padding: '6px 10px' }}>
-            <ChevronLeft size={16} />
+            <ChevronRight size={16} aria-hidden="true" />
           </button>
         </div>
         <div className="expense-total">
