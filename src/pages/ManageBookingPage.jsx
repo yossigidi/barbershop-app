@@ -12,6 +12,7 @@ import {
 } from '../utils/slots';
 import Calendar from '../components/Calendar.jsx';
 import { whatsappUrl } from '../utils/whatsapp';
+import { getThemeKey } from '../utils/themes';
 
 // /manage/:token — public page where a client can view, cancel, or
 // reschedule their appointment using the unique token from the link they
@@ -189,7 +190,7 @@ export default function ManageBookingPage() {
   })();
 
   return (
-    <div className="app">
+    <div className="app" data-theme={getThemeKey(barber)}>
       <div className="brand-header brand-header-row">
         {barber?.logoUrl
           ? <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />

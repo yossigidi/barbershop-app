@@ -4318,3 +4318,158 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   border-radius: var(--radius-sm);
   padding: 8px 10px;
 }
+
+/* ─── Theme overrides for the public booking page ──────────────────────
+   Default values live in :root. Each [data-theme="..."] selector below
+   overrides the variables that the public page reads. The dashboard
+   (operator-side) doesn't get a data-theme attribute so it stays on the
+   default Gold Premium look. */
+
+[data-theme="soft-cream"] {
+  --bg: #f6efe4;
+  --surface: #fffaf0;
+  --surface-2: #f0e6d3;
+  --border: #e3d5b8;
+  --text: #3a2c1c;
+  --text-dim: #6b5a44;
+  --text-soft: #8d7a5e;
+  --gold: #c9974a;
+  --gold-2: #d6a55a;
+  --gold-deep: #8b6628;
+  --gold-soft: rgba(201, 151, 74, 0.12);
+}
+
+[data-theme="dark-modern"] {
+  --bg: #0a0a0c;
+  --surface: #18181b;
+  --surface-2: #232328;
+  --border: #2c2c30;
+  --text: #f5f5f5;
+  --text-dim: #a8a8b0;
+  --text-soft: #6b6b73;
+  --gold: #e8b15c;
+  --gold-2: #f4c478;
+  --gold-deep: #c9974a;
+  --gold-soft: rgba(232, 177, 92, 0.18);
+}
+[data-theme="dark-modern"] .card,
+[data-theme="dark-modern"] .modal {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.30), 0 4px 12px rgba(0,0,0,0.40);
+}
+
+[data-theme="rose-studio"] {
+  --bg: #fdf2f4;
+  --surface: #ffffff;
+  --surface-2: #fde8ec;
+  --border: #f0c8d2;
+  --text: #5e1a2e;
+  --text-dim: #93455e;
+  --text-soft: #b8788c;
+  --accent: #9f1239;
+  --accent-2: #be2350;
+  --accent-3: #7a0e2c;
+  --gold: #db7799;
+  --gold-2: #e89db0;
+  --gold-deep: #9f1239;
+  --gold-soft: rgba(219, 119, 153, 0.12);
+  --gold-glow: rgba(219, 119, 153, 0.30);
+}
+
+[data-theme="minimal-white"] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f5f5f7;
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-dim: #4b5563;
+  --text-soft: #6b7280;
+  --accent: #111827;
+  --accent-2: #1f2937;
+  --accent-3: #030712;
+  --gold: #6b7280;
+  --gold-2: #9ca3af;
+  --gold-deep: #1f2937;
+  --gold-soft: rgba(107, 114, 128, 0.08);
+  --gold-glow: rgba(107, 114, 128, 0.18);
+}
+
+/* ─── Theme picker (Settings) ─────────────────────────────────────────── */
+.theme-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: start;
+  overflow: hidden;
+  transition: border-color 0.15s var(--ease), transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+.theme-card:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: var(--shadow-2); }
+.theme-card.is-on {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+.theme-card-preview {
+  height: 100px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.theme-card-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+.theme-card-pill {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 88%;
+}
+.theme-card-chip {
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid;
+}
+.theme-card-meta { padding: 10px 12px; }
+.theme-card-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.theme-card-check { color: var(--gold); }
+.theme-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+  line-height: 1.4;
+}

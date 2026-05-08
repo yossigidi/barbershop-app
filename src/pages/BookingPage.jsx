@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isReservedSlug } from '../utils/slugs';
+import { getThemeKey } from '../utils/themes';
 import {
   CheckCircle2, CalendarPlus, CreditCard, Repeat, Bell, Check,
   Calendar as CalendarIcon, Clock, Hourglass, Scissors as ScissorsIcon,
@@ -654,7 +655,7 @@ export default function BookingPage() {
 
   if (success) {
     return (
-      <div className="app">
+      <div className="app" data-theme={getThemeKey(barber)}>
         <div className="brand-header brand-header-row">
           {barber.logoUrl ? (
             <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
@@ -790,7 +791,7 @@ export default function BookingPage() {
   const addons = barber.addons || [];
 
   return (
-    <div className="app">
+    <div className="app" data-theme={getThemeKey(barber)}>
       <div className="brand-header brand-header-row">
         {barber.logoUrl ? (
           <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />

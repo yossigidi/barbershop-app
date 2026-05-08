@@ -7,6 +7,8 @@ import { doc, getDoc, onSnapshot, updateDoc, setDoc, deleteDoc } from 'firebase/
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
 import { PROFESSION_LIST, readProfessions } from '../utils/professions';
 import { nameToSlug, normalizeSlug, validateSlug } from '../utils/slugs';
+import { DEFAULT_THEME, getThemeKey } from '../utils/themes';
+import ThemePicker from '../components/ThemePicker.jsx';
 import { getAccessState } from '../utils/subscription';
 import LogoUploader from '../components/LogoUploader.jsx';
 import PaywallModal from '../components/PaywallModal.jsx';
@@ -42,6 +44,7 @@ export default function SettingsPage() {
   const [aiGender, setAiGender] = useState('neutral');
   const [customSlug, setCustomSlug] = useState('');
   const [slugError, setSlugError] = useState('');
+  const [theme, setTheme] = useState(DEFAULT_THEME);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [barberData, setBarberData] = useState(null);
@@ -76,6 +79,7 @@ export default function SettingsPage() {
         setGoogleReviewUrl(data.googleReviewUrl || '');
         setAiGender(data.aiGender || 'neutral');
         setCustomSlug(data.customSlug || '');
+        setTheme(getThemeKey(data));
       }
       setLoaded(true);
     });
@@ -167,6 +171,7 @@ export default function SettingsPage() {
         googleReviewUrl: (googleReviewUrl || '').trim(),
         aiGender,
         customSlug: desiredSlug,
+        theme,
       });
 
       // Slug bookkeeping: create/update the shortCodes/{slug} pointer and
@@ -284,6 +289,15 @@ export default function SettingsPage() {
           <label>לוגו</label>
           <LogoUploader uid={user.uid} currentUrl={logoUrl} onChange={setLogoUrl} />
         </div>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />עיצוב הדף ללקוחות</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+          בחר/י את התמה שתופיע בדף שהלקוחות פותחים מהלינק שלך. אפשר לעדכן בכל זמן.
+          הדשבורד שלך לא מושפע מהבחירה.
+        </p>
+        <ThemePicker value={theme} onSelect={setTheme} businessName={businessName} />
       </div>
 
       <div className="card">
