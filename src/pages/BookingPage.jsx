@@ -16,6 +16,7 @@ import {
 } from '../utils/slots';
 import { getRecommendedSlots, SLOT_REASONS } from '../utils/slotScoring';
 import Calendar from '../components/Calendar.jsx';
+import MonthCalendar from '../components/MonthCalendar.jsx';
 import LiveStatusBanner from '../components/LiveStatusBanner.jsx';
 import { buildIcs, downloadIcs } from '../utils/ics';
 
@@ -51,6 +52,7 @@ export default function BookingPage() {
   const [pickedService, setPickedService] = useState(null);
   const [pickedAddonIds, setPickedAddonIds] = useState([]);
   const [addonsOpen, setAddonsOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState('date'); // 'date' | 'time' | 'summary'
   const [client, setClient] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
@@ -245,8 +247,25 @@ export default function BookingPage() {
 
   function pickSlot(time) {
     setPickedTime(time);
-    if (client) setShowConfirm(true);
-    else setShowLogin(true);
+  }
+  // When the user changes service, addons or date, reset to step 1 so the
+  // upstream choices are re-confirmed (slot availability depends on duration).
+  useEffect(() => { setWizardStep('date'); setPickedTime(null); }, [pickedService?.id]);
+  useEffect(() => { if (wizardStep === 'summary') setPickedTime(null); /* eslint-disable-next-line */ }, [pickedAddonIds.length]);
+  useEffect(() => {
+    // Date change while in time/summary step → bounce back to time
+    if (wizardStep === 'summary') { setWizardStep('time'); setPickedTime(null); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate?.getTime?.()]);
+
+  // When user clicks "אשר וקבע" in step 3 — gate through login/signup if needed
+  function confirmFromSummary() {
+    if (!pickedTime || !pickedService) return;
+    if (client) {
+      confirmBooking(pickedTime, client);
+    } else {
+      setShowLogin(true);
+    }
   }
 
   function toggleAddon(id) {
@@ -264,7 +283,9 @@ export default function BookingPage() {
         setClient(data);
         localStorage.setItem(`${PHONE_KEY}_${barberId}`, phone);
         setShowLogin(false);
-        if (pickedTime) setShowConfirm(true);
+        // Wizard summary step is already open with all details visible —
+        // login was the last gate, so finalize the booking immediately.
+        if (pickedTime) confirmBooking(pickedTime, data);
       } else {
         setShowLogin(false);
         setShowSignup(true);
@@ -297,7 +318,8 @@ export default function BookingPage() {
       setClient(data);
       localStorage.setItem(`${PHONE_KEY}_${barberId}`, phone);
       setShowSignup(false);
-      if (pickedTime) setShowConfirm(true);
+      // First-time signup — fall straight through to creating the booking
+      if (pickedTime) confirmBooking(pickedTime, data);
     } catch (e) {
       alert('שגיאה: ' + e.message);
     } finally {
@@ -771,126 +793,270 @@ export default function BookingPage() {
         </div>
       )}
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>בחר יום</h3>
-        <Calendar
-          days={days}
-          selectedDate={selectedDate}
-          onSelect={setSelectedDate}
-          workingHours={barber.workingHours}
-        />
-        <div className="muted text-center" style={{ marginBottom: 12 }}>
-          {DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}
-          {pickedService && (
-            <> • סה״כ {totalDuration} דק׳{totalPrice ? ` • ₪${totalPrice}` : ''}</>
-          )}
+      {pickedService && (
+        <div className="wizard-progress" aria-label="התקדמות בתהליך">
+          <div className={`wizard-step ${wizardStep === 'date' ? 'is-current' : 'is-done'}`}>
+            <span className="wizard-step-num">1</span>
+            <span className="wizard-step-label">תאריך</span>
+          </div>
+          <div className="wizard-line" />
+          <div className={`wizard-step ${wizardStep === 'time' ? 'is-current' : wizardStep === 'summary' ? 'is-done' : ''}`}>
+            <span className="wizard-step-num">2</span>
+            <span className="wizard-step-label">שעה</span>
+          </div>
+          <div className="wizard-line" />
+          <div className={`wizard-step ${wizardStep === 'summary' ? 'is-current' : ''}`}>
+            <span className="wizard-step-num">3</span>
+            <span className="wizard-step-label">אישור</span>
+          </div>
         </div>
+      )}
 
-        <div className="card-inset" style={{ marginBottom: 12 }}>
-          <label className="row" style={{ alignItems: 'center', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={recurring}
-              onChange={(e) => setRecurring(e.target.checked)}
-              style={{ width: 22, height: 22, flex: 'none', accentColor: 'var(--accent)', marginLeft: 8 }}
-            />
-            <span style={{ flex: 1 }}><strong><Repeat size={14} className="icon-inline" />תור קבוע</strong> <span className="muted">(אותה שעה, חוזר)</span></span>
-          </label>
-          {recurring && (
-            <div className="row" style={{ marginTop: 10 }}>
-              <div>
-                <label className="muted" style={{ fontSize: '0.85rem' }}>כל</label>
-                <select value={recurEvery} onChange={(e) => setRecurEvery(Number(e.target.value))}>
-                  <option value={1}>שבוע</option>
-                  <option value={2}>שבועיים</option>
-                  <option value={3}>3 שבועות</option>
-                  <option value={4}>4 שבועות</option>
-                </select>
-              </div>
-              <div>
-                <label className="muted" style={{ fontSize: '0.85rem' }}>סה״כ פעמים</label>
-                <select value={recurTimes} onChange={(e) => setRecurTimes(Number(e.target.value))}>
-                  <option value={4}>4</option>
-                  <option value={6}>6</option>
-                  <option value={8}>8</option>
-                  <option value={12}>12</option>
-                  <option value={20}>20</option>
-                </select>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <h3>בחר שעה</h3>
-        {slots.length === 0 ? (
-          <div className="empty">סגור ביום זה</div>
-        ) : slots.every((s) => !s.available) ? (
-          <>
-            <div className="empty">אין שעות פנויות בתאריך זה</div>
-            {client && (
-              <button
-                className="btn-primary"
-                onClick={joinWaitlist}
-                style={{ width: '100%', marginTop: 8 }}
-              >
-<Bell size={18} className="icon-inline" />הצטרף לרשימת המתנה — נודיע אם יתפנה
-              </button>
+      {/* ─── Step 1 — Pick date ───────────────────────────────────────── */}
+      {pickedService && wizardStep === 'date' && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>בחר/י תאריך</h3>
+          <p className="muted" style={{ marginTop: -6, fontSize: '0.86rem' }}>
+            ניתן לקבוע עד 12 חודשים קדימה. ימים סגורים מסומנים באפור.
+          </p>
+          <MonthCalendar
+            selectedDate={selectedDate}
+            onSelect={setSelectedDate}
+            workingHours={barber.workingHours}
+          />
+          <div className="text-center" style={{ marginTop: 12, fontSize: '0.95rem' }}>
+            <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
+            {totalDuration > 0 && (
+              <span className="muted" style={{ marginInlineStart: 8 }}>
+                · {totalDuration} דק׳{totalPrice ? ` · ₪${totalPrice}` : ''}
+              </span>
             )}
-          </>
-        ) : (
-          <>
-            {recommendedWithUsual.length > 0 && (
-              <div className="recommended-section">
-                <div className="recommended-label">מומלצים בשבילך</div>
-                <div className="slots-recommended">
-                  {recommendedWithUsual.map((s) => {
-                    const r = SLOT_REASONS[s.reason] || SLOT_REASONS.earliest;
-                    return (
+          </div>
+
+          <div className="card-inset" style={{ marginTop: 14 }}>
+            <label className="row" style={{ alignItems: 'center', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={recurring}
+                onChange={(e) => setRecurring(e.target.checked)}
+                style={{ width: 22, height: 22, flex: 'none', accentColor: 'var(--accent)', marginLeft: 8 }}
+              />
+              <span style={{ flex: 1 }}><strong><Repeat size={14} className="icon-inline" />תור קבוע</strong> <span className="muted">(אותה שעה, חוזר)</span></span>
+            </label>
+            {recurring && (
+              <div className="row" style={{ marginTop: 10 }}>
+                <div>
+                  <label className="muted" style={{ fontSize: '0.85rem' }}>כל</label>
+                  <select value={recurEvery} onChange={(e) => setRecurEvery(Number(e.target.value))}>
+                    <option value={1}>שבוע</option>
+                    <option value={2}>שבועיים</option>
+                    <option value={3}>3 שבועות</option>
+                    <option value={4}>4 שבועות</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="muted" style={{ fontSize: '0.85rem' }}>סה״כ פעמים</label>
+                  <select value={recurTimes} onChange={(e) => setRecurTimes(Number(e.target.value))}>
+                    <option value={4}>4</option>
+                    <option value={6}>6</option>
+                    <option value={8}>8</option>
+                    <option value={12}>12</option>
+                    <option value={20}>20</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="btn-gold wizard-next"
+            onClick={() => setWizardStep('time')}
+          >
+            הבא: בחירת שעה ←
+          </button>
+        </div>
+      )}
+
+      {/* ─── Step 2 — Pick time ───────────────────────────────────────── */}
+      {pickedService && wizardStep === 'time' && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>בחר/י שעה</h3>
+          <button
+            type="button"
+            className="wizard-summary-link"
+            onClick={() => setWizardStep('date')}
+            aria-label="חזור לבחירת תאריך"
+          >
+            <CalendarIcon size={14} className="icon-inline" />
+            {DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}
+            <span className="wizard-summary-edit">שנה ›</span>
+          </button>
+
+          {slots.length === 0 ? (
+            <div className="empty">סגור ביום זה</div>
+          ) : slots.every((s) => !s.available) ? (
+            <>
+              <div className="empty">אין שעות פנויות בתאריך זה</div>
+              {client && (
+                <button
+                  className="btn-primary"
+                  onClick={joinWaitlist}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  <Bell size={18} className="icon-inline" />הצטרף לרשימת המתנה — נודיע אם יתפנה
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {recommendedWithUsual.length > 0 && (
+                <div className="recommended-section">
+                  <div className="recommended-label">המלצות AI לשעות הטובות</div>
+                  <div className="slots-recommended">
+                    {recommendedWithUsual.map((s) => {
+                      const r = SLOT_REASONS[s.reason] || SLOT_REASONS.earliest;
+                      return (
+                        <div
+                          key={s.time}
+                          className={`slot slot-recommended ${pickedTime === s.time ? 'selected' : ''}`}
+                          onClick={() => pickSlot(s.time)}
+                        >
+                          <div className="slot-time-big">{s.time}</div>
+                          <div className={`slot-badge tone-${r.tone}`}>{r.badge}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {!showAllSlots && slotGroups.length > 0 && (
+                    <button
+                      type="button"
+                      className="show-all-toggle"
+                      onClick={() => setShowAllSlots(true)}
+                    >
+                      הצג את כל השעות הזמינות
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {(showAllSlots || recommendedWithUsual.length === 0) && slotGroups.map((g) => (
+                <div key={g.key} className="slots-section">
+                  <div className="slot-group-label">{g.label}</div>
+                  <div className="slots">
+                    {g.items.map((s) => (
                       <div
                         key={s.time}
-                        className={`slot slot-recommended ${pickedTime === s.time ? 'selected' : ''}`}
+                        className={`slot ${pickedTime === s.time ? 'selected' : ''}`}
                         onClick={() => pickSlot(s.time)}
                       >
-                        <div className="slot-time-big">{s.time}</div>
-                        <div className={`slot-badge tone-${r.tone}`}>{r.badge}</div>
+                        <div>{s.time}</div>
+                        {pickedService?.duration > 20 && (
+                          <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
+                        )}
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-                {!showAllSlots && slotGroups.length > 0 && (
-                  <button
-                    type="button"
-                    className="show-all-toggle"
-                    onClick={() => setShowAllSlots(true)}
-                  >
-                    הצג את כל השעות הזמינות
-                  </button>
-                )}
-              </div>
-            )}
+              ))}
+            </>
+          )}
 
-            {(showAllSlots || recommendedWithUsual.length === 0) && slotGroups.map((g) => (
-              <div key={g.key} className="slots-section">
-                <div className="slot-group-label">{g.label}</div>
-                <div className="slots">
-                  {g.items.map((s) => (
-                    <div
-                      key={s.time}
-                      className={`slot ${pickedTime === s.time ? 'selected' : ''}`}
-                      onClick={() => pickSlot(s.time)}
-                    >
-                      <div>{s.time}</div>
-                      {pickedService?.duration > 20 && (
-                        <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </>
-        )}
-      </div>
+          <div className="wizard-actions">
+            <button
+              type="button"
+              className="btn-secondary wizard-back"
+              onClick={() => setWizardStep('date')}
+            >
+              › חזור
+            </button>
+            <button
+              type="button"
+              className="btn-gold wizard-next"
+              onClick={() => setWizardStep('summary')}
+              disabled={!pickedTime}
+            >
+              הבא: סיכום ←
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Step 3 — Summary + confirm ───────────────────────────────── */}
+      {pickedService && wizardStep === 'summary' && pickedTime && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>סיכום ואישור</h3>
+          <p className="muted" style={{ marginTop: -6, fontSize: '0.86rem' }}>
+            בדוק/י שכל הפרטים נכונים לפני שתאשר/י.
+          </p>
+
+          <div className="confirm-row">
+            <span className="confirm-label"><CalendarIcon size={14} className="icon-inline" />תאריך</span>
+            <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
+          </div>
+          <div className="confirm-row">
+            <span className="confirm-label"><Clock size={14} className="icon-inline" />שעה</span>
+            <strong>{pickedTime}–{addMinToTime(pickedTime, totalDuration)}</strong>
+          </div>
+          <div className="confirm-row">
+            <span className="confirm-label"><Hourglass size={14} className="icon-inline" />אורך</span>
+            <strong>{totalDuration} דקות</strong>
+          </div>
+          <div className="confirm-row">
+            <span className="confirm-label"><ScissorsIcon size={14} className="icon-inline" />שירות</span>
+            <strong>{pickedService?.name}</strong>
+          </div>
+          {pickedAddonIds.length > 0 && (
+            <div className="confirm-row">
+              <span className="confirm-label"><Sparkles size={14} className="icon-inline" />תוספות</span>
+              <strong>
+                {(barber.addons || [])
+                  .filter((a) => pickedAddonIds.includes(a.id))
+                  .map((a) => a.name)
+                  .join(', ')}
+              </strong>
+            </div>
+          )}
+          {totalPrice > 0 && (
+            <div className="confirm-row">
+              <span className="confirm-label"><CircleDollarSign size={14} className="icon-inline" />מחיר</span>
+              <strong>₪{totalPrice}</strong>
+            </div>
+          )}
+          {client && (
+            <div className="confirm-row">
+              <span className="confirm-label"><User size={14} className="icon-inline" />על שם</span>
+              <strong>{client.firstName} {client.lastName}</strong>
+            </div>
+          )}
+          {recurring && (
+            <div className="confirm-row" style={{ borderTop: '1px dashed var(--gold)', paddingTop: 8, marginTop: 8 }}>
+              <span className="confirm-label"><Repeat size={14} className="icon-inline" />חוזר</span>
+              <strong>כל {recurEvery} שבועות, {recurTimes} פעמים</strong>
+            </div>
+          )}
+
+          <div className="wizard-actions" style={{ marginTop: 16 }}>
+            <button
+              type="button"
+              className="btn-secondary wizard-back"
+              onClick={() => setWizardStep('time')}
+              disabled={busy}
+            >
+              › חזור לשעה
+            </button>
+            <button
+              type="button"
+              className="btn-gold wizard-confirm"
+              onClick={confirmFromSummary}
+              disabled={busy}
+            >
+              <Check size={16} className="icon-inline" />
+              {busy ? 'קובע…' : 'אשר וקבע תור'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showLogin && (
         <div className="modal-backdrop" onClick={() => setShowLogin(false)}>
@@ -908,77 +1074,6 @@ export default function BookingPage() {
             </div>
             <button className="btn-primary" onClick={loginByPhone} disabled={busy} style={{ width: '100%' }}>
               {busy ? 'בודק…' : 'המשך'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showConfirm && client && pickedTime && (
-        <div className="modal-backdrop" onClick={() => !busy && setShowConfirm(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>אישור הזמנה</h2>
-            <p className="muted" style={{ marginTop: -6 }}>בדוק שכל הפרטים נכונים לפני שתאשר.</p>
-
-            <div className="confirm-row">
-              <span className="confirm-label"><CalendarIcon size={14} className="icon-inline" />תאריך</span>
-              <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
-            </div>
-            <div className="confirm-row">
-              <span className="confirm-label"><Clock size={14} className="icon-inline" />שעה</span>
-              <strong>{pickedTime}–{addMinToTime(pickedTime, totalDuration)}</strong>
-            </div>
-            <div className="confirm-row">
-              <span className="confirm-label"><Hourglass size={14} className="icon-inline" />אורך</span>
-              <strong>{totalDuration} דקות</strong>
-            </div>
-            <div className="confirm-row">
-              <span className="confirm-label"><ScissorsIcon size={14} className="icon-inline" />שירות</span>
-              <strong>{pickedService?.name}</strong>
-            </div>
-            {pickedAddonIds.length > 0 && (
-              <div className="confirm-row">
-                <span className="confirm-label"><Sparkles size={14} className="icon-inline" />תוספות</span>
-                <strong>
-                  {(barber.addons || [])
-                    .filter((a) => pickedAddonIds.includes(a.id))
-                    .map((a) => a.name)
-                    .join(', ')}
-                </strong>
-              </div>
-            )}
-            {totalPrice > 0 && (
-              <div className="confirm-row">
-                <span className="confirm-label"><CircleDollarSign size={14} className="icon-inline" />מחיר</span>
-                <strong>₪{totalPrice}</strong>
-              </div>
-            )}
-            <div className="confirm-row">
-              <span className="confirm-label"><User size={14} className="icon-inline" />על שם</span>
-              <strong>{client.firstName} {client.lastName}</strong>
-            </div>
-            {recurring && (
-              <div className="confirm-row" style={{ borderTop: '1px dashed var(--gold)', paddingTop: 8, marginTop: 8 }}>
-                <span className="confirm-label"><Repeat size={14} className="icon-inline" />חוזר</span>
-                <strong>כל {recurEvery} שבועות, {recurTimes} פעמים</strong>
-              </div>
-            )}
-
-            <div className="spacer" />
-            <button
-              className="btn-primary"
-              onClick={() => { setShowConfirm(false); confirmBooking(pickedTime, client); }}
-              disabled={busy}
-              style={{ width: '100%', marginBottom: 8 }}
-            >
-<Check size={18} className="icon-inline" />אשר וקבע תור
-            </button>
-            <button
-              className="btn-secondary"
-              onClick={() => { setShowConfirm(false); setPickedTime(null); }}
-              disabled={busy}
-              style={{ width: '100%' }}
-            >
-              חזור לבחור שעה אחרת
             </button>
           </div>
         </div>

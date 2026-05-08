@@ -3891,3 +3891,139 @@ body:has(.bottom-nav) .a11y-fab { bottom: calc(72px + env(safe-area-inset-bottom
   line-height: 1.55;
 }
 .studio-actions { margin-top: 18px; }
+
+/* ─── Booking wizard (3-step) ─────────────────────────────────────────── */
+.wizard-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 0 8px;
+}
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-soft);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.wizard-step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+.wizard-step.is-current { color: var(--text); }
+.wizard-step.is-current .wizard-step-num {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(184, 137, 58, 0.30);
+}
+.wizard-step.is-done .wizard-step-num {
+  background: var(--accent);
+  color: white;
+  border-color: transparent;
+}
+.wizard-step.is-done .wizard-step-num::before {
+  content: '✓';
+  font-size: 0.92rem;
+}
+.wizard-step.is-done .wizard-step-num > * { display: none; }
+.wizard-line {
+  height: 2px;
+  width: 32px;
+  background: var(--border);
+  border-radius: 1px;
+}
+
+.wizard-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.wizard-back {
+  flex: 0 0 auto;
+  padding: 14px 18px !important;
+}
+.wizard-next, .wizard-confirm {
+  flex: 1;
+  padding: 14px !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+}
+.wizard-next:disabled, .wizard-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wizard-summary-link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: start;
+  gap: 6px;
+}
+.wizard-summary-link:hover { border-color: var(--gold); }
+.wizard-summary-link .icon-inline { color: var(--gold); flex: none; }
+.wizard-summary-edit {
+  margin-inline-start: auto;
+  color: var(--gold-deep);
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+/* ─── Month-view calendar (replaces 14-day strip on BookingPage) ──────── */
+.month-calendar { margin-bottom: 8px; }
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px 12px;
+  gap: 6px;
+}
+.month-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-dim);
+  flex: none;
+  transition: all 0.15s var(--ease);
+}
+.month-nav-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold-deep);
+  background: var(--gold-soft);
+}
+.month-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.month-label {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
