@@ -3,13 +3,18 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { dateToISO, dayKeyFromDate, DAYS_OF_WEEK } from '../utils/slots';
 
 // Full-month calendar with prev/next month navigation. Used in the
-// public BookingPage so clients can pick a date 2+ months ahead.
+// public BookingPage so clients can pick a date 2+ months ahead, and on
+// the operator dashboard for past-month review.
 //
 // Props:
 //   selectedDate: Date — the currently picked day
 //   onSelect: (Date) => void
 //   workingHours: WorkingHours map (to grey-out closed days)
 //   maxMonthsAhead: number (default 12) — how far the user can navigate
+//   allowPast: boolean (default true) — when false, the "previous month"
+//     button is hidden. Set false on the public booking page since clients
+//     can never book past dates anyway; the barber dashboard keeps it on
+//     so they can review who came / how many bookings on a past day.
 //   bookingsByDate: { 'YYYY-MM-DD': count } — optional badge on each day
 
 const SHORT_DAY = {
@@ -29,6 +34,7 @@ export default function MonthCalendar({
   maxMonthsAhead = 12,
   bookingsByDate,
   compact = false,
+  allowPast = true,
 }) {
   // Anchor month — drives the visible grid. Default = month of selectedDate.
   const [anchor, setAnchor] = useState(() => {
@@ -76,25 +82,31 @@ export default function MonthCalendar({
       <div className="month-nav">
         <button
           type="button"
-          className="month-nav-btn"
+          className="month-nav-btn month-nav-next"
           onClick={() => changeMonth(1)}
           disabled={!canGoForward}
           aria-label="חודש הבא"
         >
-          <ChevronLeft size={18} aria-hidden="true" />
+          <ChevronLeft size={22} strokeWidth={2.4} aria-hidden="true" />
         </button>
         <div className="month-label">
           {HEB_MONTHS[anchor.getMonth()]} {anchor.getFullYear()}
         </div>
-        <button
-          type="button"
-          className="month-nav-btn"
-          onClick={() => changeMonth(-1)}
-          disabled={!canGoBack}
-          aria-label="חודש קודם"
-        >
-          <ChevronRight size={18} aria-hidden="true" />
-        </button>
+        {allowPast ? (
+          <button
+            type="button"
+            className="month-nav-btn month-nav-prev"
+            onClick={() => changeMonth(-1)}
+            disabled={!canGoBack}
+            aria-label="חודש קודם"
+          >
+            <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+        ) : (
+          // Visual spacer so the month label stays centered when the
+          // backward button is hidden on the public booking flow.
+          <div className="month-nav-spacer" aria-hidden="true" />
+        )}
       </div>
 
       <div className="calendar-row calendar-headers">

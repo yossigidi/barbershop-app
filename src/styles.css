@@ -4004,16 +4004,16 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   gap: 6px;
 }
 .month-nav-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-dim);
+  color: var(--text);
   flex: none;
   transition: all 0.15s var(--ease);
 }
@@ -4021,8 +4021,34 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   border-color: var(--gold);
   color: var(--gold-deep);
   background: var(--gold-soft);
+  transform: translateY(-1px);
 }
 .month-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.month-nav-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.month-nav-spacer { width: 40px; height: 40px; flex: none; }
+
+/* The "next month" button on the public booking page sits on the dark
+   booking-app surface — give it a gold accent so it reads as a CTA, not
+   a faded glyph. The barber-dashboard MonthCalendar keeps the muted
+   surface look. */
+.booking-app .month-nav-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+.booking-app .month-nav-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(184, 137, 58, 0.35);
+}
+.booking-app .month-nav-next {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.30);
+}
+.booking-app .month-label { color: #ffffff; }
 .month-label {
   flex: 1;
   text-align: center;
@@ -4035,7 +4061,8 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
    without dominating the screen. Cells shrink from ~62px to ~40px,
    font shrinks proportionally, badge becomes a tiny dot. */
 .month-calendar.is-compact .month-nav { padding: 4px 2px 8px; }
-.month-calendar.is-compact .month-nav-btn { width: 30px; height: 30px; }
+.month-calendar.is-compact .month-nav-btn,
+.month-calendar.is-compact .month-nav-spacer { width: 30px; height: 30px; }
 .month-calendar.is-compact .month-label { font-size: 0.92rem; }
 .month-calendar.is-compact .calendar-grid { gap: 3px; }
 .month-calendar.is-compact .calendar-head { font-size: 0.7rem; }

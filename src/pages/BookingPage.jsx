@@ -1032,6 +1032,7 @@ export default function BookingPage() {
               }
             }}
             workingHours={barber.workingHours}
+            allowPast={false}
           />
           <div className="text-center" style={{ marginTop: 12, fontSize: '0.95rem' }}>
             <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
