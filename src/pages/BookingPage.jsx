@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { isReservedSlug } from '../utils/slugs';
 import {
   CheckCircle2, CalendarPlus, CreditCard, Repeat, Bell, Check,
   Calendar as CalendarIcon, Clock, Hourglass, Scissors as ScissorsIcon,
@@ -39,6 +40,7 @@ function normalizePhone(raw) {
 
 export default function BookingPage() {
   const { code } = useParams();
+  const navigate = useNavigate();
   const [barber, setBarber] = useState(null);
   const [barberId, setBarberId] = useState(null);
   const [error, setError] = useState('');
@@ -69,22 +71,36 @@ export default function BookingPage() {
   const [showAllSlots, setShowAllSlots] = useState(false);
   const [usualHour, setUsualHour] = useState(null);
 
-  // Resolve short code → barber
+  // Resolve short code → barber. The same component handles both
+  // /b/:code (legacy 6-char auto-codes) and /:code (custom slugs like
+  // /ramos). When the code looks like an internal route name or doesn't
+  // resolve to a barber, redirect home so a typo doesn't show an error.
   useEffect(() => {
+    if (!code) return;
+    if (isReservedSlug(code)) {
+      navigate('/', { replace: true });
+      return;
+    }
     (async () => {
       try {
-        const codeSnap = await getDoc(doc(db, 'shortCodes', code));
-        if (!codeSnap.exists()) return setError('לינק לא תקין');
+        const codeSnap = await getDoc(doc(db, 'shortCodes', code.toLowerCase()));
+        if (!codeSnap.exists()) {
+          navigate('/', { replace: true });
+          return;
+        }
         const uid = codeSnap.data().uid;
         const barberSnap = await getDoc(doc(db, 'barbers', uid));
-        if (!barberSnap.exists()) return setError('העסק לא נמצא');
+        if (!barberSnap.exists()) {
+          navigate('/', { replace: true });
+          return;
+        }
         setBarberId(uid);
         setBarber(barberSnap.data());
       } catch (e) {
         setError(e.message);
       }
     })();
-  }, [code]);
+  }, [code, navigate]);
 
   // Returning client
   useEffect(() => {

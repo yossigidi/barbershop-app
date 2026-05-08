@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
-import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
 import { PROFESSION_LIST, readProfessions } from '../utils/professions';
+import { nameToSlug, normalizeSlug, validateSlug } from '../utils/slugs';
 import { getAccessState } from '../utils/subscription';
 import LogoUploader from '../components/LogoUploader.jsx';
 import PaywallModal from '../components/PaywallModal.jsx';
@@ -39,6 +40,8 @@ export default function SettingsPage() {
   const [professions, setProfessions] = useState(['barber']);
   const [googleReviewUrl, setGoogleReviewUrl] = useState('');
   const [aiGender, setAiGender] = useState('neutral');
+  const [customSlug, setCustomSlug] = useState('');
+  const [slugError, setSlugError] = useState('');
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [barberData, setBarberData] = useState(null);
@@ -72,6 +75,7 @@ export default function SettingsPage() {
         setProfessions(readProfessions(data));
         setGoogleReviewUrl(data.googleReviewUrl || '');
         setAiGender(data.aiGender || 'neutral');
+        setCustomSlug(data.customSlug || '');
       }
       setLoaded(true);
     });
@@ -104,6 +108,28 @@ export default function SettingsPage() {
   }
 
   async function save() {
+    setSlugError('');
+    // Validate + reserve the new slug BEFORE updating the barber doc, so a
+    // failed save doesn't leave a dangling shortCodes/{slug} pointer.
+    const desiredSlug = normalizeSlug(customSlug);
+    const previousSlug = normalizeSlug(barberData?.customSlug || '');
+    if (desiredSlug) {
+      const err = validateSlug(desiredSlug);
+      if (err) { setSlugError(err); return; }
+      if (desiredSlug !== previousSlug) {
+        try {
+          const existing = await getDoc(doc(db, 'shortCodes', desiredSlug));
+          if (existing.exists() && existing.data().uid !== user.uid) {
+            setSlugError('הכתובת הזו כבר תפוסה — בחר/י כתובת אחרת');
+            return;
+          }
+        } catch (e) {
+          setSlugError('שגיאת רשת — נסה/י שוב');
+          return;
+        }
+      }
+    }
+
     setSaving(true);
     try {
       const cleanedServices = services
@@ -140,7 +166,18 @@ export default function SettingsPage() {
         profession: professions[0],
         googleReviewUrl: (googleReviewUrl || '').trim(),
         aiGender,
+        customSlug: desiredSlug,
       });
+
+      // Slug bookkeeping: create/update the shortCodes/{slug} pointer and
+      // delete the previous one if the slug changed (or was cleared).
+      if (desiredSlug && desiredSlug !== previousSlug) {
+        await setDoc(doc(db, 'shortCodes', desiredSlug), { uid: user.uid });
+      }
+      if (previousSlug && previousSlug !== desiredSlug) {
+        try { await deleteDoc(doc(db, 'shortCodes', previousSlug)); } catch {}
+      }
+
       navigate('/dashboard');
     } catch (e) {
       alert('שגיאה: ' + e.message);
@@ -192,8 +229,57 @@ export default function SettingsPage() {
       <div className="card">
         <div className="field">
           <label>שם העסק</label>
-          <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="העסק של דני" />
+          <input
+            value={businessName}
+            onChange={(e) => {
+              setBusinessName(e.target.value);
+              // Auto-suggest slug only when the field hasn't been customized
+              const auto = nameToSlug(e.target.value);
+              const prevAuto = nameToSlug(barberData?.businessName || '');
+              if (auto && (customSlug === '' || customSlug === prevAuto)) {
+                setCustomSlug(auto);
+                setSlugError('');
+              }
+            }}
+            placeholder="העסק של דני"
+            maxLength={50}
+          />
+          <p className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
+            השם הזה מופיע ללקוחות בלוגו ובהזמנת התור. עדיף קצר ויפה.
+          </p>
         </div>
+
+        <div className="field">
+          <label>הקישור שלך ללקוחות</label>
+          <div className="slug-input-wrap">
+            <span className="slug-prefix" dir="ltr">toron.co.il/</span>
+            <input
+              type="text"
+              dir="ltr"
+              value={customSlug}
+              onChange={(e) => {
+                setCustomSlug(normalizeSlug(e.target.value));
+                setSlugError('');
+              }}
+              placeholder={barberData?.shortCode || 'ramos'}
+              maxLength={30}
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+            />
+          </div>
+          <p className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
+            {customSlug ? (
+              <>הקישור יהיה: <strong dir="ltr">toron.co.il/{customSlug}</strong></>
+            ) : (
+              <>אם תשאיר/י ריק — הקישור יהיה <strong dir="ltr">toron.co.il/{barberData?.shortCode || 'XXXXXX'}</strong> (אוטומטי)</>
+            )}
+          </p>
+          {slugError && (
+            <p style={{ color: 'var(--danger)', fontSize: '0.84rem', marginTop: 4 }}>{slugError}</p>
+          )}
+        </div>
+
         <div className="field">
           <label>לוגו</label>
           <LogoUploader uid={user.uid} currentUrl={logoUrl} onChange={setLogoUrl} />

@@ -39,6 +39,10 @@ export default function App() {
         <Route path="/accessibility" element={<AccessibilityPage />} />
         <Route path="/b/:code" element={<BookingPage />} />
         <Route path="/manage/:token" element={<ManageBookingPage />} />
+        {/* Custom-slug catch-all — toron.co.il/ramos style. BookingPage
+            checks reserved words + shortCodes lookup; redirects to /
+            when nothing matches. Must be the LAST route. */}
+        <Route path="/:code" element={<BookingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <AccessibilityWidget />

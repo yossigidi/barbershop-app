@@ -4051,3 +4051,39 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   height: 14px;
   padding: 0 4px;
 }
+
+/* ─── Slug input (Settings: כתובת מותאמת אישית) ────────────────────── */
+.slug-input-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  overflow: hidden;
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+.slug-input-wrap:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+.slug-prefix {
+  padding: 12px 14px;
+  background: var(--surface);
+  border-inline-end: 1px solid var(--border);
+  color: var(--text-soft);
+  font-weight: 600;
+  font-size: 0.92rem;
+  user-select: none;
+  white-space: nowrap;
+}
+.slug-input-wrap input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 12px 14px;
+  font-family: 'Heebo', monospace;
+  font-size: 0.95rem;
+  color: var(--text);
+  outline: none;
+  letter-spacing: 0.01em;
+}

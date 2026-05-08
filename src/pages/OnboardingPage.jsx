@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Scissors, HandHeart, Trash2, Lightbulb, Save, Check, Sparkles, Plus, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { DAYS_OF_WEEK, DAY_LABELS_HE, defaultWorkingHours } from '../utils/slots';
 import { PROFESSION_LIST, presetCatalogForMany, readProfessions, getProfession } from '../utils/professions';
+import { nameToSlug, normalizeSlug } from '../utils/slugs';
 import LogoUploader from '../components/LogoUploader.jsx';
 
 function ServiceCard({ item, options, onToggle, onPrice, onDuration, onName, onDelete, placeholder }) {
@@ -68,6 +69,7 @@ export default function OnboardingPage() {
   const [professions, setProfessions] = useState(['barber']);
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [shortCodeHint, setShortCodeHint] = useState('');
   const [hours, setHours] = useState(defaultWorkingHours());
   const initialPreset = presetCatalogForMany(['barber']);
   const [services, setServices] = useState(initialPreset.services);
@@ -113,6 +115,7 @@ export default function OnboardingPage() {
         setAddonDurations(preset.addonDurations);
         setBusinessName(data.businessName || '');
         setLogoUrl(data.logoUrl || '');
+        setShortCodeHint(data.shortCode || '');
         if (data.workingHours) {
           setHours({ ...defaultWorkingHours(), ...data.workingHours });
         }
@@ -307,10 +310,25 @@ export default function OnboardingPage() {
       const primaryProf = getProfession(professions[0]);
       const fallbackName = primaryProf.defaultBusinessName('');
       const presetForAll = presetCatalogForMany(professions);
+      const finalName = businessName.trim() || fallbackName;
+      // Auto-derive a slug from the business name. If it can't be cleanly
+      // converted (e.g. Hebrew-only) we leave customSlug empty and the link
+      // falls back to the auto-generated 6-char shortCode.
+      const autoSlug = nameToSlug(finalName);
+      let chosenSlug = '';
+      if (autoSlug) {
+        try {
+          const existing = await getDoc(doc(db, 'shortCodes', autoSlug));
+          if (!existing.exists() || existing.data().uid === user.uid) {
+            chosenSlug = autoSlug;
+          }
+        } catch {}
+      }
+
       await updateDoc(doc(db, 'barbers', user.uid), {
         professions,
         profession: professions[0], // legacy single field, keep for back-compat
-        businessName: businessName.trim() || fallbackName,
+        businessName: finalName,
         logoUrl: logoUrl || '',
         workingHours: hours,
         services: allServices,
@@ -318,7 +336,11 @@ export default function OnboardingPage() {
         defaultDuration: presetForAll.serviceDurations[0] || 20,
         defaultPrice: offeredSvc[0]?.price || 0,
         onboarded: true,
+        customSlug: chosenSlug,
       });
+      if (chosenSlug) {
+        try { await setDoc(doc(db, 'shortCodes', chosenSlug), { uid: user.uid }); } catch {}
+      }
       navigate('/dashboard', { replace: true });
     } catch (e) {
       alert('שגיאה: ' + e.message);
@@ -380,8 +402,15 @@ export default function OnboardingPage() {
           <input
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
-            placeholder="העסק של דני"
+            placeholder="ramos / Studio Dani"
+            maxLength={50}
           />
+          <p className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
+            ⚡ השם הזה הופך אוטומטית לכתובת הקישור שלך:
+            {' '}<strong dir="ltr">toron.co.il/{nameToSlug(businessName) || (shortCodeHint || 'XXXXXX')}</strong>
+            <br />
+            כדאי שיהיה קצר, באנגלית, ויפה לקריאה. אפשר תמיד לעדכן בהגדרות אחר כך.
+          </p>
         </div>
         <div className="field">
           <label>לוגו (אופציונלי)</label>

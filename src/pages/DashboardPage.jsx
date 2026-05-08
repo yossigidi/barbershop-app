@@ -134,8 +134,12 @@ export default function DashboardPage() {
     });
   }, [todayISO]);
 
-  const shortLink = barber?.shortCode
-    ? `${window.location.origin}/b/${barber.shortCode}`
+  // Prefer the custom slug (toron.co.il/ramos) when set, otherwise fall
+   // back to the auto-generated 6-char code. Drop the /b/ prefix in both
+   // cases — the new top-level /:code route resolves either form.
+  const shortCodeOrSlug = (barber?.customSlug || barber?.shortCode || '').trim();
+  const shortLink = shortCodeOrSlug
+    ? `${window.location.origin}/${shortCodeOrSlug}`
     : '';
 
   // Subscription gate — when access is denied (trial expired, no payment),
