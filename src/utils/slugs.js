@@ -8,8 +8,8 @@
 export const RESERVED_SLUGS = new Set([
   // Top-level app routes
   'auth', 'dashboard', 'settings', 'reports', 'pricing',
-  'terms', 'privacy', 'refund', 'accessibility',
-  'onboarding', 'b', 'manage', 'api',
+  'terms', 'privacy', 'refund', 'accessibility', 'promo',
+  'onboarding', 'b', 'manage', 'api', 'whatsapp-templates',
   // Common system / future routes — block now to avoid surprises later
   'admin', 'help', 'about', 'contact', 'support', 'home', 'index',
   'login', 'signup', 'register', 'logout', 'profile', 'account',

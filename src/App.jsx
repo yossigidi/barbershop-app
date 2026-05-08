@@ -25,6 +25,7 @@ const RefundPage = lazy(() => import('./pages/RefundPage.jsx'));
 const AccessibilityPage = lazy(() => import('./pages/AccessibilityPage.jsx'));
 const ManageBookingPage = lazy(() => import('./pages/ManageBookingPage.jsx'));
 const WhatsAppTemplatesPage = lazy(() => import('./pages/WhatsAppTemplatesPage.jsx'));
+const PromoPage = lazy(() => import('./pages/PromoPage.jsx'));
 
 function Loading() {
   return <div className="loading" role="status" aria-live="polite">טוען…</div>;
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/refund" element={<RefundPage />} />
           <Route path="/accessibility" element={<AccessibilityPage />} />
+          <Route path="/promo" element={<PromoPage />} />
           <Route path="/b/:code" element={<BookingPage />} />
           <Route path="/manage/:token" element={<ManageBookingPage />} />
           {/* Custom-slug catch-all — toron.co.il/ramos style. BookingPage
