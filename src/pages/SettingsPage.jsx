@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle, Repeat } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle, Repeat, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, onSnapshot, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -44,6 +44,11 @@ export default function SettingsPage() {
   const [aiGender, setAiGender] = useState('neutral');
   const [customSlug, setCustomSlug] = useState('');
   const [slugError, setSlugError] = useState('');
+  // Live slug-availability state. Updated by a debounced effect that hits
+  // shortCodes/{slug} as the user types; lets us show ✓ "פנוי" / ✗ "תפוס"
+  // inline so they don't only learn after pressing "שמור".
+  // 'idle' | 'checking' | 'available' | 'taken' | 'mine' | 'invalid'
+  const [slugStatus, setSlugStatus] = useState('idle');
   // When true, the public booking page exposes the "תור קבוע" (recurring
   // appointment) option to clients. Off by default — many barbers prefer
   // to manage recurring booking creation themselves rather than letting
@@ -90,6 +95,33 @@ export default function SettingsPage() {
       setLoaded(true);
     });
   }, [user]);
+
+  // Debounced availability check — runs whenever the user changes the
+  // customSlug input. Skipped when the slug equals the user's previous
+  // saved slug (their own).
+  useEffect(() => {
+    const trimmed = normalizeSlug(customSlug);
+    if (!trimmed) { setSlugStatus('idle'); return; }
+    if (trimmed === normalizeSlug(barberData?.customSlug || '')) {
+      setSlugStatus('mine'); return;
+    }
+    const formatErr = validateSlug(trimmed);
+    if (formatErr) { setSlugStatus('invalid'); return; }
+    setSlugStatus('checking');
+    const t = setTimeout(async () => {
+      try {
+        const snap = await getDoc(doc(db, 'shortCodes', trimmed));
+        if (!snap.exists()) { setSlugStatus('available'); return; }
+        if (snap.data().uid === user?.uid) { setSlugStatus('mine'); return; }
+        setSlugStatus('taken');
+      } catch {
+        // If the lookup fails (offline / quota) keep the user unblocked —
+        // the save() call will re-check authoritatively before writing.
+        setSlugStatus('idle');
+      }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [customSlug, barberData?.customSlug, user?.uid]);
 
   function updateDay(day, patch) {
     setHours((h) => ({ ...h, [day]: { ...h[day], ...patch } }));
@@ -262,10 +294,11 @@ export default function SettingsPage() {
         </div>
 
         <div className="field">
-          <label>הקישור שלך ללקוחות</label>
-          <div className="slug-input-wrap">
+          <label htmlFor="setting-custom-slug">הקישור שלך ללקוחות</label>
+          <div className={`slug-input-wrap slug-status-${slugStatus}`}>
             <span className="slug-prefix" dir="ltr">toron.co.il/</span>
             <input
+              id="setting-custom-slug"
               type="text"
               dir="ltr"
               value={customSlug}
@@ -279,6 +312,33 @@ export default function SettingsPage() {
               autoCapitalize="off"
               autoCorrect="off"
             />
+            {customSlug && (
+              <span className="slug-indicator" aria-live="polite">
+                {slugStatus === 'checking' && (
+                  <Loader2 size={14} className="slug-spin" aria-hidden="true" />
+                )}
+                {slugStatus === 'available' && (
+                  <span className="slug-badge slug-badge-ok">
+                    <Check size={12} aria-hidden="true" />פנוי
+                  </span>
+                )}
+                {slugStatus === 'mine' && (
+                  <span className="slug-badge slug-badge-mine">
+                    <Check size={12} aria-hidden="true" />שלך
+                  </span>
+                )}
+                {slugStatus === 'taken' && (
+                  <span className="slug-badge slug-badge-bad">
+                    <XCircle size={12} aria-hidden="true" />תפוס
+                  </span>
+                )}
+                {slugStatus === 'invalid' && (
+                  <span className="slug-badge slug-badge-bad">
+                    <XCircle size={12} aria-hidden="true" />לא תקין
+                  </span>
+                )}
+              </span>
+            )}
           </div>
           <p className="muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
             {customSlug ? (
@@ -287,6 +347,11 @@ export default function SettingsPage() {
               <>אם תשאיר/י ריק — הקישור יהיה <strong dir="ltr">toron.co.il/{barberData?.shortCode || 'XXXXXX'}</strong> (אוטומטי)</>
             )}
           </p>
+          {slugStatus === 'taken' && !slugError && (
+            <p style={{ color: 'var(--danger)', fontSize: '0.84rem', marginTop: 4 }}>
+              הכתובת הזו תפוסה — נסה תוספת כמו <strong dir="ltr">{customSlug}-2</strong> או שם אחר
+            </p>
+          )}
           {slugError && (
             <p style={{ color: 'var(--danger)', fontSize: '0.84rem', marginTop: 4 }}>{slugError}</p>
           )}

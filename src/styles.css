@@ -4986,3 +4986,53 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
     padding-inline: max(16px, calc(50vw - 340px));
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Settings → custom slug live availability indicator
+   ─────────────────────────────────────────────────────────────────────── */
+.slug-input-wrap { position: relative; }
+.slug-input-wrap input { padding-inline-end: 88px; }
+
+.slug-indicator {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
+}
+.slug-spin { animation: slug-spin 1s linear infinite; color: var(--text-dim); }
+@keyframes slug-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .slug-spin { animation: none; } }
+
+.slug-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+}
+.slug-badge-ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: #128a3a;
+  border: 1px solid rgba(22, 163, 74, 0.30);
+}
+.slug-badge-mine {
+  background: var(--gold-soft);
+  color: var(--gold-deep);
+  border: 1px solid rgba(184, 137, 58, 0.35);
+}
+.slug-badge-bad {
+  background: rgba(220, 38, 38, 0.10);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.30);
+}
+
+.slug-status-available .slug-input-wrap,
+.slug-input-wrap.slug-status-available { border-color: rgba(22, 163, 74, 0.45); }
+.slug-input-wrap.slug-status-taken,
+.slug-input-wrap.slug-status-invalid { border-color: rgba(220, 38, 38, 0.45); }
