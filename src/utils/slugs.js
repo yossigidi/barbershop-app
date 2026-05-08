@@ -44,13 +44,73 @@ export function isReservedSlug(s) {
   return RESERVED_SLUGS.has(normalizeSlug(s));
 }
 
+// Hebrew → Latin transliteration. Hebrew is consonantal (no written
+// vowels) so a perfect mapping isn't possible without a name dictionary,
+// but we use two heuristics to get close:
+//
+//   1. ו (vav) and י (yud) are *matres lectionis* — they act as
+//      consonants ("v"/"y") at word start but as vowels ("o"/"i")
+//      everywhere else. This handles the most common Hebrew name shapes.
+//   2. Sin/Shin and final-form letters collapse to their base value.
+//
+// Examples:
+//   יוסי גידני     → "yosi gidni"
+//   מספרת רמוס     → "msprt rmos"
+//   ספרת ישראל     → "sprt yshral"
+//
+// Result isn't always pretty for very vowel-light words, but it's a
+// readable URL — strictly better than the random shortCode it replaces.
+// Users can always edit it manually in Settings.
+const HEB_CONSONANT = {
+  'א': 'a', 'ב': 'b', 'ג': 'g', 'ד': 'd', 'ה': 'h',
+  'ז': 'z', 'ח': 'ch', 'ט': 't',
+  'כ': 'k', 'ך': 'k', 'ל': 'l', 'מ': 'm', 'ם': 'm',
+  'נ': 'n', 'ן': 'n', 'ס': 's', 'ע': 'a',
+  'פ': 'p', 'ף': 'f', 'צ': 'tz', 'ץ': 'tz',
+  'ק': 'k', 'ר': 'r', 'ש': 'sh', 'ת': 't',
+};
+
+function transliterateHebrew(input) {
+  if (!input) return '';
+  // Strip nikud (vowel marks) so they don't confuse the loop.
+  const stripped = String(input)
+    .normalize('NFKD')
+    .replace(/[֑-ׇ]/g, '')
+    .replace(/[׳״]/g, ''); // Hebrew geresh / gershayim
+  const out = [];
+  let prevHeb = false;
+  for (const c of stripped) {
+    if (HEB_CONSONANT[c] !== undefined) {
+      out.push(HEB_CONSONANT[c]);
+      prevHeb = true;
+    } else if (c === 'ו') {
+      out.push(prevHeb ? 'o' : 'v');
+      prevHeb = true;
+    } else if (c === 'י') {
+      out.push(prevHeb ? 'i' : 'y');
+      prevHeb = true;
+    } else if (/[a-zA-Z0-9]/.test(c)) {
+      out.push(c);
+      prevHeb = false;
+    } else {
+      // Whitespace or punctuation — emit a separator and reset position.
+      out.push(' ');
+      prevHeb = false;
+    }
+  }
+  return out.join('');
+}
+
 // Auto-derive a slug suggestion from the business name. Handles Latin
-// names cleanly ("Ramos Hair" → "ramos-hair"). Hebrew/non-Latin names
-// produce an empty string and the caller falls back to the auto-generated
-// 6-char shortCode (which is what Toron still serves at toron.co.il/{code}).
+// names directly ("Ramos Hair" → "ramos-hair") and Hebrew names via
+// transliteration ("יוסי גידני" → "yosi-gidni"). Returns '' only when
+// the source has nothing usable at all.
 export function nameToSlug(name) {
   if (!name) return '';
-  let s = String(name).toLowerCase().trim();
+  let s = String(name).trim();
+  // If there's any Hebrew, transliterate first; harmless on Latin input.
+  if (/[֐-׿]/.test(s)) s = transliterateHebrew(s);
+  s = s.toLowerCase();
   // Strip apostrophes / quotes / dots between letters
   s = s.replace(/['’´`".,&+()/\\]+/g, '');
   // Replace any non-[a-z0-9] run with a single hyphen
