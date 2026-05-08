@@ -1,6 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
+function backHref(navigate) {
+  return () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/');
+  };
+}
+
 // Privacy policy — Hebrew, aligned with Israeli Privacy Protection Law
 // (חוק הגנת הפרטיות, תשמ"א-1981) and accepted GDPR-equivalent practice.
 // IMPORTANT: this is a draft prepared with care; the operator should still
@@ -13,7 +20,7 @@ export default function PrivacyPage() {
     <div className="app legal-page">
       <div className="header">
         <h1><ShieldCheck size={20} className="icon-inline" />מדיניות פרטיות</h1>
-        <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate(-1)}>
+        <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={backHref(navigate)}>
           <ArrowLeft size={14} className="icon-inline" />חזור
         </button>
       </div>
@@ -164,11 +171,20 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2>11. יצירת קשר</h2>
-          <p>
+          <h2>11. יצירת קשר וזיהוי בעל המאגר</h2>
+          <address style={{ fontStyle: 'normal', lineHeight: 1.7 }}>
             <strong>Toron — ניהול תורים</strong><br />
-            מייל פרטיות: <a href="mailto:privacy@toron.co.il">privacy@toron.co.il</a><br />
-            תמיכה כללית: <a href="mailto:support@toron.co.il">support@toron.co.il</a>
+            שם משפטי: <strong>יוסף גידניאן (עוסק פטור)</strong><br />
+            מס׳ עוסק: <strong dir="ltr">036289750</strong><br />
+            כתובת: <strong>דוד אלעזר 45, חולון</strong><br />
+            טלפון: <a href="tel:+972532702270" dir="ltr">053-270-2270</a><br />
+            מייל פרטיות: <a href="mailto:privacy@toron.co.il" dir="ltr">privacy@toron.co.il</a><br />
+            תמיכה כללית: <a href="mailto:support@toron.co.il" dir="ltr">support@toron.co.il</a>
+          </address>
+          <p className="muted" style={{ fontSize: '0.82rem', marginTop: 12 }}>
+            רישום מאגר מידע ברשם המאגרים: לא נדרש בשלב זה — היקף המאגר נמצא
+            מתחת לסף החובה לרישום לפי תקנות הגנת הפרטיות (מאגר מידע), תשע"ז-2017.
+            במידה והיקף השימוש יגדל, נרשום את המאגר בהתאם.
           </p>
         </section>
       </div>

@@ -1,6 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Accessibility } from 'lucide-react';
 
+function backHref(navigate) {
+  return () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/');
+  };
+}
+
 // Israeli Equal Rights of People with Disabilities Law (1998) requires every
 // public-facing web service to publish an accessibility statement that:
 //   - identifies the operator
@@ -15,7 +22,7 @@ export default function AccessibilityPage() {
     <div className="app legal-page">
       <div className="header">
         <h1><Accessibility size={20} className="icon-inline" />הצהרת נגישות</h1>
-        <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate(-1)}>
+        <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={backHref(navigate)}>
           <ArrowLeft size={14} className="icon-inline" />חזור
         </button>
       </div>
@@ -73,13 +80,24 @@ export default function AccessibilityPage() {
           <h2>פניות בנושא נגישות</h2>
           <p>
             אם נתקלת בקושי בשימוש בשירות, או יש לך הצעה לשיפור הנגישות,
-            ניתן לפנות אל רכז הנגישות:
+            ניתן לפנות אל רכז/ת הנגישות בכל אחד מהאמצעים הבאים:
           </p>
           <ul>
-            <li><strong>רכז/ת נגישות:</strong> Toron — צוות התמיכה</li>
-            <li><strong>אימייל:</strong> <a href="mailto:accessibility@toron.co.il">accessibility@toron.co.il</a></li>
+            <li><strong>רכז נגישות:</strong> יוסף גידניאן</li>
+            <li><strong>טלפון:</strong> <a href="tel:+972532702270" dir="ltr">053-270-2270</a></li>
+            <li><strong>אימייל:</strong> <a href="mailto:accessibility@toron.co.il" dir="ltr">accessibility@toron.co.il</a></li>
+            <li><strong>כתובת לפניות בכתב:</strong> דוד אלעזר 45, חולון</li>
             <li><strong>זמן תגובה:</strong> עד 14 ימי עסקים</li>
             <li><strong>שעות מענה:</strong> ימים א'–ה', 09:00–17:00</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>זיהוי בעל השירות</h2>
+          <ul>
+            <li><strong>שם משפטי:</strong> יוסף גידניאן (עוסק פטור)</li>
+            <li><strong>מס׳ עוסק:</strong> <span dir="ltr">036289750</span></li>
+            <li><strong>כתובת רשומה:</strong> דוד אלעזר 45, חולון</li>
           </ul>
         </section>
 

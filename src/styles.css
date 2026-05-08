@@ -4473,3 +4473,427 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   margin-top: 2px;
   line-height: 1.4;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Reusable utilities — link-button, input-ltr, modal-close
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Inline button styled like a link. Use instead of <a onClick> so it's
+   keyboard accessible, has the right focus ring, and is announced as a
+   button to screen readers. */
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--gold-deep);
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline;
+}
+.link-button:hover { color: var(--gold); }
+.link-button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+
+.input-ltr { direction: ltr !important; text-align: left !important; }
+
+/* AccessibleModal close button — 44×44 hit area, top-end of dialog */
+.modal-close {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+.modal-close:hover { background: var(--surface-2); color: var(--text); }
+.modal-close:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Tablet — widen legal pages so they don't sit in a 600px column on iPad */
+@media (min-width: 768px) {
+  .app.legal-page { max-width: 760px; padding: 32px 28px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Booking page hero — new public booking surface
+   Dark cinematic image background per profession; bold gold typography on
+   top; two CTAs (Phone + Book). On scroll the user lands directly in the
+   service picker.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.booking-app {
+  /* Re-take padding control from .app — hero needs to bleed full-width */
+  padding: 0 !important;
+  max-width: none !important;
+  background: #0c0c0e;
+  color: #e8e8eb;
+  --booking-content-max: 480px;
+}
+@media (min-width: 768px) {
+  .booking-app { --booking-content-max: 600px; }
+}
+@media (min-width: 1100px) {
+  .booking-app { --booking-content-max: 680px; }
+}
+
+/* Page-level cards inside the booking app — re-introduce horizontal padding
+   so the existing .card / wizard / slot grids look right under the hero. */
+.booking-app > *:not(.booking-hero):not(#booking-services-anchor) {
+  max-width: var(--booking-content-max);
+  margin-inline: auto;
+  padding-inline: 12px;
+}
+@media (min-width: 540px) {
+  .booking-app > *:not(.booking-hero):not(#booking-services-anchor) {
+    padding-inline: 16px;
+  }
+}
+.booking-app .card {
+  background: #16161a;
+  border-color: #2a2a30;
+  color: #e8e8eb;
+}
+.booking-app .card h3 { color: #ffffff; }
+.booking-app .muted { color: #a8a8b0; }
+.booking-app .btn-secondary {
+  background: #1d1d22;
+  color: #e8e8eb;
+  border-color: #2e2e36;
+}
+.booking-app .btn-secondary:hover { border-color: var(--gold); background: #1d1d22; }
+.booking-app input,
+.booking-app select,
+.booking-app textarea {
+  background: #1d1d22;
+  color: #e8e8eb;
+  border-color: #2e2e36;
+}
+.booking-app input::placeholder { color: #6e6e78; }
+
+/* The hero itself — full-bleed image with dark gradient overlay */
+.booking-hero {
+  position: relative;
+  min-height: 84vh;
+  background-color: #0c0c0e;
+  background-size: cover;
+  background-position: center 20%;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 28px;
+  color: #ffffff;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .booking-hero { min-height: 70vh; padding: 22px 32px 36px; }
+}
+.booking-hero-overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(12,12,14,0.55) 0%, rgba(12,12,14,0.30) 30%, rgba(12,12,14,0.78) 75%, rgba(12,12,14,0.95) 100%),
+    radial-gradient(ellipse 60% 40% at 50% 30%, rgba(184, 137, 58, 0.18), transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+.booking-hero > * { position: relative; z-index: 2; }
+
+/* Top bar — small "קבע תור" pill on inline-start, brand on inline-end */
+.booking-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: auto;
+  padding-bottom: 28px;
+  gap: 12px;
+}
+.booking-hero-pill {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  color: #1a1a1d;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  text-shadow: none;
+  box-shadow: 0 4px 14px rgba(184, 137, 58, 0.40);
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+.booking-hero-pill:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(184, 137, 58, 0.55); }
+.booking-hero-pill:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
+.booking-hero-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.booking-hero-brand-name {
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.005em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.40);
+}
+.booking-hero-brand-name b,
+.booking-hero-brand-name span { color: var(--gold-2); }
+.booking-hero-brand-logo {
+  width: 32px; height: 32px; border-radius: 8px; object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.booking-hero-brand-icon { color: var(--gold-2); }
+
+/* Center content — eyebrow, title, sub, CTAs, status */
+.booking-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: auto;
+  align-items: center;
+  text-align: center;
+}
+.booking-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(184, 137, 58, 0.45);
+  color: var(--gold-2);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.booking-hero-eyebrow .icon-inline { color: var(--gold-2); }
+
+.booking-hero-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.3rem, 9vw, 4rem);
+  line-height: 1.0;
+  letter-spacing: -0.025em;
+  margin: 0;
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0,0,0,0.55);
+  /* Each word gets its own line break naturally on small screens via clamp */
+  word-break: keep-all;
+}
+.booking-hero-sub {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  color: rgba(255,255,255,0.85);
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.4;
+  max-width: 520px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.50);
+}
+
+.booking-hero-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
+  margin-top: 6px;
+}
+@media (min-width: 480px) {
+  .booking-hero-actions { grid-template-columns: 1fr 1.4fr; gap: 12px; }
+}
+
+.booking-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 22px;
+  border-radius: 14px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.02rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.18s var(--ease);
+  border: 1px solid transparent;
+  min-height: 52px;
+}
+.booking-hero-btn:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
+.booking-hero-btn-primary {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold), var(--gold-deep));
+  color: #1a1a1d;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    0 6px 16px rgba(184, 137, 58, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.20);
+}
+.booking-hero-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 10px 24px rgba(184, 137, 58, 0.45),
+    0 3px 6px rgba(0, 0, 0, 0.25);
+}
+.booking-hero-btn-secondary {
+  background: rgba(20, 20, 24, 0.55);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.booking-hero-btn-secondary:hover {
+  background: rgba(20, 20, 24, 0.75);
+  border-color: rgba(255, 255, 255, 0.30);
+}
+
+.booking-hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.80);
+  margin-top: 6px;
+}
+.booking-hero-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6b6b73;
+  flex: none;
+}
+.booking-hero-status.open .booking-hero-status-dot {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.55);
+}
+.booking-hero-status.closed .booking-hero-status-dot { background: #ef4444; }
+
+/* Anchor sits between hero and services content — pure layout marker */
+#booking-services-anchor {
+  height: 0;
+  scroll-margin-top: 16px;
+}
+
+/* On the dark booking app, the success card / brand-header should also be
+   themed dark. They're rendered after a successful booking, before this
+   refactor they used the standard light card. */
+.booking-app .success-card { background: #16161a; }
+.booking-app .brand-header-row {
+  background: #16161a;
+  color: #ffffff;
+  margin: 0;
+  padding: 18px 22px;
+}
+.booking-app .brand-title { color: #ffffff; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Wake-lock toggle in dashboard header
+   ─────────────────────────────────────────────────────────────────────── */
+.wake-lock-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+  margin-inline-start: auto;
+}
+.wake-lock-toggle:hover { border-color: var(--gold); color: var(--text); }
+.wake-lock-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.wake-lock-toggle.is-on {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(184, 137, 58, 0.35);
+}
+.wake-lock-toggle.is-on:hover { color: #ffffff; border-color: transparent; }
+.wake-lock-label { font-weight: 600; }
+@media (max-width: 380px) {
+  .wake-lock-label { display: none; }
+  .wake-lock-toggle { padding: 8px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   WhatsApp Business — Quick Reply templates page
+   ─────────────────────────────────────────────────────────────────────── */
+.wa-templates-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .wa-templates-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+}
+
+.wa-template-card { display: flex; flex-direction: column; }
+.wa-template-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.wa-template-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.wa-template-shortcut {
+  display: inline-block;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  margin-top: 4px;
+}
+.wa-template-copy {
+  flex: none;
+  padding: 8px 14px !important;
+  font-size: 0.86rem !important;
+  white-space: nowrap;
+}
+.wa-template-copy.is-copied {
+  background: rgba(37, 211, 102, 0.10);
+  border-color: #25d366;
+  color: #128c7e;
+}
+.wa-template-body {
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+}
+.wa-template-body code,
+.wa-template-card code {
+  background: rgba(184, 137, 58, 0.12);
+  border: 1px solid rgba(184, 137, 58, 0.30);
+  color: var(--gold-deep);
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 0.86em;
+}

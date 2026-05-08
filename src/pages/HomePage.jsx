@@ -6,6 +6,7 @@ import {
   Check, ChevronDown, ShieldCheck, Clock, Crown, X, Tablet, AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import AccessibleModal from '../components/AccessibleModal.jsx';
 
 // Toron landing page — public-facing marketing surface.
 // Sections (top-to-bottom):
@@ -119,7 +120,7 @@ export default function HomePage() {
         <section className="who" aria-labelledby="who-title">
           <h2 id="who-title" className="section-title">מי שמשתמש ב-Toron</h2>
           <p className="section-sub">
-            תוכננה במיוחד לבעלי מקצועות שירות שכל היום שלהם הוא יומן ובאתחיים פגישות.
+            תוכננה במיוחד לבעלי מקצועות שירות שכל היום שלהם מתנהל סביב היומן והפגישות.
           </p>
           <div className="who-grid">
             <article className="who-card">
@@ -239,7 +240,7 @@ export default function HomePage() {
           </div>
           <p className="price-note">
             <ShieldCheck size={14} className="icon-inline" />
-            כל המחירים כוללים מע"מ. קבלות אוטומטיות. סליקה מאובטחת ע"י <strong>Tranzila</strong> (PCI-DSS Level 1).
+            המחירים סופיים — הספק עוסק פטור (לא נגבה מע"מ). קבלות אוטומטיות. סליקה מאובטחת ע"י <strong>Tranzila</strong> (PCI-DSS Level 1).
           </p>
         </section>
 
@@ -336,21 +337,25 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {studioOpen && (
-        <div className="modal-backdrop" onClick={() => setStudioOpen(false)} role="presentation">
-          <div className="modal studio-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-labelledby="studio-title" aria-modal="true">
-            <div className="studio-head">
-              <div className="studio-icon"><Tablet size={26} aria-hidden="true" /></div>
-              <div style={{ flex: 1 }}>
-                <h2 id="studio-title" style={{ margin: 0, fontFamily: 'var(--font-display)' }}>מסלול Studio + טאבלט</h2>
-                <div className="muted" style={{ fontSize: '0.86rem' }}>50 ש"ח לחודש · 24 חודשי התחייבות</div>
-              </div>
-              <button type="button" className="auth-close" onClick={() => setStudioOpen(false)} aria-label="סגור">
-                <X size={20} aria-hidden="true" />
-              </button>
-            </div>
+      <AccessibleModal
+        open={studioOpen}
+        onClose={() => setStudioOpen(false)}
+        titleId="studio-title"
+        className="studio-modal"
+        showCloseButton={false}
+      >
+        <div className="studio-head">
+          <div className="studio-icon"><Tablet size={26} aria-hidden="true" /></div>
+          <div style={{ flex: 1 }}>
+            <h2 id="studio-title" style={{ margin: 0, fontFamily: 'var(--font-display)' }}>מסלול Studio + טאבלט</h2>
+            <div className="muted" style={{ fontSize: '0.86rem' }}>50 ש"ח לחודש · 24 חודשי התחייבות</div>
+          </div>
+          <button type="button" className="auth-close" onClick={() => setStudioOpen(false)} aria-label="סגור">
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
 
-            <h3 style={{ marginTop: 18, marginBottom: 8 }}>מה כלול</h3>
+        <h3 style={{ marginTop: 18, marginBottom: 8 }}>מה כלול</h3>
             <ul className="studio-list">
               <li><Check size={14} className="icon-inline" />טאבלט 10" איכותי לעסק (במתנה)</li>
               <li><Check size={14} className="icon-inline" />כל הפיצ'רים של Pro — בלי הגבלה</li>
@@ -386,22 +391,20 @@ export default function HomePage() {
               קודי הנחה אינם תקפים על מסלול Studio (כולל טאבלט).
             </p>
 
-            <div className="studio-actions">
-              <Link
-                to="/auth?mode=signup"
-                className="btn-gold"
-                onClick={() => setStudioOpen(false)}
-                style={{ width: '100%', textAlign: 'center', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-              >
-                <Sparkles size={16} className="icon-inline" />התחל ניסיון 30 יום חינם
-              </Link>
-              <button type="button" className="btn-secondary" onClick={() => setStudioOpen(false)} style={{ width: '100%', marginTop: 8 }}>
-                סגור
-              </button>
-            </div>
-          </div>
+        <div className="studio-actions">
+          <Link
+            to="/auth?mode=signup"
+            className="btn-gold"
+            onClick={() => setStudioOpen(false)}
+            style={{ width: '100%', textAlign: 'center', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          >
+            <Sparkles size={16} className="icon-inline" />התחל ניסיון 30 יום חינם
+          </Link>
+          <button type="button" className="btn-secondary" onClick={() => setStudioOpen(false)} style={{ width: '100%', marginTop: 8 }}>
+            סגור
+          </button>
         </div>
-      )}
+      </AccessibleModal>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle, Repeat } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, onSnapshot, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -44,6 +44,11 @@ export default function SettingsPage() {
   const [aiGender, setAiGender] = useState('neutral');
   const [customSlug, setCustomSlug] = useState('');
   const [slugError, setSlugError] = useState('');
+  // When true, the public booking page exposes the "תור קבוע" (recurring
+  // appointment) option to clients. Off by default — many barbers prefer
+  // to manage recurring booking creation themselves rather than letting
+  // a one-time client lock 12 future slots.
+  const [allowRecurring, setAllowRecurring] = useState(false);
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -79,6 +84,7 @@ export default function SettingsPage() {
         setGoogleReviewUrl(data.googleReviewUrl || '');
         setAiGender(data.aiGender || 'neutral');
         setCustomSlug(data.customSlug || '');
+        setAllowRecurring(data.allowRecurring === true);
         setTheme(getThemeKey(data));
       }
       setLoaded(true);
@@ -171,6 +177,7 @@ export default function SettingsPage() {
         googleReviewUrl: (googleReviewUrl || '').trim(),
         aiGender,
         customSlug: desiredSlug,
+        allowRecurring: !!allowRecurring,
         theme,
       });
 
@@ -573,6 +580,32 @@ export default function SettingsPage() {
         <button className="btn-secondary" onClick={addAddon} type="button" style={{ width: '100%', marginTop: 8 }}>
           + הוסף תוספת
         </button>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Repeat size={18} className="icon-inline" />אפשרויות הזמנה</h3>
+        <label className="row" style={{ alignItems: 'center', cursor: 'pointer', gap: 12 }}>
+          <div
+            className={`toggle ${allowRecurring ? 'on' : ''}`}
+            onClick={() => setAllowRecurring((v) => !v)}
+            role="switch"
+            aria-checked={allowRecurring}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                setAllowRecurring((v) => !v);
+              }
+            }}
+            style={{ flex: 'none' }}
+          />
+          <div style={{ flex: 1 }}>
+            <strong>אפשר ללקוח לקבוע "תור קבוע"</strong>
+            <div className="muted" style={{ fontSize: '0.84rem', marginTop: 2, lineHeight: 1.5 }}>
+              כשדלוק — ללקוח יוצג צ'קבוקס שמאפשר לקבוע סדרת תורים בתדירות קבועה (כל שבוע / שבועיים / 3 / 4 שבועות). כבוי כברירת מחדל כדי שתוכלו לנהל סדרות בעצמכם.
+            </div>
+          </div>
+        </label>
       </div>
 
       <div className="card">

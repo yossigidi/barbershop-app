@@ -4,6 +4,7 @@ import {
   CalendarDays, Clock, Scissors as ScissorsIcon, CircleDollarSign,
   Phone, XCircle, Edit3, ArrowLeft, CheckCircle2,
 } from 'lucide-react';
+import AccessibleModal from '../components/AccessibleModal.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import {
@@ -33,6 +34,9 @@ export default function ManageBookingPage() {
   });
   const [pickedTime, setPickedTime] = useState(null);
   const [occupied, setOccupied] = useState([]);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+  const [confirmRescheduleOpen, setConfirmRescheduleOpen] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   // Resolve token → barber + booking
   useEffect(() => {
@@ -125,7 +129,7 @@ export default function ManageBookingPage() {
   })();
 
   async function cancelBooking() {
-    if (!confirm('לבטל את התור?')) return;
+    setActionError('');
     setBusy(true);
     try {
       await updateDoc(doc(db, 'barbers', resolved.uid, 'bookings', resolved.bookingId), {
@@ -133,8 +137,9 @@ export default function ManageBookingPage() {
         status: 'cancelled',
       });
       setBooking({ ...booking, status: 'cancelled' });
+      setConfirmCancelOpen(false);
     } catch (e) {
-      alert('שגיאה: ' + e.message);
+      setActionError('שגיאה: ' + e.message);
     } finally {
       setBusy(false);
     }
@@ -147,9 +152,14 @@ export default function ManageBookingPage() {
       setReschedulingMode(false);
       return;
     }
-    if (!confirm(`לעדכן את התור ל-${formatDateHe(selectedDate)} בשעה ${pickedTime}?`)) return;
+    setConfirmRescheduleOpen(true);
+  }
+
+  async function applyReschedule() {
+    setActionError('');
     setBusy(true);
     try {
+      const newISO = dateToISO(selectedDate);
       await updateDoc(doc(db, 'barbers', resolved.uid, 'bookings', resolved.bookingId), {
         clientPhone: booking.clientPhone,
         status: 'booked',
@@ -159,8 +169,9 @@ export default function ManageBookingPage() {
       setBooking({ ...booking, date: newISO, time: pickedTime });
       setReschedulingMode(false);
       setPickedTime(null);
+      setConfirmRescheduleOpen(false);
     } catch (e) {
-      alert('שגיאה: ' + e.message);
+      setActionError('שגיאה: ' + e.message);
     } finally {
       setBusy(false);
     }
@@ -245,7 +256,7 @@ export default function ManageBookingPage() {
           </button>
           <button
             className="btn-danger"
-            onClick={cancelBooking}
+            onClick={() => setConfirmCancelOpen(true)}
             style={{ width: '100%', marginBottom: 8 }}
             disabled={busy}
           >
@@ -274,13 +285,16 @@ export default function ManageBookingPage() {
           ) : (
             <div className="slots">
               {slots.filter((s) => s.available).map((s) => (
-                <div
+                <button
+                  type="button"
                   key={s.time}
                   className={`slot ${pickedTime === s.time ? 'selected' : ''}`}
                   onClick={() => setPickedTime(s.time)}
+                  aria-pressed={pickedTime === s.time}
+                  aria-label={`שעה ${s.time}`}
                 >
                   {s.time}
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -326,6 +340,78 @@ export default function ManageBookingPage() {
           <Phone size={16} />יצירת קשר ב-WhatsApp
         </a>
       )}
+
+      <AccessibleModal
+        open={confirmCancelOpen}
+        onClose={() => !busy && (setConfirmCancelOpen(false), setActionError(''))}
+        titleId="manage-cancel-title"
+        maxWidth={420}
+        showCloseButton={false}
+      >
+        <h2 id="manage-cancel-title">
+          <XCircle size={20} className="icon-inline" style={{ color: 'var(--danger)' }} aria-hidden="true" />
+          ביטול תור
+        </h2>
+        <p style={{ fontSize: '0.95rem', lineHeight: 1.6 }}>
+          לבטל את התור הזה? הפעולה לא הפיכה — תצטרך/י לקבוע תור חדש בנפרד.
+        </p>
+        {actionError && (
+          <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.88rem' }}>{actionError}</p>
+        )}
+        <div className="spacer" />
+        <button
+          className="btn-danger"
+          onClick={cancelBooking}
+          disabled={busy}
+          style={{ width: '100%', marginBottom: 8 }}
+        >
+          {busy ? 'מבטל…' : 'אישור — בטל תור'}
+        </button>
+        <button
+          className="btn-secondary"
+          onClick={() => { setConfirmCancelOpen(false); setActionError(''); }}
+          disabled={busy}
+          style={{ width: '100%' }}
+        >
+          חזור
+        </button>
+      </AccessibleModal>
+
+      <AccessibleModal
+        open={confirmRescheduleOpen}
+        onClose={() => !busy && (setConfirmRescheduleOpen(false), setActionError(''))}
+        titleId="manage-resched-title"
+        maxWidth={420}
+        showCloseButton={false}
+      >
+        <h2 id="manage-resched-title">
+          <Edit3 size={20} className="icon-inline" aria-hidden="true" />
+          אישור שינוי תור
+        </h2>
+        <p style={{ fontSize: '0.95rem', lineHeight: 1.6 }}>
+          לעדכן את התור ל־<strong>{formatDateHe(selectedDate)}</strong> בשעה <strong>{pickedTime}</strong>?
+        </p>
+        {actionError && (
+          <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.88rem' }}>{actionError}</p>
+        )}
+        <div className="spacer" />
+        <button
+          className="btn-primary"
+          onClick={applyReschedule}
+          disabled={busy}
+          style={{ width: '100%', marginBottom: 8 }}
+        >
+          {busy ? 'מעדכן…' : 'אישור שינוי'}
+        </button>
+        <button
+          className="btn-secondary"
+          onClick={() => { setConfirmRescheduleOpen(false); setActionError(''); }}
+          disabled={busy}
+          style={{ width: '100%' }}
+        >
+          חזור
+        </button>
+      </AccessibleModal>
     </div>
   );
 }

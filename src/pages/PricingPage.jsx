@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Check, ArrowLeft, Sparkles, Tag, XCircle, Gift, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useSubscription } from '../hooks/useSubscription';
 import { PRICE_NIS, TRIAL_DAYS } from '../utils/subscription';
+import AccessibleModal from '../components/AccessibleModal.jsx';
 
 export default function PricingPage() {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export default function PricingPage() {
   const [msg, setMsg] = useState('');
   const [showCommitmentTerms, setShowCommitmentTerms] = useState(false);
   const [showCancelStudio, setShowCancelStudio] = useState(false);
+  const [showCancelMonthly, setShowCancelMonthly] = useState(false);
 
   // Live exit-fee calculation for committed (Studio) plans
   const sub = barber?.subscription || {};
@@ -67,14 +69,19 @@ export default function PricingPage() {
     }
   }
 
-  async function cancelSubscription() {
+  function cancelSubscription() {
     // Studio plan goes through the dedicated exit-fee modal — see
-    // confirmCancelStudio. This function only handles flexible monthly.
+    // confirmCancelStudio. Flexible monthly opens its own confirmation modal
+    // (replacing the old native confirm() which iOS / VoiceOver users couldn't
+    // reliably reach).
     if (sub.plan === 'studio-24') {
       setShowCancelStudio(true);
       return;
     }
-    if (!confirm('לבטל את המנוי? תשמור על גישה עד סוף תקופת התשלום הנוכחית, ולא תחויב יותר.')) return;
+    setShowCancelMonthly(true);
+  }
+
+  async function confirmCancelMonthly() {
     if (!user) return;
     setBusy(true);
     setMsg('');
@@ -87,7 +94,8 @@ export default function PricingPage() {
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'הביטול נכשל');
       const accessUntil = data.accessUntil ? new Date(data.accessUntil).toLocaleDateString('he-IL') : '';
-      setMsg(`✓ המנוי בוטל. גישה עד ${accessUntil}.`);
+      setMsg(`המנוי בוטל. גישה עד ${accessUntil}.`);
+      setShowCancelMonthly(false);
     } catch (e) {
       setMsg('שגיאה: ' + e.message);
     } finally {
@@ -282,9 +290,13 @@ export default function PricingPage() {
                 : 'הזמן את החבילה')}
           </button>
           <p className="muted text-center" style={{ fontSize: '0.74rem', marginTop: 8, marginBottom: 0 }}>
-            <a onClick={() => setShowCommitmentTerms(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setShowCommitmentTerms(true)}
+            >
               פרטי התחייבות »
-            </a>
+            </button>
           </p>
         </div>
 
@@ -330,105 +342,161 @@ export default function PricingPage() {
       </div>
 
       <div className="legal-footer">
-        <a onClick={() => navigate('/terms')}>תקנון השירות</a>
-        <span>·</span>
-        <a onClick={() => navigate('/refund')}>תקנון ביטולים והחזרים</a>
-        <span>·</span>
-        <a onClick={() => navigate('/privacy')}>מדיניות פרטיות</a>
-        <span>·</span>
-        <a onClick={() => navigate('/accessibility')}>נגישות</a>
+        <Link to="/terms">תקנון השירות</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/refund">תקנון ביטולים והחזרים</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/privacy">מדיניות פרטיות</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/accessibility">נגישות</Link>
       </div>
 
-      {showCancelStudio && studioExit && (
-        <div className="modal-backdrop" onClick={() => !busy && setShowCancelStudio(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
-            <h2><XCircle size={20} className="icon-inline" style={{ color: 'var(--danger)' }} />ביטול מנוי Studio</h2>
-            <p className="muted" style={{ marginTop: -6, fontSize: '0.92rem' }}>
-              המסלול שלך הוא בהתחייבות לשנתיים. כדי לבטל לפני תום ההתחייבות,
-              עליך לשלם דמי יציאה.
-            </p>
+      <AccessibleModal
+        open={showCancelStudio && !!studioExit}
+        onClose={() => !busy && setShowCancelStudio(false)}
+        titleId="cancel-studio-title"
+        maxWidth={460}
+        showCloseButton={false}
+      >
+        <h2 id="cancel-studio-title">
+          <XCircle size={20} className="icon-inline" style={{ color: 'var(--danger)' }} aria-hidden="true" />
+          ביטול מנוי Studio
+        </h2>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.92rem' }}>
+          המסלול שלך הוא בהתחייבות לשנתיים. כדי לבטל לפני תום ההתחייבות, עליך
+          לשלם דמי יציאה.
+        </p>
 
-            <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 16, margin: '14px 0' }}>
-              <div className="row" style={{ marginBottom: 8 }}>
-                <span className="muted">חודשים שנותרו עד תום ההתחייבות:</span>
-                <strong style={{ flex: 'none', textAlign: 'end' }}>{studioExit.monthsLeft}</strong>
-              </div>
-              <div className="row" style={{ marginBottom: 8 }}>
-                <span className="muted">דמי יציאה לחודש:</span>
-                <strong style={{ flex: 'none', textAlign: 'end' }}>₪{studioExit.perMonth}</strong>
-              </div>
-              <div className="row" style={{ paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-                <strong>סה"כ לתשלום:</strong>
-                <strong style={{ flex: 'none', textAlign: 'end', fontSize: '1.4rem', color: 'var(--danger)', fontFamily: 'var(--font-display)' }}>
-                  ₪{studioExit.fee}
-                </strong>
-              </div>
+        {studioExit && (
+          <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 16, margin: '14px 0' }}>
+            <div className="row" style={{ marginBottom: 8 }}>
+              <span className="muted">חודשים שנותרו עד תום ההתחייבות:</span>
+              <strong style={{ flex: 'none', textAlign: 'end' }}>{studioExit.monthsLeft}</strong>
             </div>
-
-            <p className="muted" style={{ fontSize: '0.82rem', lineHeight: 1.5, margin: '12px 0' }}>
-              בלחיצה על "אישור" — נחייב את הכרטיס השמור שלך ב-₪{studioExit.fee}, נסיים את החיובים החודשיים, וזה ייכנס לתוקף מיידית. הטאבלט נשאר אצלך.
-            </p>
-
-            {msg && (
-              <p style={{ fontSize: '0.88rem', color: msg.startsWith('✓') ? 'var(--success)' : 'var(--danger)', fontWeight: 600, margin: '8px 0' }}>{msg}</p>
-            )}
-
-            <div className="spacer" />
-            <button
-              className="btn-danger"
-              onClick={confirmCancelStudio}
-              disabled={busy}
-              style={{ width: '100%', marginBottom: 8 }}
-            >
-              {busy ? 'מחייב…' : `אישור — חייב כרטיס ב-₪${studioExit.fee} ובטל`}
-            </button>
-            <button
-              className="btn-secondary"
-              onClick={() => setShowCancelStudio(false)}
-              disabled={busy}
-              style={{ width: '100%' }}
-            >
-              ביטול
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showCommitmentTerms && (
-        <div className="modal-backdrop" onClick={() => setShowCommitmentTerms(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
-            <h2><Calendar size={20} className="icon-inline" />פרטי התחייבות לשנתיים</h2>
-            <div style={{ fontSize: '0.92rem', lineHeight: 1.7 }}>
-              <p style={{ margin: '0 0 12px' }}>
-                המסלול כולל טאבלט מקצועי במתנה (10/11 אינץ׳, סטנד והגדרה ראשונית).
-                התחייבות לתשלום של ₪50/חודש למשך 24 חודשים.
-              </p>
-              <p style={{ margin: '0 0 12px' }}>
-                <strong>סך התחייבות:</strong> ₪1,200 (לפני מע"מ נכלל).
-              </p>
-              <p style={{ margin: '0 0 12px' }}>
-                <strong>ביטול:</strong> ניתן בכל זמן בתשלום דמי יציאה — ₪30 לכל
-                חודש שנותר עד תום ההתחייבות. הטאבלט נשאר אצלך.
-              </p>
-              <p style={{ margin: '0 0 12px' }}>
-                <strong>תקופת צינון:</strong> 14 יום ממועד הקבלה (החזר מלא בכפוף
-                להחזרת הטאבלט באריזה מקורית, ללא שימוש).
-              </p>
-              <p style={{ margin: '0 0 12px' }}>
-                <strong>אחרי 24 חודשים:</strong> ממשיך ב-₪50/חודש ללא התחייבות,
-                ניתן לבטל בכל זמן ללא קנס.
-              </p>
-              <p className="muted" style={{ fontSize: '0.82rem', margin: '14px 0 0' }}>
-                התקנון המלא ב-<a onClick={() => navigate('/terms')} style={{ cursor: 'pointer', textDecoration: 'underline' }}>עמוד התקנון</a>.
-              </p>
+            <div className="row" style={{ marginBottom: 8 }}>
+              <span className="muted">דמי יציאה לחודש:</span>
+              <strong style={{ flex: 'none', textAlign: 'end' }}>₪{studioExit.perMonth}</strong>
             </div>
-            <div className="spacer" />
-            <button className="btn-secondary" onClick={() => setShowCommitmentTerms(false)} style={{ width: '100%' }}>
-              הבנתי
-            </button>
+            <div className="row" style={{ paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+              <strong>סה"כ לתשלום:</strong>
+              <strong style={{ flex: 'none', textAlign: 'end', fontSize: '1.4rem', color: 'var(--danger)', fontFamily: 'var(--font-display)' }}>
+                ₪{studioExit.fee}
+              </strong>
+            </div>
           </div>
+        )}
+
+        <p className="muted" style={{ fontSize: '0.82rem', lineHeight: 1.5, margin: '12px 0' }}>
+          בלחיצה על "אישור" — נחייב את הכרטיס השמור שלך ב-₪{studioExit?.fee}, נסיים את החיובים החודשיים, וזה ייכנס לתוקף מיידית. הטאבלט נשאר אצלך.
+        </p>
+
+        {msg && (
+          <p role="status" aria-live="polite" style={{ fontSize: '0.88rem', color: msg.startsWith('המנוי') ? 'var(--success)' : 'var(--danger)', fontWeight: 600, margin: '8px 0' }}>{msg}</p>
+        )}
+
+        <div className="spacer" />
+        <button
+          className="btn-danger"
+          onClick={confirmCancelStudio}
+          disabled={busy}
+          style={{ width: '100%', marginBottom: 8 }}
+        >
+          {busy ? 'מחייב…' : `אישור — חייב כרטיס ב-₪${studioExit?.fee} ובטל`}
+        </button>
+        <button
+          className="btn-secondary"
+          onClick={() => setShowCancelStudio(false)}
+          disabled={busy}
+          style={{ width: '100%' }}
+        >
+          חזור
+        </button>
+      </AccessibleModal>
+
+      <AccessibleModal
+        open={showCancelMonthly}
+        onClose={() => !busy && setShowCancelMonthly(false)}
+        titleId="cancel-monthly-title"
+        maxWidth={460}
+        showCloseButton={false}
+      >
+        <h2 id="cancel-monthly-title">
+          <XCircle size={20} className="icon-inline" style={{ color: 'var(--danger)' }} aria-hidden="true" />
+          ביטול מנוי
+        </h2>
+        <p style={{ fontSize: '0.95rem', lineHeight: 1.6 }}>
+          לבטל את המנוי? תשמור על גישה עד סוף תקופת התשלום הנוכחית, ולא תחויב יותר.
+        </p>
+        {msg && (
+          <p role="status" aria-live="polite" style={{ fontSize: '0.88rem', color: msg.startsWith('המנוי') ? 'var(--success)' : 'var(--danger)', fontWeight: 600, margin: '8px 0' }}>{msg}</p>
+        )}
+        <div className="spacer" />
+        <button
+          className="btn-danger"
+          onClick={confirmCancelMonthly}
+          disabled={busy}
+          style={{ width: '100%', marginBottom: 8 }}
+        >
+          {busy ? 'מבטל…' : 'אישור — בטל מנוי'}
+        </button>
+        <button
+          className="btn-secondary"
+          onClick={() => setShowCancelMonthly(false)}
+          disabled={busy}
+          style={{ width: '100%' }}
+        >
+          חזור
+        </button>
+      </AccessibleModal>
+
+      <AccessibleModal
+        open={showCommitmentTerms}
+        onClose={() => setShowCommitmentTerms(false)}
+        titleId="commitment-title"
+        maxWidth={460}
+        showCloseButton={false}
+      >
+        <h2 id="commitment-title">
+          <Calendar size={20} className="icon-inline" aria-hidden="true" />
+          פרטי התחייבות לשנתיים
+        </h2>
+        <div style={{ fontSize: '0.92rem', lineHeight: 1.7 }}>
+          <p style={{ margin: '0 0 12px' }}>
+            המסלול כולל טאבלט מקצועי במתנה (10/11 אינץ׳, סטנד והגדרה ראשונית).
+            התחייבות לתשלום של ₪50/חודש למשך 24 חודשים.
+          </p>
+          <p style={{ margin: '0 0 12px' }}>
+            <strong>סך התחייבות:</strong> ₪1,200 (פטור ממע"מ).
+          </p>
+          <p style={{ margin: '0 0 12px' }}>
+            <strong>ביטול:</strong> ניתן בכל זמן בתשלום דמי יציאה — ₪30 לכל
+            חודש שנותר עד תום ההתחייבות. הטאבלט נשאר אצלך.
+          </p>
+          <p style={{ margin: '0 0 12px' }}>
+            <strong>תקופת צינון:</strong> 14 יום ממועד הקבלה (החזר מלא בכפוף
+            להחזרת הטאבלט באריזה מקורית, ללא שימוש).
+          </p>
+          <p style={{ margin: '0 0 12px' }}>
+            <strong>אחרי 24 חודשים:</strong> ממשיך ב-₪50/חודש ללא התחייבות,
+            ניתן לבטל בכל זמן ללא קנס.
+          </p>
+          <p className="muted" style={{ fontSize: '0.82rem', margin: '14px 0 0' }}>
+            התקנון המלא ב-
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => navigate('/terms')}
+            >
+              עמוד התקנון
+            </button>
+            .
+          </p>
         </div>
-      )}
+        <div className="spacer" />
+        <button className="btn-secondary" onClick={() => setShowCommitmentTerms(false)} style={{ width: '100%' }}>
+          הבנתי
+        </button>
+      </AccessibleModal>
     </div>
   );
 }

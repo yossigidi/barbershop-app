@@ -13,6 +13,7 @@ import PrivacyPage from './pages/PrivacyPage.jsx';
 import RefundPage from './pages/RefundPage.jsx';
 import AccessibilityPage from './pages/AccessibilityPage.jsx';
 import ManageBookingPage from './pages/ManageBookingPage.jsx';
+import WhatsAppTemplatesPage from './pages/WhatsAppTemplatesPage.jsx';
 import AccessibilityWidget from './components/AccessibilityWidget.jsx';
 
 function Protected({ children }) {
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
         <Route path="/reports" element={<Protected><ReportsPage /></Protected>} />
         <Route path="/pricing" element={<Protected><PricingPage /></Protected>} />
+        <Route path="/whatsapp-templates" element={<Protected><WhatsAppTemplatesPage /></Protected>} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/refund" element={<RefundPage />} />

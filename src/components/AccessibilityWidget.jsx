@@ -116,6 +116,7 @@ export default function AccessibilityWidget() {
                 state={CONTRAST_LABEL[prefs.contrast]}
                 on={prefs.contrast !== 'off'}
                 onClick={() => a11yStore.set({ contrast: nextContrast(prefs.contrast) })}
+                isCycle
               />
               <Toggle
                 icon={Type}
@@ -123,6 +124,7 @@ export default function AccessibilityWidget() {
                 state={`${prefs.textSize}%`}
                 on={prefs.textSize !== 100}
                 onClick={() => a11yStore.set({ textSize: nextTextSize(prefs.textSize) })}
+                isCycle
               />
               <Toggle
                 icon={AlignJustify}
@@ -130,6 +132,7 @@ export default function AccessibilityWidget() {
                 state={LINE_LABEL[prefs.lineSpacing]}
                 on={prefs.lineSpacing !== 'normal'}
                 onClick={() => a11yStore.set({ lineSpacing: nextLineSpacing(prefs.lineSpacing) })}
+                isCycle
               />
               <Toggle
                 icon={BookOpen}
@@ -195,14 +198,22 @@ export default function AccessibilityWidget() {
   );
 }
 
-function Toggle({ icon: Icon, label, state, on, onClick }) {
+function Toggle({ icon: Icon, label, state, on, onClick, isCycle = false }) {
+  // For binary toggles, aria-pressed correctly conveys on/off. For cycle
+  // toggles (contrast, text size, line spacing) — which have 3-4 states —
+  // aria-pressed misleads screen readers because "pressed" implies binary.
+  // Convey the current value via a richer aria-label instead and omit
+  // aria-pressed.
+  const ariaProps = isCycle
+    ? { 'aria-label': `${label}: ${state}` }
+    : { 'aria-pressed': on };
   return (
     <button
       type="button"
       className={`a11y-toggle ${on ? 'is-on' : ''}`}
       onClick={onClick}
-      aria-pressed={on}
       data-a11y-toggle
+      {...ariaProps}
     >
       <span className="a11y-toggle-ico"><Icon size={20} aria-hidden="true" /></span>
       <span className="a11y-toggle-label">{label}</span>

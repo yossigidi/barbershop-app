@@ -2,7 +2,10 @@ import { useMemo } from 'react';
 import { Coffee, Ban, Check, Repeat, Circle } from 'lucide-react';
 import { dayKeyFromDate, timeToMin, minToTime, addMinToTime } from '../utils/slots';
 
-const PX_PER_MIN = 1.0; // 60 min = 60 px tall — compact mobile-first
+// 1.8 px/min → a 20-min cell is 36px tall, comfortable for finger taps without
+// becoming so tall that a full work day requires excessive scrolling.
+// Was 1.0 originally; user feedback was that cells felt too thin to hit reliably.
+const PX_PER_MIN = 1.8;
 
 export default function DayTimeline({ date, workingHours, bookings, blocks, onBookingTap, onFreeSlotTap, onBlockTap }) {
   const dayKey = dayKeyFromDate(date);

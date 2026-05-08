@@ -1,5 +1,15 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
+
+// `navigate(-1)` fails when a user lands on the legal page directly (e.g.
+// from a search result or a shared link) — there's no history to go back
+// to. Fall back to "/" in that case.
+function backHref(navigate) {
+  return () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/');
+  };
+}
 
 // Comprehensive Terms of Service — Hebrew, Israeli consumer law oriented.
 // IMPORTANT: This is a DRAFT prepared by an AI; the user should have a
@@ -13,7 +23,7 @@ export default function TermsPage() {
     <div className="app legal-page">
       <div className="header">
         <h1><FileText size={20} className="icon-inline" />תקנון השירות</h1>
-        <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate(-1)}>
+        <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={backHref(navigate)}>
           <ArrowLeft size={14} className="icon-inline" />חזור
         </button>
       </div>
@@ -71,7 +81,7 @@ export default function TermsPage() {
 
           <h3>5.1 מסלול Pro חודשי</h3>
           <ul>
-            <li>תשלום חודשי: ₪50 לחודש (כולל מע"מ).</li>
+            <li>תשלום חודשי: ₪50 לחודש (פטור ממע"מ — הספק עוסק פטור).</li>
             <li>חיוב אוטומטי בתחילת כל מחזור חודשי.</li>
             <li>ללא תקופת התחייבות — ניתן לבטל בכל זמן.</li>
             <li>הביטול תקף החל ממחזור החיוב הבא; אין החזר על מחזור שכבר חויב.</li>
@@ -79,7 +89,7 @@ export default function TermsPage() {
 
           <h3>5.2 מסלול Studio (התחייבות לשנתיים)</h3>
           <ul>
-            <li>תשלום חודשי: ₪50 לחודש (כולל מע"מ).</li>
+            <li>תשלום חודשי: ₪50 לחודש (פטור ממע"מ — הספק עוסק פטור).</li>
             <li>תקופת התחייבות: 24 חודשים החל מיום ההצטרפות.</li>
             <li>סך התחייבות כספית: ₪1,200.</li>
             <li>במסגרת המסלול נשלח אל הלקוח טאבלט במתנה (ראה סעיף 7).</li>
@@ -227,9 +237,9 @@ export default function TermsPage() {
           <p>
             המפעיל מחויב להנגשת השירות בהתאם לחוק שוויון זכויות לאנשים עם
             מוגבלות (התשנ"ח-1998). הצהרת הנגישות המלאה זמינה ב-
-            <a onClick={() => navigate('/accessibility')} style={{ cursor: 'pointer', textDecoration: 'underline', color: 'var(--gold)' }}>
+            <Link to="/accessibility" style={{ color: 'var(--gold)' }}>
               עמוד הנגישות
-            </a>.
+            </Link>.
           </p>
         </section>
 
@@ -237,7 +247,7 @@ export default function TermsPage() {
           <h2>15. יצירת קשר</h2>
           <p>
             לכל שאלה, פנייה או דרישה: ניתן לפנות בכתובת אימייל
-            <strong> support@barbershop-app.com</strong> (תוקן בקרוב לכתובת הסופית).
+            {' '}<a href="mailto:support@toron.co.il" dir="ltr"><strong>support@toron.co.il</strong></a>.
             המפעיל ישתדל להגיב בתוך 5 ימי עסקים.
           </p>
         </section>

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useSubscription } from '../hooks/useSubscription';
+import WakeLockToggle from '../components/WakeLockToggle.jsx';
 import PaywallModal from '../components/PaywallModal.jsx';
 import { db } from '../firebase';
 import {
@@ -494,6 +495,9 @@ export default function DashboardPage() {
         <Link to="/reports">
           <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><BarChart3 size={18} className="icon-inline" />דוחות מלאים</button>
         </Link>
+        <Link to="/whatsapp-templates">
+          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><MessageCircle size={18} className="icon-inline" />תגובות מהירות ל-WhatsApp Business</button>
+        </Link>
         <button className="btn-gold" onClick={() => setShowBroadcast(true)} style={{ width: '100%', marginBottom: 8 }}>
           <Megaphone size={18} className="icon-inline" />הודעה לכל הלקוחות (חג / חופשה / עליית מחירים)
         </button>
@@ -519,6 +523,7 @@ export default function DashboardPage() {
           <img src={barber.logoUrl} alt="logo" className="dashboard-logo" />
         )}
         <h1>{barber.businessName || 'העסק שלי'}</h1>
+        <WakeLockToggle />
       </div>
 
       <TrialExpiryBanner access={access} />

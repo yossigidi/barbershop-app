@@ -5,8 +5,9 @@ import { getThemeKey } from '../utils/themes';
 import {
   CheckCircle2, CalendarPlus, CreditCard, Repeat, Bell, Check,
   Calendar as CalendarIcon, Clock, Hourglass, Scissors as ScissorsIcon,
-  Sparkles, CircleDollarSign, User,
+  Sparkles, CircleDollarSign, User, Phone, Star,
 } from 'lucide-react';
+import AccessibleModal from '../components/AccessibleModal.jsx';
 import { db } from '../firebase';
 import {
   doc, getDoc, setDoc, addDoc, collection, query, where, getDocs,
@@ -23,6 +24,25 @@ import LiveStatusBanner from '../components/LiveStatusBanner.jsx';
 import { buildIcs, downloadIcs } from '../utils/ics';
 
 const PHONE_KEY = 'bs_phone';
+
+// Default hero background per profession. The barber can override by setting
+// `heroImageUrl` on their barbers/{uid} doc. Hosted on Unsplash CDN — no
+// API key required, lazy-loaded by the browser; the dark overlay rendered
+// on top keeps the headline readable on top of any source image.
+const PROFESSION_HERO_BG = {
+  barber: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600&q=80&auto=format&fit=crop',
+  manicurist: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1600&q=80&auto=format&fit=crop',
+  pedicurist: 'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1600&q=80&auto=format&fit=crop',
+  cosmetician: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&q=80&auto=format&fit=crop',
+};
+// Short business-type label for the hero eyebrow. Kept neutral and factual —
+// the actual service names appear in the sub-headline (`servicesPreview`).
+const PROFESSION_TAGLINE = {
+  barber: 'מספרה',
+  manicurist: 'סטודיו לציפורניים',
+  pedicurist: 'סטודיו לפדיקור',
+  cosmetician: 'סטודיו קוסמטיקה',
+};
 
 // 20-char URL-safe random token — uses crypto.getRandomValues for true
 // randomness, base36-style alphabet (lowercase + digits)
@@ -264,6 +284,23 @@ export default function BookingPage() {
     const parts = name.split(/\s+/).filter(Boolean);
     return (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
   }, [barber]);
+
+  // Hero data — picks the profession-appropriate background image and tagline,
+  // unless the barber has set their own heroImageUrl on the barber doc.
+  const heroProfession = barber?.profession || barber?.professions?.[0] || 'barber';
+  const heroBg = barber?.heroImageUrl || PROFESSION_HERO_BG[heroProfession] || PROFESSION_HERO_BG.barber;
+  const heroTagline = PROFESSION_TAGLINE[heroProfession] || PROFESSION_TAGLINE.barber;
+  // Compact service preview line — shows up to the first 3 service names so the
+  // hero communicates concretely what this business does.
+  const servicesPreview = useMemo(() => {
+    const list = (barber?.services || []).filter((s) => s.name).slice(0, 3).map((s) => s.name);
+    return list.length > 0 ? list.join(' · ') : heroTagline;
+  }, [barber, heroTagline]);
+
+  function scrollToServices() {
+    const el = document.getElementById('booking-services-anchor');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   function pickSlot(time) {
     setPickedTime(time);
@@ -791,23 +828,74 @@ export default function BookingPage() {
   const addons = barber.addons || [];
 
   return (
-    <div className="app" data-theme={getThemeKey(barber)}>
-      <div className="brand-header brand-header-row">
-        {barber.logoUrl ? (
-          <img src={barber.logoUrl} alt={barber.businessName} className="brand-logo" />
-        ) : (
-          <div className="brand-wordmark" aria-hidden="true">{initials}</div>
-        )}
-        <div className="brand-text">
-          <h1 className="brand-title">{barber.businessName}</h1>
+    <div className="app booking-app" data-theme={getThemeKey(barber)}>
+      <header
+        className="booking-hero"
+        style={{ backgroundImage: `url(${heroBg})` }}
+      >
+        <div className="booking-hero-overlay" aria-hidden="true" />
+
+        <div className="booking-hero-top">
+          <button
+            type="button"
+            className="booking-hero-pill"
+            onClick={scrollToServices}
+          >
+            קבע תור
+          </button>
+          <div className="booking-hero-brand">
+            <span className="booking-hero-brand-name">{barber.businessName}</span>
+            {barber.logoUrl ? (
+              <img
+                src={barber.logoUrl}
+                alt=""
+                aria-hidden="true"
+                className="booking-hero-brand-logo"
+              />
+            ) : (
+              <ScissorsIcon size={18} aria-hidden="true" className="booking-hero-brand-icon" />
+            )}
+          </div>
+        </div>
+
+        <div className="booking-hero-content">
+          <div className="booking-hero-eyebrow">
+            <Sparkles size={14} aria-hidden="true" className="icon-inline" />
+            <span>{heroTagline}</span>
+          </div>
+          <h1 className="booking-hero-title">{barber.businessName}</h1>
+          <p className="booking-hero-sub">{servicesPreview}</p>
+
+          <div className="booking-hero-actions">
+            {barber.phoneContact && (
+              <a
+                href={`tel:${barber.phoneContact}`}
+                className="booking-hero-btn booking-hero-btn-secondary"
+              >
+                <Phone size={16} aria-hidden="true" />
+                <span>התקשר</span>
+              </a>
+            )}
+            <button
+              type="button"
+              className="booking-hero-btn booking-hero-btn-primary"
+              onClick={scrollToServices}
+            >
+              <CalendarPlus size={16} aria-hidden="true" />
+              <span>קבע תור עכשיו</span>
+            </button>
+          </div>
+
           {todayStatus && (
-            <div className={`brand-tagline ${todayStatus.open ? '' : 'closed'}`}>
-              <span className="dot" />
+            <div className={`booking-hero-status ${todayStatus.open ? 'open' : 'closed'}`}>
+              <span className="booking-hero-status-dot" aria-hidden="true" />
               {todayStatus.text}
             </div>
           )}
         </div>
-      </div>
+      </header>
+
+      <div id="booking-services-anchor" />
 
       <LiveStatusBanner barberId={barberId} barberName={barber.businessName} />
 
@@ -940,40 +1028,46 @@ export default function BookingPage() {
             )}
           </div>
 
-          <div className="card-inset" style={{ marginTop: 14 }}>
-            <label className="row" style={{ alignItems: 'center', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={recurring}
-                onChange={(e) => setRecurring(e.target.checked)}
-                style={{ width: 22, height: 22, flex: 'none', accentColor: 'var(--accent)', marginLeft: 8 }}
-              />
-              <span style={{ flex: 1 }}><strong><Repeat size={14} className="icon-inline" />תור קבוע</strong> <span className="muted">(אותה שעה, חוזר)</span></span>
-            </label>
-            {recurring && (
-              <div className="row" style={{ marginTop: 10 }}>
-                <div>
-                  <label className="muted" style={{ fontSize: '0.85rem' }}>כל</label>
-                  <select value={recurEvery} onChange={(e) => setRecurEvery(Number(e.target.value))}>
-                    <option value={1}>שבוע</option>
-                    <option value={2}>שבועיים</option>
-                    <option value={3}>3 שבועות</option>
-                    <option value={4}>4 שבועות</option>
-                  </select>
+          {/* Recurring is gated behind barber.allowRecurring (Settings → אפשרויות
+              הזמנה). Most barbers prefer to manage recurring series manually
+              rather than letting one client lock 12 future slots. */}
+          {barber.allowRecurring && (
+            <div className="card-inset" style={{ marginTop: 14 }}>
+              <label className="row" style={{ alignItems: 'center', cursor: 'pointer' }} htmlFor="recurring-checkbox">
+                <input
+                  id="recurring-checkbox"
+                  type="checkbox"
+                  checked={recurring}
+                  onChange={(e) => setRecurring(e.target.checked)}
+                  style={{ width: 22, height: 22, flex: 'none', accentColor: 'var(--accent)', marginLeft: 8 }}
+                />
+                <span style={{ flex: 1 }}><strong><Repeat size={14} className="icon-inline" />תור קבוע</strong> <span className="muted">(אותה שעה, חוזר)</span></span>
+              </label>
+              {recurring && (
+                <div className="row" style={{ marginTop: 10 }}>
+                  <div>
+                    <label htmlFor="recur-every" className="muted" style={{ fontSize: '0.85rem' }}>כל</label>
+                    <select id="recur-every" value={recurEvery} onChange={(e) => setRecurEvery(Number(e.target.value))}>
+                      <option value={1}>שבוע</option>
+                      <option value={2}>שבועיים</option>
+                      <option value={3}>3 שבועות</option>
+                      <option value={4}>4 שבועות</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="recur-times" className="muted" style={{ fontSize: '0.85rem' }}>סה״כ פעמים</label>
+                    <select id="recur-times" value={recurTimes} onChange={(e) => setRecurTimes(Number(e.target.value))}>
+                      <option value={4}>4</option>
+                      <option value={6}>6</option>
+                      <option value={8}>8</option>
+                      <option value={12}>12</option>
+                      <option value={20}>20</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="muted" style={{ fontSize: '0.85rem' }}>סה״כ פעמים</label>
-                  <select value={recurTimes} onChange={(e) => setRecurTimes(Number(e.target.value))}>
-                    <option value={4}>4</option>
-                    <option value={6}>6</option>
-                    <option value={8}>8</option>
-                    <option value={12}>12</option>
-                    <option value={20}>20</option>
-                  </select>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           <button
             type="button"
@@ -1024,14 +1118,17 @@ export default function BookingPage() {
                     {recommendedWithUsual.map((s) => {
                       const r = SLOT_REASONS[s.reason] || SLOT_REASONS.earliest;
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={s.time}
                           className={`slot slot-recommended ${pickedTime === s.time ? 'selected' : ''}`}
                           onClick={() => pickSlot(s.time)}
+                          aria-pressed={pickedTime === s.time}
+                          aria-label={`${s.time} — ${r.badge}`}
                         >
                           <div className="slot-time-big">{s.time}</div>
                           <div className={`slot-badge tone-${r.tone}`}>{r.badge}</div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -1052,16 +1149,19 @@ export default function BookingPage() {
                   <div className="slot-group-label">{g.label}</div>
                   <div className="slots">
                     {g.items.map((s) => (
-                      <div
+                      <button
+                        type="button"
                         key={s.time}
                         className={`slot ${pickedTime === s.time ? 'selected' : ''}`}
                         onClick={() => pickSlot(s.time)}
+                        aria-pressed={pickedTime === s.time}
+                        aria-label={`שעה ${s.time}`}
                       >
                         <div>{s.time}</div>
                         {pickedService?.duration > 20 && (
                           <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>עד {addMinToTime(s.time, totalDuration)}</div>
                         )}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1232,60 +1332,100 @@ export default function BookingPage() {
         </div>
       )}
 
-      {showLogin && (
-        <div className="modal-backdrop" onClick={() => setShowLogin(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>הזן טלפון</h2>
-            <p className="muted">אם הזמנת אצלנו בעבר, נזהה אותך אוטומטית.</p>
-            <div className="field">
-              <input
-                type="tel"
-                inputMode="tel"
-                placeholder="050-1234567"
-                value={pendingPhone}
-                onChange={(e) => setPendingPhone(e.target.value)}
-              />
-            </div>
-            <button className="btn-primary" onClick={loginByPhone} disabled={busy} style={{ width: '100%' }}>
-              {busy ? 'בודק…' : 'המשך'}
-            </button>
-          </div>
+      <AccessibleModal
+        open={showLogin}
+        onClose={() => !busy && setShowLogin(false)}
+        titleId="booking-login-title"
+      >
+        <h2 id="booking-login-title">הזן טלפון</h2>
+        <p className="muted">אם הזמנת אצלנו בעבר, נזהה אותך אוטומטית.</p>
+        <div className="field">
+          <label htmlFor="booking-login-phone" className="muted" style={{ fontSize: '0.85rem' }}>
+            מספר טלפון
+          </label>
+          <input
+            id="booking-login-phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            pattern="^0?5\d{8}$"
+            maxLength={11}
+            placeholder="050-1234567"
+            value={pendingPhone}
+            onChange={(e) => setPendingPhone(e.target.value)}
+            data-autofocus
+          />
         </div>
-      )}
+        <button
+          className="btn-primary"
+          onClick={loginByPhone}
+          disabled={busy}
+          style={{ width: '100%' }}
+        >
+          {busy ? 'בודק…' : 'המשך'}
+        </button>
+      </AccessibleModal>
 
-      {showSignup && (
-        <div className="modal-backdrop" onClick={() => setShowSignup(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>פעם ראשונה? נכיר! 👋</h2>
-            <div className="field">
-              <label>שם פרטי</label>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-            </div>
-            <div className="field">
-              <label>שם משפחה</label>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
-            </div>
-            <div className="field">
-              <label>טלפון</label>
-              <input type="tel" value={pendingPhone} onChange={(e) => setPendingPhone(e.target.value)} />
-            </div>
-            <div className="field">
-              <label>אימייל (לקבלת אישור התור) — אופציונלי</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="example@gmail.com"
-                dir="ltr"
-                style={{ direction: 'ltr', textAlign: 'left' }}
-              />
-            </div>
-            <button className="btn-primary" onClick={signup} disabled={busy} style={{ width: '100%' }}>
-              {busy ? 'שומר…' : 'אשר וקבע תור'}
-            </button>
-          </div>
+      <AccessibleModal
+        open={showSignup}
+        onClose={() => !busy && setShowSignup(false)}
+        titleId="booking-signup-title"
+      >
+        <h2 id="booking-signup-title">פעם ראשונה? נכיר!</h2>
+        <div className="field">
+          <label htmlFor="booking-signup-first">שם פרטי</label>
+          <input
+            id="booking-signup-first"
+            autoComplete="given-name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            data-autofocus
+          />
         </div>
-      )}
+        <div className="field">
+          <label htmlFor="booking-signup-last">שם משפחה</label>
+          <input
+            id="booking-signup-last"
+            autoComplete="family-name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="booking-signup-phone">טלפון</label>
+          <input
+            id="booking-signup-phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            pattern="^0?5\d{8}$"
+            maxLength={11}
+            value={pendingPhone}
+            onChange={(e) => setPendingPhone(e.target.value)}
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="booking-signup-email">אימייל (לקבלת אישור התור) — אופציונלי</label>
+          <input
+            id="booking-signup-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="example@gmail.com"
+            className="input-ltr"
+          />
+        </div>
+        <button
+          className="btn-primary"
+          onClick={signup}
+          disabled={busy}
+          style={{ width: '100%' }}
+        >
+          {busy ? 'שומר…' : 'אשר וקבע תור'}
+        </button>
+      </AccessibleModal>
     </div>
   );
 }

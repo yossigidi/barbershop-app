@@ -1,6 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RotateCcw } from 'lucide-react';
 
+function backHref(navigate) {
+  return () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/');
+  };
+}
+
 // Cancellation & refund policy — Hebrew, fully aligned with the Israeli
 // Consumer Protection (Cancellation of Transactions) Regulations 5771-2010
 // (תקנות הגנת הצרכן (ביטול עסקה) תשע"א-2010) and Consumer Protection Law
@@ -14,7 +21,7 @@ export default function RefundPage() {
     <div className="app legal-page">
       <div className="header">
         <h1><RotateCcw size={20} className="icon-inline" />מדיניות ביטולים והחזרים</h1>
-        <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={() => navigate(-1)}>
+        <button className="btn-secondary" style={{ padding: '6px 12px' }} onClick={backHref(navigate)}>
           <ArrowLeft size={14} className="icon-inline" />חזור
         </button>
       </div>
@@ -113,9 +120,9 @@ export default function RefundPage() {
           <p>אופן הביטול:</p>
           <ol>
             <li><strong>באפליקציה</strong> — בדף "מסלול וחיוב" → "ביטול מנוי".</li>
-            <li><strong>במייל</strong> — <a href="mailto:support@toron.co.il">support@toron.co.il</a>
+            <li><strong>במייל</strong> — <a href="mailto:support@toron.co.il" dir="ltr">support@toron.co.il</a>
               עם הפרטים: שם, אימייל, סוג מסלול וסיבת הביטול (לא חובה).</li>
-            <li><strong>בטלפון</strong> — בעת תפעול קו תמיכה (יפורסם בהמשך).</li>
+            <li><strong>בטלפון</strong> — <a href="tel:+972532702270" dir="ltr">053-270-2270</a> בימים א'-ה' 09:00-17:00.</li>
           </ol>
           <p>
             נשלח לך אישור ביטול בכתב תוך <strong>14 ימי עסקים</strong>. ההחזר הכספי
