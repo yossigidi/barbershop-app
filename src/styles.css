@@ -4897,3 +4897,92 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   border-radius: 4px;
   font-size: 0.86em;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Booking page sticky bottom CTA — fixes the "Next button below the fold"
+   problem on phones. Always visible at the bottom of the viewport while
+   the user is on the time-pick or summary step.
+   ─────────────────────────────────────────────────────────────────────── */
+.booking-app { padding-bottom: 110px !important; }
+
+.booking-bottom-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  gap: 10px;
+  padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  background:
+    linear-gradient(180deg,
+      rgba(12, 12, 14, 0) 0%,
+      rgba(12, 12, 14, 0.85) 30%,
+      rgba(12, 12, 14, 0.96) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.booking-bottom-cta .btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  flex: none;
+  min-height: 56px;
+  min-width: 56px;
+  padding: 0 18px !important;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.booking-bottom-cta .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.booking-cta-primary {
+  flex: 1;
+  min-height: 56px;
+  font-size: 1.05rem !important;
+  font-weight: 700;
+  padding: 16px 22px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  /* Pulsing gold glow draws the eye even when the user hasn't scrolled. */
+  animation: booking-cta-pulse 2.4s ease-in-out infinite;
+}
+.booking-cta-primary:disabled {
+  animation: none;
+  opacity: 0.55;
+}
+@keyframes booking-cta-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.30),
+      0 0 0 0 rgba(184, 137, 58, 0.55),
+      0 4px 14px rgba(184, 137, 58, 0.40);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 0 0 10px rgba(184, 137, 58, 0.0),
+      0 6px 22px rgba(184, 137, 58, 0.55);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-cta-primary { animation: none; }
+}
+
+/* On wider screens, constrain the bar's content so it lines up with the
+   booking-app column. */
+@media (min-width: 600px) {
+  .booking-bottom-cta {
+    padding-inline: max(16px, calc(50vw - 300px));
+  }
+}
+@media (min-width: 1100px) {
+  .booking-bottom-cta {
+    padding-inline: max(16px, calc(50vw - 340px));
+  }
+}

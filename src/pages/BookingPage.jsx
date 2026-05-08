@@ -1125,40 +1125,12 @@ export default function BookingPage() {
             </>
           ) : (
             <>
-              {recommendedWithUsual.length > 0 && (
-                <div className="recommended-section">
-                  <div className="recommended-label">המלצות AI לשעות הטובות</div>
-                  <div className="slots-recommended">
-                    {recommendedWithUsual.map((s) => {
-                      const r = SLOT_REASONS[s.reason] || SLOT_REASONS.earliest;
-                      return (
-                        <button
-                          type="button"
-                          key={s.time}
-                          className={`slot slot-recommended ${pickedTime === s.time ? 'selected' : ''}`}
-                          onClick={() => pickSlot(s.time)}
-                          aria-pressed={pickedTime === s.time}
-                          aria-label={`${s.time} — ${r.badge}`}
-                        >
-                          <div className="slot-time-big">{s.time}</div>
-                          <div className={`slot-badge tone-${r.tone}`}>{r.badge}</div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {!showAllSlots && slotGroups.length > 0 && (
-                    <button
-                      type="button"
-                      className="show-all-toggle"
-                      onClick={() => setShowAllSlots(true)}
-                    >
-                      הצג את כל השעות הזמינות
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {(showAllSlots || recommendedWithUsual.length === 0) && slotGroups.map((g) => (
+              {/* AI-recommended slots removed per UX feedback — clients prefer
+                  to scan all available times themselves rather than be funneled
+                  to a suggestion. The recommended/usualHour computations are
+                  kept as dead code for now in case we expose them differently
+                  (e.g. inside the dashboard for the barber, not the client). */}
+              {slotGroups.map((g) => (
                 <div key={g.key} className="slots-section">
                   <div className="slot-group-label">{g.label}</div>
                   <div className="slots">
@@ -1183,23 +1155,6 @@ export default function BookingPage() {
             </>
           )}
 
-          <div className="wizard-actions">
-            <button
-              type="button"
-              className="btn-secondary wizard-back"
-              onClick={() => setWizardStep('date')}
-            >
-              › חזור
-            </button>
-            <button
-              type="button"
-              className="btn-gold wizard-next"
-              onClick={() => setWizardStep('summary')}
-              disabled={!pickedTime}
-            >
-              הבא: סיכום ←
-            </button>
-          </div>
         </div>
       )}
 
@@ -1320,29 +1275,61 @@ export default function BookingPage() {
             </div>
           )}
 
-          <div className="wizard-actions" style={{ marginTop: 16 }}>
-            <button
-              type="button"
-              className="btn-secondary wizard-back"
-              onClick={() => setWizardStep('time')}
-              disabled={busy}
-            >
-              › חזור לשעה
-            </button>
-            <button
-              type="button"
-              className="btn-gold wizard-confirm"
-              onClick={confirmFromSummary}
-              disabled={busy}
-            >
-              <Check size={16} className="icon-inline" />
-              {busy
-                ? 'קובע…'
-                : groupTotalCount > 1
-                  ? `אשר וקבע ${groupTotalCount} תורים`
-                  : 'אשר וקבע תור'}
-            </button>
-          </div>
+        </div>
+      )}
+
+      {/* ─── Sticky bottom CTA bar — visible whenever the wizard is past
+              the date step. The "הבא" button used to live at the bottom of
+              the time-pick card, below the fold for many users; promoting
+              it to a fixed bottom bar means it's always in sight. */}
+      {pickedService && wizardStep !== 'date' && (
+        <div className="booking-bottom-cta" role="region" aria-label="פעולות המשך">
+          {wizardStep === 'time' && (
+            <>
+              <button
+                type="button"
+                className="btn-secondary booking-cta-back"
+                onClick={() => setWizardStep('date')}
+                disabled={busy}
+              >
+                ›
+              </button>
+              <button
+                type="button"
+                className="btn-gold booking-cta-primary"
+                onClick={() => setWizardStep('summary')}
+                disabled={!pickedTime}
+              >
+                {pickedTime ? `הבא: סיכום (${pickedTime})` : 'בחר/י שעה כדי להמשיך'}
+                <span aria-hidden="true">←</span>
+              </button>
+            </>
+          )}
+          {wizardStep === 'summary' && (
+            <>
+              <button
+                type="button"
+                className="btn-secondary booking-cta-back"
+                onClick={() => setWizardStep('time')}
+                disabled={busy}
+              >
+                ›
+              </button>
+              <button
+                type="button"
+                className="btn-gold booking-cta-primary"
+                onClick={confirmFromSummary}
+                disabled={busy}
+              >
+                <Check size={18} className="icon-inline" aria-hidden="true" />
+                {busy
+                  ? 'קובע…'
+                  : groupTotalCount > 1
+                    ? `אשר וקבע ${groupTotalCount} תורים`
+                    : 'אשר וקבע תור'}
+              </button>
+            </>
+          )}
         </div>
       )}
 
