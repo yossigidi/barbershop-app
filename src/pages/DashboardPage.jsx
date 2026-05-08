@@ -14,12 +14,12 @@ import {
   addDoc, deleteDoc, getDocs, setDoc, arrayUnion, arrayRemove, serverTimestamp,
 } from 'firebase/firestore';
 import {
-  dateToISO, formatDateHe, nextNDays, DAY_LABELS_HE, dayKeyFromDate,
+  dateToISO, formatDateHe, DAY_LABELS_HE, dayKeyFromDate,
 } from '../utils/slots';
 import { registerFcmToken, requestPushPermission } from '../utils/push';
 import { whatsappUrl, shareLinkText } from '../utils/whatsapp';
 import { upcomingHolidays } from '../utils/holidays';
-import Calendar from '../components/Calendar.jsx';
+import MonthCalendar from '../components/MonthCalendar.jsx';
 import StatsCard from '../components/StatsCard.jsx';
 import SmartTipsCard from '../components/SmartTipsCard.jsx';
 import RescheduleModal from '../components/RescheduleModal.jsx';
@@ -112,7 +112,6 @@ export default function DashboardPage() {
     const d = new Date(); d.setHours(0, 0, 0, 0); return d;
   }, []);
   const todayISO = dateToISO(today);
-  const days = useMemo(() => nextNDays(14), []);
   const selectedISO = dateToISO(selectedDate);
 
   const todayBookings = bookings.filter((b) => b.date === todayISO);
@@ -381,14 +380,16 @@ export default function DashboardPage() {
         />
 
         <div className="card">
-          <div className="muted text-center" style={{ marginBottom: 8, fontSize: '0.85rem' }}>{upcomingTotal} תורים צפויים בשבועיים הקרובים</div>
-          <Calendar
-            days={days}
+          <div className="muted text-center" style={{ marginBottom: 8, fontSize: '0.85rem' }}>{upcomingTotal} תורים מתוכננים מהיום והלאה</div>
+          <MonthCalendar
             selectedDate={selectedDate}
             onSelect={setSelectedDate}
+            workingHours={barber.workingHours}
             bookingsByDate={bookingsByDate}
+            maxMonthsAhead={12}
+            compact
           />
-          <div className="muted text-center" style={{ marginBottom: 8 }}>
+          <div className="muted text-center" style={{ marginBottom: 8, marginTop: 8 }}>
             <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
             {' • '}{dayBookings.length} תורים
           </div>

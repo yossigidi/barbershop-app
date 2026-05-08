@@ -28,6 +28,7 @@ export default function MonthCalendar({
   workingHours,
   maxMonthsAhead = 12,
   bookingsByDate,
+  compact = false,
 }) {
   // Anchor month — drives the visible grid. Default = month of selectedDate.
   const [anchor, setAnchor] = useState(() => {
@@ -71,7 +72,7 @@ export default function MonthCalendar({
   const selectedISO = selectedDate ? dateToISO(selectedDate) : '';
 
   return (
-    <div className="month-calendar">
+    <div className={`month-calendar ${compact ? 'is-compact' : ''}`}>
       <div className="month-nav">
         <button
           type="button"

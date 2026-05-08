@@ -4027,3 +4027,24 @@ body:has(.bottom-nav) .a11y-fab { bottom: calc(72px + env(safe-area-inset-bottom
   font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
 }
+
+/* Compact mode — used on the operator dashboard so the full month fits
+   without dominating the screen. Cells shrink from ~62px to ~40px,
+   font shrinks proportionally, badge becomes a tiny dot. */
+.month-calendar.is-compact .month-nav { padding: 4px 2px 8px; }
+.month-calendar.is-compact .month-nav-btn { width: 30px; height: 30px; }
+.month-calendar.is-compact .month-label { font-size: 0.92rem; }
+.month-calendar.is-compact .calendar-grid { gap: 3px; }
+.month-calendar.is-compact .calendar-head { font-size: 0.7rem; }
+.month-calendar.is-compact .calendar-cell {
+  max-width: 44px;
+  max-height: 44px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.month-calendar.is-compact .calendar-badge {
+  font-size: 0.62rem;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 4px;
+}
