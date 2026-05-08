@@ -17,7 +17,14 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- Heebo: trimmed from 7 weights → 4 (regular/semibold/bold/extrabold).
+         Cuts ~120-180kB of font payload on first paint without losing the
+         hierarchy the design relies on. -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Preconnect to Unsplash so the booking-page hero image starts its
+         TLS handshake in parallel with the JS download instead of waiting
+         for hydration. -->
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <title>Toron — ניהול תורים מקצועי</title>
     <!-- Accessibility prefs FOUC bootstrap — applies persisted IS 5568 user prefs
          to <html> classes synchronously before React hydrates. Keep in sync

@@ -32,10 +32,10 @@ const PHONE_KEY = 'bs_phone';
 // Photo IDs were verified live against images.unsplash.com — replace only
 // with verified IDs to avoid 404s in production.
 const PROFESSION_HERO_BG = {
-  barber: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600&q=80&auto=format&fit=crop',
-  manicurist: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1600&q=80&auto=format&fit=crop',
-  pedicurist: 'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1600&q=80&auto=format&fit=crop',
-  cosmetician: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&q=80&auto=format&fit=crop',
+  barber: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&q=70&auto=format&fit=crop',
+  manicurist: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1200&q=70&auto=format&fit=crop',
+  pedicurist: 'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1200&q=70&auto=format&fit=crop',
+  cosmetician: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=70&auto=format&fit=crop',
 };
 // Short business-type label for the hero eyebrow. Kept neutral and factual —
 // the actual service names appear in the sub-headline (`servicesPreview`).
