@@ -5099,3 +5099,279 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 14px rgba(124, 58, 237, 0.30);
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   BOOKING-APP — UNIFIED DARK THEME
+   Every component used on the public booking flow gets a dark, gold-
+   accented variant so the wizard, the calendar, the slots, the summary
+   and the success state share the same cinematic feel as the hero.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* Generic surfaces inside the booking-app */
+.booking-app .card {
+  background: #16161a;
+  border-color: #26262c;
+  color: #e8e8eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.30), 0 4px 14px rgba(0, 0, 0, 0.20);
+}
+.booking-app .card h2,
+.booking-app .card h3,
+.booking-app .card h4 { color: #ffffff; }
+.booking-app .muted { color: #a8a8b0; }
+.booking-app strong { color: #ffffff; }
+.booking-app .text-danger { color: #fca5a5; }
+
+/* Slim brand banner — used in the success-state header */
+.booking-app .brand-header,
+.booking-app .brand-header-row {
+  background: linear-gradient(180deg, #1a1a1d 0%, #0c0c0e 100%);
+  border-bottom: 1px solid rgba(184, 137, 58, 0.30);
+  margin: 0 0 16px;
+  padding: 16px 22px;
+  border-radius: 0;
+  color: #ffffff;
+}
+.booking-app .brand-header::before,
+.booking-app .brand-header::after { display: none; }
+.booking-app .brand-header-row .brand-logo,
+.booking-app .brand-header-row .brand-wordmark {
+  width: 52px; height: 52px;
+  border: 1px solid rgba(184, 137, 58, 0.50);
+  border-radius: 12px;
+}
+.booking-app .brand-header-row .brand-wordmark {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  color: #ffffff;
+  font-size: 1.3rem;
+}
+.booking-app .brand-header-row .brand-title { color: #ffffff; font-size: 1.3rem; }
+.booking-app .brand-tagline { color: rgba(255, 255, 255, 0.78); }
+.booking-app .brand-tagline.closed { color: rgba(255, 100, 100, 0.85); }
+
+/* ── Service picker cards ─────────────────────────────────────────────── */
+.booking-app .service-card {
+  background: #1a1a1d;
+  border-color: #2a2a30;
+  color: #e8e8eb;
+}
+.booking-app .service-card:hover:not(.active) {
+  border-color: rgba(184, 137, 58, 0.55);
+  background: rgba(184, 137, 58, 0.04);
+}
+.booking-app .service-card.active {
+  background: linear-gradient(180deg, rgba(184, 137, 58, 0.18), rgba(184, 137, 58, 0.06));
+  border-color: var(--gold);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(184, 137, 58, 0.20), 0 6px 18px rgba(184, 137, 58, 0.15);
+}
+.booking-app .service-card-name { color: #ffffff; }
+.booking-app .service-card-meta { color: #a8a8b0; }
+.booking-app .service-card-desc { color: #c8c8d0; }
+.booking-app .service-pkg-pill {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  color: #ffffff;
+}
+
+/* ── Wizard progress (1-2-3 steps) ────────────────────────────────────── */
+.booking-app .wizard-progress { padding: 14px 0; }
+.booking-app .wizard-step-num {
+  background: #1a1a1d;
+  border: 2px solid #2e2e36;
+  color: #a8a8b0;
+}
+.booking-app .wizard-step.is-current .wizard-step-num {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  border-color: var(--gold);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(184, 137, 58, 0.40);
+}
+.booking-app .wizard-step.is-done .wizard-step-num {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  border-color: #16a34a;
+  color: #ffffff;
+}
+.booking-app .wizard-step-label { color: #a8a8b0; }
+.booking-app .wizard-step.is-current .wizard-step-label { color: #ffffff; }
+.booking-app .wizard-line { background: #2a2a30; }
+
+/* ── Month calendar — pick a date ─────────────────────────────────────── */
+.booking-app .calendar-grid { gap: 4px; }
+.booking-app .calendar-head { color: #a8a8b0; }
+.booking-app .calendar-cell {
+  background: #1a1a1d;
+  border-color: #2a2a30;
+  color: #e8e8eb;
+}
+.booking-app .calendar-cell:hover:not(:disabled):not(.active) {
+  border-color: rgba(184, 137, 58, 0.45);
+  background: rgba(184, 137, 58, 0.06);
+}
+.booking-app .calendar-cell.today {
+  border-color: rgba(184, 137, 58, 0.55);
+  color: var(--gold-2);
+}
+.booking-app .calendar-cell.active {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  border-color: var(--gold);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(184, 137, 58, 0.20), 0 4px 12px rgba(184, 137, 58, 0.30);
+}
+.booking-app .calendar-cell.closed {
+  background: transparent;
+  color: #4a4a52;
+  opacity: 0.55;
+}
+.booking-app .calendar-badge {
+  background: rgba(184, 137, 58, 0.20);
+  color: var(--gold-2);
+}
+
+/* ── Time slot pickers ────────────────────────────────────────────────── */
+.booking-app .slots-section + .slots-section { border-top: 1px solid #2a2a30; padding-top: 14px; }
+.booking-app .slot-group-label {
+  color: #c8c8d0;
+  font-weight: 600;
+}
+.booking-app .slot-group-label::before,
+.booking-app .slot-group-label::after { background: #2a2a30; }
+.booking-app .slot {
+  background: #1a1a1d;
+  border-color: #2a2a30;
+  color: #e8e8eb;
+}
+.booking-app .slot:hover:not(:disabled):not(.selected) {
+  border-color: var(--gold);
+  background: rgba(184, 137, 58, 0.10);
+  color: #ffffff;
+}
+.booking-app .slot.selected {
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  border-color: var(--gold);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(184, 137, 58, 0.25), 0 6px 16px rgba(184, 137, 58, 0.30);
+}
+.booking-app .empty {
+  color: #a8a8b0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  text-align: center;
+}
+
+/* "Picked date" pill in step 2 */
+.booking-app .wizard-summary-link {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e8e8eb;
+}
+.booking-app .wizard-summary-link:hover {
+  background: rgba(184, 137, 58, 0.10);
+  border-color: var(--gold);
+  color: #ffffff;
+}
+.booking-app .wizard-summary-edit { color: var(--gold-2); }
+
+/* ── Summary step (confirm rows) ──────────────────────────────────────── */
+.booking-app .confirm-row { border-bottom-color: #26262c; }
+.booking-app .confirm-label { color: #a8a8b0; }
+
+/* ── Recurring + group-booking blocks ─────────────────────────────────── */
+.booking-app .card-inset {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #2a2a30;
+}
+.booking-app .extra-people {
+  background: rgba(184, 137, 58, 0.04);
+  border: 1px solid rgba(184, 137, 58, 0.15);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-top: 12px;
+}
+.booking-app .extra-people-head {
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.booking-app .extra-person-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #2a2a30;
+}
+.booking-app .extra-person-time { color: #ffffff; }
+.booking-app .extra-person-add {
+  background: transparent;
+  border: 1px dashed rgba(184, 137, 58, 0.45);
+  color: var(--gold-2);
+}
+.booking-app .extra-person-add:hover {
+  background: rgba(184, 137, 58, 0.10);
+  border-color: var(--gold);
+}
+.booking-app .extra-person-remove {
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(220, 38, 38, 0.30);
+}
+.booking-app .extra-person-remove:hover {
+  background: rgba(220, 38, 38, 0.25);
+  color: #ffffff;
+}
+.booking-app .extra-people-total {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ── Add-ons (collapsed list under service picker) ────────────────────── */
+.booking-app .addons-card { background: #16161a !important; }
+.booking-app .addons-toggle {
+  background: #16161a;
+  color: #e8e8eb;
+}
+.booking-app .addons-toggle:hover { background: rgba(184, 137, 58, 0.10); }
+.booking-app .addons-card .addon-list { border-top-color: #26262c; }
+.booking-app .addon-row {
+  background: #1a1a1d;
+  border-color: #2a2a30;
+}
+.booking-app .addon-row.active {
+  background: rgba(184, 137, 58, 0.08);
+  border-color: var(--gold);
+}
+.booking-app .addon-name { color: #ffffff; }
+.booking-app .addons-hint { color: #a8a8b0; }
+
+/* ── "Hello" returning-client card ────────────────────────────────────── */
+.booking-app .card .btn-secondary { color: #e8e8eb; }
+
+/* ── Success state ────────────────────────────────────────────────────── */
+.booking-app .success-card {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(22, 163, 74, 0.10), transparent 70%),
+    #16161a;
+  border-color: rgba(22, 163, 74, 0.30);
+}
+.booking-app .success-headline { color: #ffffff; }
+.booking-app .success-check svg { filter: drop-shadow(0 0 18px rgba(22, 163, 74, 0.50)); }
+
+/* Manage-link box gets a gold-on-dark treatment */
+.booking-app .manage-link-box {
+  background: rgba(184, 137, 58, 0.06);
+  border: 1px solid rgba(184, 137, 58, 0.30);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.booking-app .copy-link {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(184, 137, 58, 0.55);
+  color: #ffffff;
+}
+.booking-app .copy-link:hover {
+  background: rgba(184, 137, 58, 0.12);
+  border-color: var(--gold-2);
+  color: #ffffff;
+}
+
+/* ── Forms used inside booking-app modals (login/signup) — KEEP LIGHT
+      because they appear in a centred modal that already provides its
+      own surface. We deliberately don't override here. */
