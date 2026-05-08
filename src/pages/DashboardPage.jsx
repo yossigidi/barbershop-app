@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
   MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X, Sparkles,
-  Wallet,
+  Wallet, Megaphone,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useSubscription } from '../hooks/useSubscription';
@@ -28,6 +28,7 @@ import QrModal from '../components/QrModal.jsx';
 import DayTimeline from '../components/DayTimeline.jsx';
 import BookingActionSheet from '../components/BookingActionSheet.jsx';
 import TomorrowReminders from '../components/TomorrowReminders.jsx';
+import BroadcastModal from '../components/BroadcastModal.jsx';
 import QuickBookModal from '../components/QuickBookModal.jsx';
 import TrialExpiryBanner from '../components/TrialExpiryBanner.jsx';
 import MorningSummaryCard from '../components/MorningSummaryCard.jsx';
@@ -58,6 +59,7 @@ export default function DashboardPage() {
   const [showTomorrow, setShowTomorrow] = useState(false);
   const [showToday, setShowToday] = useState(false);
   const [showYesterday, setShowYesterday] = useState(false);
+  const [showBroadcast, setShowBroadcast] = useState(false);
   const [actionFor, setActionFor] = useState(null);
 
   // Keep the action-sheet's booking in sync with Firestore changes — when
@@ -492,6 +494,9 @@ export default function DashboardPage() {
         <Link to="/reports">
           <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><BarChart3 size={18} className="icon-inline" />דוחות מלאים</button>
         </Link>
+        <button className="btn-gold" onClick={() => setShowBroadcast(true)} style={{ width: '100%', marginBottom: 8 }}>
+          <Megaphone size={18} className="icon-inline" />הודעה לכל הלקוחות (חג / חופשה / עליית מחירים)
+        </button>
         <button className="btn-secondary" onClick={() => setShowVacation(true)} style={{ width: '100%', marginBottom: 8 }}>
           <Palmtree size={18} className="icon-inline" />הוסף חופש
         </button>
@@ -575,6 +580,14 @@ export default function DashboardPage() {
           businessName={barber.businessName || 'העסק שלי'}
           targetDay="today"
           onClose={() => setShowToday(false)}
+        />
+      )}
+      {showBroadcast && (
+        <BroadcastModal
+          open
+          barberId={user.uid}
+          businessName={barber.businessName || 'העסק שלי'}
+          onClose={() => setShowBroadcast(false)}
         />
       )}
       {showYesterday && (
