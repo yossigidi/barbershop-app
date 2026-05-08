@@ -1019,7 +1019,18 @@ export default function BookingPage() {
           </p>
           <MonthCalendar
             selectedDate={selectedDate}
-            onSelect={setSelectedDate}
+            onSelect={(d) => {
+              setSelectedDate(d);
+              // Auto-advance to time picker the moment a date is tapped —
+              // the "הבא" button at the bottom of this card was hidden below
+              // the fold for many users on small phones, who didn't realise
+              // they had to scroll. If the barber enables `allowRecurring`,
+              // we keep the manual flow so the user can see the recurring
+              // toggle on this step.
+              if (!barber.allowRecurring) {
+                setWizardStep('time');
+              }
+            }}
             workingHours={barber.workingHours}
           />
           <div className="text-center" style={{ marginTop: 12, fontSize: '0.95rem' }}>
