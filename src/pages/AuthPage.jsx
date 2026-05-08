@@ -8,6 +8,7 @@ import { db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { defaultWorkingHours, generateShortCode } from '../utils/slots';
 import { initialSubscription } from '../utils/subscription';
+import { nameToSlug, validateSlug } from '../utils/slugs';
 
 // Dedicated auth page with three modes: signup / login / forgot.
 // The mode is driven by the `?mode=` query string so the landing page
@@ -60,12 +61,21 @@ export default function AuthPage() {
         let onboarded = true;
         if (!snap.exists()) {
           const code = await pickUniqueShortCode();
+          // Try to derive a friendly URL slug from the user's display name —
+          // gives "Yosi Gidi" → "yosi-gidi" so the public booking link is
+          // toron.co.il/yosi-gidi instead of toron.co.il/abc123. For Hebrew /
+          // non-Latin names nameToSlug returns "" — we fall back to the
+          // random shortCode silently and the user can pick a slug later in
+          // Settings.
+          const businessNameInit = user.displayName ? user.displayName : 'העסק שלי';
+          const customSlug = await pickUniqueCustomSlug(businessNameInit);
           await setDoc(ref, {
             displayName: user.displayName || '',
             email: user.email || '',
-            businessName: user.displayName ? user.displayName : 'העסק שלי',
+            businessName: businessNameInit,
             profession: null,
             shortCode: code,
+            customSlug,
             workingHours: defaultWorkingHours(),
             fcmTokens: [],
             services: [],
@@ -77,6 +87,9 @@ export default function AuthPage() {
             createdAt: serverTimestamp(),
           });
           await setDoc(doc(db, 'shortCodes', code), { uid: user.uid });
+          if (customSlug) {
+            await setDoc(doc(db, 'shortCodes', customSlug), { uid: user.uid });
+          }
           onboarded = false;
         } else {
           onboarded = snap.data().onboarded !== false;
@@ -349,4 +362,20 @@ async function pickUniqueShortCode() {
     if (!snap.exists()) return code;
   }
   return generateShortCode() + Date.now().toString(36).slice(-2);
+}
+
+// Best-effort: try the bare slug derived from name, then -2, -3 … -9 if
+// taken. Returns "" if no usable slug can be derived (Hebrew name) — the
+// random shortCode then serves as the public URL until the user picks a
+// custom one in Settings.
+async function pickUniqueCustomSlug(businessName) {
+  const base = nameToSlug(businessName);
+  if (!base || validateSlug(base)) return '';
+  for (let i = 0; i < 10; i++) {
+    const candidate = i === 0 ? base : `${base}-${i + 1}`;
+    if (validateSlug(candidate)) continue;
+    const snap = await getDoc(doc(db, 'shortCodes', candidate));
+    if (!snap.exists()) return candidate;
+  }
+  return '';
 }

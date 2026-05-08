@@ -12,11 +12,12 @@ import PaywallModal from '../components/PaywallModal.jsx';
 import { db } from '../firebase';
 import {
   collection, doc, onSnapshot, query, updateDoc, where,
-  addDoc, deleteDoc, getDocs, setDoc, arrayUnion, arrayRemove, serverTimestamp,
+  addDoc, deleteDoc, getDoc, getDocs, setDoc, arrayUnion, arrayRemove, serverTimestamp,
 } from 'firebase/firestore';
 import {
   dateToISO, formatDateHe, DAY_LABELS_HE, dayKeyFromDate,
 } from '../utils/slots';
+import { nameToSlug, validateSlug } from '../utils/slugs';
 import { registerFcmToken, requestPushPermission } from '../utils/push';
 import { whatsappUrl, shareLinkText } from '../utils/whatsapp';
 import { upcomingHolidays } from '../utils/holidays';
@@ -93,6 +94,45 @@ export default function DashboardPage() {
     });
     return () => { unsubBarber(); unsubBookings(); unsubBlocks(); };
   }, [user]);
+
+  // One-time backfill: if an existing barber has no customSlug but their
+  // displayName/businessName produces a valid slug, claim it for them
+  // automatically. Older accounts kept the random shortCode in their
+  // public URL even though Settings has long supported a friendly slug —
+  // this just gives them the upgrade silently. Only runs once per session.
+  const [slugBackfillTried, setSlugBackfillTried] = useState(false);
+  useEffect(() => {
+    if (!barber || !user || slugBackfillTried) return;
+    if (barber.customSlug) { setSlugBackfillTried(true); return; }
+    const candidate = nameToSlug(barber.businessName || barber.displayName || '');
+    if (!candidate || validateSlug(candidate)) { setSlugBackfillTried(true); return; }
+    setSlugBackfillTried(true);
+    (async () => {
+      try {
+        // Try the bare candidate, then -2, -3 … -9 if taken by someone else.
+        for (let i = 0; i < 10; i++) {
+          const slug = i === 0 ? candidate : `${candidate}-${i + 1}`;
+          if (validateSlug(slug)) continue;
+          const ref = doc(db, 'shortCodes', slug);
+          const snap = await getDoc(ref);
+          if (snap.exists()) {
+            if (snap.data().uid === user.uid) {
+              await updateDoc(doc(db, 'barbers', user.uid), { customSlug: slug });
+              return;
+            }
+            continue; // taken by someone else
+          }
+          await setDoc(ref, { uid: user.uid });
+          await updateDoc(doc(db, 'barbers', user.uid), { customSlug: slug });
+          return;
+        }
+      } catch (e) {
+        // Backfill is best-effort — if rules deny or quota hits, silent fail
+        // is fine. The user can still set the slug manually in Settings.
+        console.warn('customSlug backfill skipped:', e?.message);
+      }
+    })();
+  }, [barber, user, slugBackfillTried]);
 
   // Notification deep-link handler — when ?booking=<id> is in the URL,
   // open the action sheet for that booking (and clean the URL).
