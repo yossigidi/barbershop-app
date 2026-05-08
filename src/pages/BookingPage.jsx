@@ -5,7 +5,8 @@ import { getThemeKey } from '../utils/themes';
 import {
   CheckCircle2, CalendarPlus, CreditCard, Repeat, Bell, Check,
   Calendar as CalendarIcon, Clock, Hourglass, Scissors as ScissorsIcon,
-  Sparkles, CircleDollarSign, User, Phone, Star,
+  Sparkles, CircleDollarSign, User, Phone, Star, ChevronDown, X,
+  Users, Send, Wallet, ExternalLink,
 } from 'lucide-react';
 import AccessibleModal from '../components/AccessibleModal.jsx';
 import { db } from '../firebase';
@@ -732,9 +733,14 @@ export default function BookingPage() {
           {success.manageToken && (
             <div className="manage-link-box">
               <div className="muted" style={{ fontSize: '0.78rem', marginBottom: 4 }}>לניהול התור (שינוי / ביטול):</div>
-              <div className="copy-link" onClick={copyManageLink} title="לחץ להעתקה">
+              <button
+                type="button"
+                className="copy-link"
+                onClick={copyManageLink}
+                aria-label="העתק את הקישור לניהול התור"
+              >
                 {manageUrl()}
-              </div>
+              </button>
               <div className="muted text-center" style={{ fontSize: '0.74rem', marginTop: 6 }}>
                 שמור את הלינק. דרכו תוכל לשנות או לבטל את התור בכל עת.
               </div>
@@ -750,7 +756,8 @@ export default function BookingPage() {
                   onClick={shareLinkToSelfWhatsApp}
                   style={{ width: '100%', marginTop: 10, fontSize: '0.88rem', padding: '10px' }}
                 >
-                  📲 שלח לי את הלינק בוואטסאפ
+                  <Send size={14} className="icon-inline" aria-hidden="true" />
+                  שלח לי את הלינק בוואטסאפ
                 </button>
               )}
             </div>
@@ -778,47 +785,55 @@ export default function BookingPage() {
                 rel="noopener noreferrer"
                 style={{ textDecoration: 'none', display: 'block' }}
               >
-                <button className="btn-primary" style={{ width: '100%', background: '#003087', color: 'white', marginBottom: 8 }} type="button">
-                  🅿️ שלם ב-PayPal — תשלום מיידי
+                <button className="btn-primary pay-btn pay-paypal" style={{ width: '100%', marginBottom: 8 }} type="button">
+                  <Wallet size={16} className="icon-inline" aria-hidden="true" />
+                  שלם ב-PayPal — תשלום מיידי
+                  <ExternalLink size={13} className="icon-inline" aria-hidden="true" style={{ opacity: 0.7 }} />
                 </button>
               </a>
             )}
 
             {barber.bitLink && (
               <a href={barber.bitLink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
-                <button className="btn-primary" style={{ width: '100%', background: '#0066ff', color: 'white', marginBottom: 8 }} type="button">
-                  🔵 שלם ב-Bit
+                <button className="btn-primary pay-btn pay-bit" style={{ width: '100%', marginBottom: 8 }} type="button">
+                  <Wallet size={16} className="icon-inline" aria-hidden="true" />
+                  שלם ב-Bit
+                  <ExternalLink size={13} className="icon-inline" aria-hidden="true" style={{ opacity: 0.7 }} />
                 </button>
               </a>
             )}
 
             {barber.payboxLink && (
               <a href={barber.payboxLink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
-                <button className="btn-primary" style={{ width: '100%', background: '#7C3AED', color: 'white', marginBottom: 8 }} type="button">
-                  🟣 שלם ב-PayBox
+                <button className="btn-primary pay-btn pay-paybox" style={{ width: '100%', marginBottom: 8 }} type="button">
+                  <Wallet size={16} className="icon-inline" aria-hidden="true" />
+                  שלם ב-PayBox
+                  <ExternalLink size={13} className="icon-inline" aria-hidden="true" style={{ opacity: 0.7 }} />
                 </button>
               </a>
             )}
 
             {!barber.bitLink && barber.bitPhone && (
               <button
-                className="btn-primary"
-                style={{ width: '100%', background: '#0066ff', color: 'white', marginBottom: 8 }}
+                className="btn-primary pay-btn pay-bit"
+                style={{ width: '100%', marginBottom: 8 }}
                 onClick={() => openPay('bit', barber.bitPhone, totalPrice)}
                 type="button"
               >
-                🔵 העתק מספר Bit
+                <Wallet size={16} className="icon-inline" aria-hidden="true" />
+                העתק מספר Bit
               </button>
             )}
 
             {!barber.payboxLink && barber.payboxPhone && (
               <button
-                className="btn-primary"
-                style={{ width: '100%', background: '#7C3AED', color: 'white' }}
+                className="btn-primary pay-btn pay-paybox"
+                style={{ width: '100%' }}
                 onClick={() => openPay('paybox', barber.payboxPhone, totalPrice)}
                 type="button"
               >
-                🟣 העתק מספר PayBox
+                <Wallet size={16} className="icon-inline" aria-hidden="true" />
+                העתק מספר PayBox
               </button>
             )}
           </div>
@@ -959,12 +974,17 @@ export default function BookingPage() {
             onClick={() => setAddonsOpen((o) => !o)}
           >
             <span className="addons-toggle-label">
-              ✨ תוספות
+              <Sparkles size={16} className="icon-inline" aria-hidden="true" />
+              תוספות
               {pickedAddonIds.length > 0
                 ? <span className="addons-count">{pickedAddonIds.length} נבחרו</span>
                 : <span className="addons-hint">(אופציונלי)</span>}
             </span>
-            <span className={`addons-chevron ${addonsOpen ? 'is-open' : ''}`} aria-hidden="true">▾</span>
+            <ChevronDown
+              size={18}
+              aria-hidden="true"
+              className={`addons-chevron ${addonsOpen ? 'is-open' : ''}`}
+            />
           </button>
           {addonsOpen && (
             <div id="addons-list" className="addon-list" style={{ marginTop: 10 }}>
@@ -1217,7 +1237,8 @@ export default function BookingPage() {
           {!recurring && (services.length > 0) && (
             <div className="extra-people">
               <div className="extra-people-head">
-                👨‍👩‍👧 קובעים תור גם לעוד מישהו? (לילדים, לבן/בת זוג…)
+                <Users size={16} className="icon-inline" aria-hidden="true" />
+                קובעים תור גם לעוד מישהו? (לילדים, לבן/בת זוג…)
               </div>
 
               {extraSchedule.map((p) => (
@@ -1251,7 +1272,9 @@ export default function BookingPage() {
                       className="extra-person-remove"
                       onClick={() => removeExtraPerson(p.id)}
                       aria-label="הסר"
-                    >×</button>
+                    >
+                      <X size={16} aria-hidden="true" />
+                    </button>
                   </div>
                 </div>
               ))}
