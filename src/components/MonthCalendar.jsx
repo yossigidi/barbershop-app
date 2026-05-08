@@ -11,10 +11,12 @@ import { dateToISO, dayKeyFromDate, DAYS_OF_WEEK } from '../utils/slots';
 //   onSelect: (Date) => void
 //   workingHours: WorkingHours map (to grey-out closed days)
 //   maxMonthsAhead: number (default 12) — how far the user can navigate
-//   allowPast: boolean (default true) — when false, the "previous month"
-//     button is hidden. Set false on the public booking page since clients
-//     can never book past dates anyway; the barber dashboard keeps it on
-//     so they can review who came / how many bookings on a past day.
+//   allowPast: boolean (default true) — controls whether the user can
+//     navigate to months BEFORE the current month. When true (barber
+//     dashboard) the prev button always renders so the operator can
+//     review past days. When false (public booking page) the prev button
+//     is hidden while the user is on the current month, but appears
+//     again the moment they navigate forward, so they can return.
 //   bookingsByDate: { 'YYYY-MM-DD': count } — optional badge on each day
 
 const SHORT_DAY = {
@@ -92,7 +94,7 @@ export default function MonthCalendar({
         <div className="month-label">
           {HEB_MONTHS[anchor.getMonth()]} {anchor.getFullYear()}
         </div>
-        {allowPast ? (
+        {(allowPast || canGoBack) ? (
           <button
             type="button"
             className="month-nav-btn month-nav-prev"
@@ -103,8 +105,8 @@ export default function MonthCalendar({
             <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
           </button>
         ) : (
-          // Visual spacer so the month label stays centered when the
-          // backward button is hidden on the public booking flow.
+          // Visual spacer so the month label stays centered while the
+          // back-button is hidden (public booking page, on current month).
           <div className="month-nav-spacer" aria-hidden="true" />
         )}
       </div>
