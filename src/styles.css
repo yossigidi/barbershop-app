@@ -4176,3 +4176,51 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   text-align: center;
   color: var(--text-dim);
 }
+
+/* ─── Reminder modal — bulk send for today/tomorrow ─────────────────── */
+.reminder-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 12px;
+}
+.reminder-progress-bar {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.reminder-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-2), var(--gold-deep));
+  transition: width 0.3s var(--ease);
+}
+.reminder-progress-text {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.reminder-bulk-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.reminder-row.is-sent {
+  background: rgba(22, 163, 74, 0.06);
+  border-radius: var(--radius-sm);
+}
+.reminder-row.is-sent strong { color: var(--text-dim); text-decoration: line-through; }
+.reminder-reset {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.reminder-reset:hover { border-color: var(--text-dim); color: var(--text); }

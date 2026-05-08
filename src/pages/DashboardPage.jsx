@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const [vacationSaved, setVacationSaved] = useState(null);
   const [showQr, setShowQr] = useState(false);
   const [showTomorrow, setShowTomorrow] = useState(false);
+  const [showToday, setShowToday] = useState(false);
   const [showYesterday, setShowYesterday] = useState(false);
   const [actionFor, setActionFor] = useState(null);
 
@@ -313,6 +314,17 @@ export default function DashboardPage() {
           onTapBooking={setActionFor}
         />
 
+        {todayBookings.length > 0 && (
+          <button
+            className="btn-gold"
+            onClick={() => setShowToday(true)}
+            style={{ width: '100%', marginBottom: 8 }}
+          >
+            <Send size={18} className="icon-inline" />
+            תזכורת לכל לקוחות היום ({todayBookings.length}) — לחיצה אחת
+          </button>
+        )}
+
         <BreakSuggestions
           todayBookings={todayBookings}
           todayBlocks={todayBlocks.filter((b) => !b.wholeDay)}
@@ -436,6 +448,10 @@ export default function DashboardPage() {
       <>
         <StatsCard bookings={bookings} />
         <SmartTipsCard workingHours={barber.workingHours} bookings={bookings} blocks={blocks} />
+        <button className="btn-gold" onClick={() => setShowToday(true)} style={{ width: '100%', marginBottom: 8 }}>
+          <Send size={18} className="icon-inline" />
+          תזכורת להיום ({todayBookings.length}) — שלח לכולם בלחיצה
+        </button>
         <button className="btn-secondary" onClick={() => setShowTomorrow(true)} style={{ width: '100%', marginBottom: 8 }}>
           <Send size={18} className="icon-inline" />תזכורות WhatsApp ללקוחות מחר
         </button>
@@ -552,6 +568,14 @@ export default function DashboardPage() {
       )}
       {showTomorrow && (
         <TomorrowReminders bookings={bookings} businessName={barber.businessName || 'העסק שלי'} onClose={() => setShowTomorrow(false)} />
+      )}
+      {showToday && (
+        <TomorrowReminders
+          bookings={bookings}
+          businessName={barber.businessName || 'העסק שלי'}
+          targetDay="today"
+          onClose={() => setShowToday(false)}
+        />
       )}
       {showYesterday && (
         <YesterdayFollowUp
