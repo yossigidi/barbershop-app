@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import {
   computeSlotsForDate, dateToISO, formatDateHe, nextNDays,
-  DAY_LABELS_HE, dayKeyFromDate, addMinToTime, timeToMin,
+  DAY_LABELS_HE, dayKeyFromDate, addMinToTime, timeToMin, minToTime,
 } from '../utils/slots';
 import { getRecommendedSlots, SLOT_REASONS } from '../utils/slotScoring';
 import Calendar from '../components/Calendar.jsx';
@@ -55,6 +55,9 @@ export default function BookingPage() {
   const [pickedAddonIds, setPickedAddonIds] = useState([]);
   const [addonsOpen, setAddonsOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState('date'); // 'date' | 'time' | 'summary'
+  // Group booking — extra people booked back-to-back after the main client.
+  // Cap of 2 extras (3 total) keeps the slot pressure reasonable and the UI simple.
+  const [extraPeople, setExtraPeople] = useState([]); // [{ id, name, serviceId }]
   const [client, setClient] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
@@ -277,12 +280,61 @@ export default function BookingPage() {
   // When user clicks "אשר וקבע" in step 3 — gate through login/signup if needed
   function confirmFromSummary() {
     if (!pickedTime || !pickedService) return;
+    // Block submit if any extra person is missing required fields
+    if (extraPeople.some((p) => !p.name?.trim() || !p.serviceId)) {
+      alert('נא למלא שם ושירות לכל אדם נוסף');
+      return;
+    }
     if (client) {
       confirmBooking(pickedTime, client);
     } else {
       setShowLogin(true);
     }
   }
+
+  // Group-booking helpers — compute consecutive start times for extras
+  // based on pickedTime, the main booking's duration, and each extra's
+  // selected service duration.
+  function addExtraPerson() {
+    if (extraPeople.length >= 2) return;
+    const id = `ex_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    setExtraPeople((list) => [
+      ...list,
+      { id, name: '', serviceId: pickedService?.id || (barber?.services?.[0]?.id) || '' },
+    ]);
+  }
+  function updateExtraPerson(id, patch) {
+    setExtraPeople((list) => list.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }
+  function removeExtraPerson(id) {
+    setExtraPeople((list) => list.filter((p) => p.id !== id));
+  }
+  // Resolve each extra person's service from the catalog; return scheduled
+  // start/end + price metadata for rendering and writing booking docs.
+  const extraSchedule = useMemo(() => {
+    if (!pickedTime || !pickedService) return [];
+    const services = barber?.services || [];
+    let cursor = timeToMin(pickedTime) + totalDuration;
+    const out = [];
+    for (const p of extraPeople) {
+      const svc = services.find((s) => s.id === p.serviceId) || services[0];
+      const dur = (svc?.duration || 20);
+      out.push({
+        ...p,
+        serviceName: svc?.name || '',
+        duration: dur,
+        price: svc?.price || 0,
+        startTime: minToTime(cursor),
+        endTime: minToTime(cursor + dur),
+      });
+      cursor += dur;
+    }
+    return out;
+  }, [extraPeople, barber, pickedTime, pickedService, totalDuration]);
+
+  const groupTotalDuration = totalDuration + extraSchedule.reduce((s, p) => s + p.duration, 0);
+  const groupTotalPrice = totalPrice + extraSchedule.reduce((s, p) => s + p.price, 0);
+  const groupTotalCount = 1 + extraSchedule.length;
 
   function toggleAddon(id) {
     setPickedAddonIds((arr) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]));
@@ -394,38 +446,75 @@ export default function BookingPage() {
           ...bSnap.docs.map((x) => ({ time: x.data().time, duration: x.data().duration || 20 })),
           ...blSnap.docs.map((x) => ({ time: x.data().time, duration: x.data().duration || 20 })),
         ];
-        const slotMin = timeToMin(time);
-        const slotEnd = slotMin + totalDuration;
+        // Conflict check — covers the WHOLE consecutive group (self + extras),
+        // not just the first slot, so we never half-create a group.
+        const groupSegments = [
+          { startMin: timeToMin(time), endMin: timeToMin(time) + totalDuration },
+          ...extraSchedule.map((p) => ({
+            startMin: timeToMin(p.startTime),
+            endMin: timeToMin(p.startTime) + p.duration,
+          })),
+        ];
         const conflict = occ.some((o) => {
           const oS = timeToMin(o.time), oE = oS + o.duration;
-          return slotMin < oE && slotEnd > oS;
+          return groupSegments.some((seg) => seg.startMin < oE && seg.endMin > oS);
         });
         if (conflict) { skipped.push(d); continue; }
 
-        // 20-char token unique per booking — used by the client to view,
-        // cancel, or reschedule via /manage/<token> without logging in
-        const manageToken = generateManageToken();
+        // Group ID — links self + extras for the same client visit so the
+        // dashboard can show them as a related batch later if we want.
+        const groupId = extraSchedule.length > 0
+          ? `g_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 5)}`
+          : null;
 
+        // ── Main booking (self) ────────────────────────────────────────
+        const manageToken = generateManageToken();
         const ref = await addDoc(collection(db, 'barbers', barberId, 'bookings'), {
           ...baseDoc,
           date: d,
           recurringId: recurringId || null,
           manageToken,
+          groupId,
           createdAt: serverTimestamp(),
         });
         created.push({ id: ref.id, date: d, manageToken });
-
-        // Cross-reference: token → {uid, bookingId} so /manage/<token> can
-        // resolve the booking path without authentication.
         try {
           await setDoc(doc(db, 'manageTokens', manageToken), {
             uid: barberId,
             bookingId: ref.id,
             createdAt: serverTimestamp(),
           });
-        } catch (e) {
-          // Non-fatal — booking was still created. Log for visibility.
-          console.warn('manageTokens write failed', e?.message);
+        } catch (e) { console.warn('manageTokens write failed', e?.message); }
+
+        // ── Extra people (consecutive slots, same date, same phone) ────
+        for (const p of extraSchedule) {
+          const exManage = generateManageToken();
+          const exRef = await addDoc(collection(db, 'barbers', barberId, 'bookings'), {
+            time: p.startTime,
+            duration: p.duration,
+            price: p.price,
+            serviceId: p.serviceId,
+            serviceName: p.serviceName,
+            addons: [],
+            clientName: p.name.trim(),
+            clientPhone: c.phone,
+            clientEmail: c.email || '',
+            status: 'booked',
+            date: d,
+            recurringId: null,
+            manageToken: exManage,
+            groupId,
+            isExtraPerson: true,
+            createdAt: serverTimestamp(),
+          });
+          created.push({ id: exRef.id, date: d, manageToken: exManage });
+          try {
+            await setDoc(doc(db, 'manageTokens', exManage), {
+              uid: barberId,
+              bookingId: exRef.id,
+              createdAt: serverTimestamp(),
+            });
+          } catch (e) { console.warn('manageTokens write failed', e?.message); }
         }
       }
 
@@ -473,6 +562,7 @@ export default function BookingPage() {
       });
       setPickedTime(null);
       setPickedAddonIds([]);
+      setExtraPeople([]);
       setRecurring(false);
     } catch (e) {
       alert('שגיאה: ' + e.message);
@@ -1052,6 +1142,69 @@ export default function BookingPage() {
             </div>
           )}
 
+          {/* ── Group booking — extra people (kids / partner / etc.) ── */}
+          {!recurring && (services.length > 0) && (
+            <div className="extra-people">
+              <div className="extra-people-head">
+                👨‍👩‍👧 קובעים תור גם לעוד מישהו? (לילדים, לבן/בת זוג…)
+              </div>
+
+              {extraSchedule.map((p) => (
+                <div key={p.id} className="extra-person-card">
+                  <div className="extra-person-time">
+                    {p.startTime}–{p.endTime}
+                    <span className="muted" style={{ fontSize: '0.74rem', marginInlineStart: 6 }}>
+                      ({p.duration} דק׳)
+                    </span>
+                  </div>
+                  <div className="extra-person-fields">
+                    <input
+                      type="text"
+                      placeholder="שם (לדוגמה: תום)"
+                      value={p.name}
+                      onChange={(e) => updateExtraPerson(p.id, { name: e.target.value })}
+                      maxLength={40}
+                      style={{ flex: 2, minWidth: 0 }}
+                    />
+                    <select
+                      value={p.serviceId}
+                      onChange={(e) => updateExtraPerson(p.id, { serviceId: e.target.value })}
+                      style={{ flex: 1, minWidth: 0 }}
+                    >
+                      {services.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="extra-person-remove"
+                      onClick={() => removeExtraPerson(p.id)}
+                      aria-label="הסר"
+                    >×</button>
+                  </div>
+                </div>
+              ))}
+
+              {extraPeople.length < 2 && (
+                <button
+                  type="button"
+                  className="extra-person-add"
+                  onClick={addExtraPerson}
+                >
+                  + הוסף תור עוקב לעוד אדם
+                </button>
+              )}
+
+              {extraSchedule.length > 0 && (
+                <div className="extra-people-total">
+                  סה״כ קבוצה: <strong>{groupTotalCount} תורים</strong>
+                  {' · '}{groupTotalDuration} דק׳
+                  {groupTotalPrice > 0 ? <> · ₪{groupTotalPrice}</> : null}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="wizard-actions" style={{ marginTop: 16 }}>
             <button
               type="button"
@@ -1068,7 +1221,11 @@ export default function BookingPage() {
               disabled={busy}
             >
               <Check size={16} className="icon-inline" />
-              {busy ? 'קובע…' : 'אשר וקבע תור'}
+              {busy
+                ? 'קובע…'
+                : groupTotalCount > 1
+                  ? `אשר וקבע ${groupTotalCount} תורים`
+                  : 'אשר וקבע תור'}
             </button>
           </div>
         </div>

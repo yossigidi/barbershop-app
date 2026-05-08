@@ -4087,3 +4087,92 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   outline: none;
   letter-spacing: 0.01em;
 }
+
+/* ─── Group booking (BookingPage step 3) — extras: kids/partner ───── */
+.extra-people {
+  margin-top: 16px;
+  padding: 14px 14px 12px;
+  background: var(--gold-soft);
+  border: 1px dashed var(--gold);
+  border-radius: var(--radius-sm);
+}
+.extra-people-head {
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.extra-person-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.extra-person-time {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--gold-deep);
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.extra-person-fields {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.extra-person-fields input,
+.extra-person-fields select {
+  padding: 8px 10px;
+  font-size: 0.88rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: inherit;
+}
+.extra-person-fields input:focus,
+.extra-person-fields select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-soft);
+}
+.extra-person-remove {
+  flex: none;
+  width: 32px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.extra-person-remove:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(220, 38, 38, 0.06);
+}
+.extra-person-add {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1.5px dashed var(--gold);
+  border-radius: var(--radius-sm);
+  color: var(--gold-deep);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.extra-person-add:hover { background: rgba(184, 137, 58, 0.10); }
+.extra-people-total {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--gold);
+  font-size: 0.88rem;
+  text-align: center;
+  color: var(--text-dim);
+}
