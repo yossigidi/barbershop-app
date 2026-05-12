@@ -196,24 +196,40 @@ export default function SettingsPage() {
 
   async function save() {
     setSlugError('');
-    // Validate + reserve the new slug BEFORE updating the barber doc, so a
-    // failed save doesn't leave a dangling shortCodes/{slug} pointer.
+    // Validate the slug — but never block the whole save because of it.
+    // If it's invalid we just won't persist the slug change; the user
+    // sees an alert + the slug error inline; everything else still saves.
     const desiredSlug = normalizeSlug(customSlug);
     const previousSlug = normalizeSlug(barberData?.customSlug || '');
-    if (desiredSlug) {
-      const err = validateSlug(desiredSlug);
-      if (err) { setSlugError(err); return; }
-      if (desiredSlug !== previousSlug) {
-        try {
-          const existing = await getDoc(doc(db, 'shortCodes', desiredSlug));
-          if (existing.exists() && existing.data().uid !== user.uid) {
-            setSlugError('הכתובת הזו כבר תפוסה — בחר/י כתובת אחרת');
-            return;
+    let slugToSave = previousSlug;     // default: keep the old slug
+    let slugProblem = null;            // human-readable reason if we skipped
+    let slugChanged = false;
+
+    if (desiredSlug !== previousSlug) {
+      if (!desiredSlug) {
+        // User cleared the slug deliberately — accept the clear.
+        slugToSave = '';
+        slugChanged = true;
+      } else {
+        const err = validateSlug(desiredSlug);
+        if (err) {
+          slugProblem = err;
+        } else {
+          try {
+            const existing = await getDoc(doc(db, 'shortCodes', desiredSlug));
+            if (existing.exists() && existing.data().uid !== user.uid) {
+              slugProblem = 'הכתובת הזו כבר תפוסה — בחר/י כתובת אחרת';
+            } else {
+              slugToSave = desiredSlug;
+              slugChanged = true;
+            }
+          } catch (e) {
+            slugProblem = 'שגיאת רשת בעת בדיקת הכתובת — הכתובת לא עודכנה. שאר השדות כן ייכנסו.';
           }
-        } catch (e) {
-          setSlugError('שגיאת רשת — נסה/י שוב');
-          return;
         }
+      }
+      if (slugProblem) {
+        setSlugError(slugProblem);
       }
     }
 
@@ -272,23 +288,31 @@ export default function SettingsPage() {
         profession: professions[0],
         googleReviewUrl: (googleReviewUrl || '').trim(),
         aiGender,
-        customSlug: desiredSlug,
+        customSlug: slugToSave,
         allowRecurring: !!allowRecurring,
         theme,
       });
 
       // Slug bookkeeping: create/update the shortCodes/{slug} pointer and
       // delete the previous one if the slug changed (or was cleared).
-      if (desiredSlug && desiredSlug !== previousSlug) {
-        await setDoc(doc(db, 'shortCodes', desiredSlug), { uid: user.uid });
+      if (slugChanged && slugToSave) {
+        await setDoc(doc(db, 'shortCodes', slugToSave), { uid: user.uid });
       }
-      if (previousSlug && previousSlug !== desiredSlug) {
+      if (slugChanged && previousSlug && previousSlug !== slugToSave) {
         try { await deleteDoc(doc(db, 'shortCodes', previousSlug)); } catch {}
+      }
+
+      // If we skipped the slug because it was invalid, tell the user
+      // EXPLICITLY (alert is intentional — the inline slug error is
+      // small and lives in a different section, easy to miss).
+      if (slugProblem) {
+        alert(`השמירה הצליחה — אבל כתובת הקישור לא עודכנה:\n${slugProblem}\n\nכתובת הקישור הנוכחית: ${slugToSave || '(אוטומטית)'}`);
       }
 
       navigate('/dashboard');
     } catch (e) {
-      alert('שגיאה: ' + e.message);
+      console.error('Settings save failed:', e);
+      alert('שגיאה בשמירה: ' + (e?.message || 'לא ידוע') + '\n\nאם זה חוזר על עצמו — ייתכן שכתובת הקישור חסומה. נסה/י לרוקן את שדה "הקישור שלך ללקוחות" ושמור.');
     } finally {
       setSaving(false);
     }
