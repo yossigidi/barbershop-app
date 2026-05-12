@@ -6588,3 +6588,64 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 /* When dashboard is in purple theme, ensure the old morning-card CSS
    doesn't bleed in (some legacy selectors). The new components carry
    their own .msc-* names so override risk is minimal. */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Quick WhatsApp templates — chip row inside the BookingActionSheet
+   One-tap messages with the client's actual name / time / service
+   already substituted. Sits between the per-status action buttons and
+   the AI compose flow.
+   ─────────────────────────────────────────────────────────────────────── */
+.quick-templates {
+  background: rgba(37, 211, 102, 0.06);
+  border: 1px solid rgba(37, 211, 102, 0.30);
+  border-radius: var(--radius);
+  padding: 10px 12px 12px;
+  margin-bottom: 10px;
+}
+.quick-templates-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #128c7e;
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+.quick-templates-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.quick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid #25d366;
+  color: #128c7e;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+.quick-chip:hover {
+  background: linear-gradient(180deg, #25d366, #128c7e);
+  color: #ffffff;
+  border-color: #128c7e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.30);
+}
+.quick-chip:focus-visible {
+  outline: 2px solid #128c7e;
+  outline-offset: 2px;
+}
+.quick-templates-hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}

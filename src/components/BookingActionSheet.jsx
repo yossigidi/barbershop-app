@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Phone, Play, Check, Edit3, Star, Sparkles, Crown, AlertTriangle } from 'lucide-react';
+import { Phone, Play, Check, Edit3, Star, Sparkles, Crown, AlertTriangle, MessageCircle, BellRing, Heart, Repeat } from 'lucide-react';
 import { addMinToTime, dateToISO } from '../utils/slots';
 import { whatsappUrl } from '../utils/whatsapp';
 import { computeClientMemory } from '../utils/clientMemory';
@@ -76,6 +76,58 @@ export default function BookingActionSheet({
       `⭐ אם נהנית, נשמח מאוד אם תוכל/י לכתוב ביקורת קצרה ב-Google. זה לוקח דקה ועוזר לי המון:\n` +
       `${googleReviewUrl}\n\n` +
       `מחכים לראות אותך שוב 🙏`;
+    window.open(whatsappUrl(msg, booking.clientPhone), '_blank');
+  }
+
+  // Quick WhatsApp templates — one-tap messages with the actual client's
+  // name, time, service auto-filled. No manual substitution needed by
+  // the barber. Opens wa.me with the recipient set to this booking's
+  // phone number so the message lands in the right chat immediately.
+  function sendTemplate(kind) {
+    if (!booking.clientPhone) return;
+    const firstName = (booking.clientName || '').split(/\s+/)[0] || booking.clientName || '';
+    const biz = businessName || 'אצלי';
+    const service = booking.serviceName || 'תור';
+    const time = booking.time;
+    const dateLabel = booking.date
+      ? new Date(`${booking.date}T00:00:00`).toLocaleDateString('he-IL', {
+          weekday: 'long', day: '2-digit', month: '2-digit',
+        })
+      : '';
+    let msg = '';
+    switch (kind) {
+      case 'confirm':
+        msg =
+          `שלום ${firstName}! 👋\n` +
+          `התור שלך אצלנו אושר ל-${dateLabel || 'תאריך התור'} בשעה ${time}.\n` +
+          `שירות: ${service}.\n` +
+          `אם משהו השתנה — תכתוב/י לי כאן.\nנתראה!`;
+        break;
+      case 'reminder':
+        msg =
+          `היי ${firstName} 👋\n` +
+          `רק תזכורת קצרה — יש לך תור אצלנו ב-${biz} בשעה ${time}${dateLabel ? ` (${dateLabel})` : ''}.\n` +
+          `נחכה לך!`;
+        break;
+      case 'onway':
+        msg =
+          `היי ${firstName}, יש לך תור עכשיו ב-${time} אצלנו ב-${biz}.\n` +
+          `הכל בסדר? מחכה לך 😊`;
+        break;
+      case 'thanks':
+        msg =
+          `היי ${firstName}, תודה שבחרת בנו! 🙏\n` +
+          `מקווים שנהנית. נשמח לראות אותך שוב אצלנו ב-${biz}.`;
+        break;
+      case 'rebook':
+        msg =
+          `היי ${firstName}, מזמן לא ראינו אותך 🤍\n` +
+          `יש לי כמה שעות פנויות השבוע — אם בא לך לקבוע תור.\n` +
+          `מחכה לך!`;
+        break;
+      default:
+        return;
+    }
     window.open(whatsappUrl(msg, booking.clientPhone), '_blank');
   }
 
@@ -187,6 +239,51 @@ export default function BookingActionSheet({
         )}
         {completed && googleReviewUrl && (
           <button className="btn-gold" onClick={() => { sendReviewRequest(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Star size={18} className="icon-inline" />שלח בקשת ביקורת בגוגל</button>
+        )}
+
+        {/* Quick WhatsApp templates — one-tap chip buttons that open
+            wa.me to this client with the message pre-filled (name, time,
+            service automatic). Different chips show by booking status. */}
+        {booking.clientPhone && (
+          <div className="quick-templates">
+            <div className="quick-templates-label">
+              <MessageCircle size={13} className="icon-inline" />
+              תבניות מהירות ל-WhatsApp
+            </div>
+            <div className="quick-templates-chips">
+              {!completed && (
+                <>
+                  <button type="button" className="quick-chip" onClick={() => sendTemplate('confirm')}>
+                    <Check size={13} aria-hidden="true" />
+                    אישור תור
+                  </button>
+                  <button type="button" className="quick-chip" onClick={() => sendTemplate('reminder')}>
+                    <BellRing size={13} aria-hidden="true" />
+                    תזכורת
+                  </button>
+                  <button type="button" className="quick-chip" onClick={() => sendTemplate('onway')}>
+                    <Phone size={13} aria-hidden="true" />
+                    בדרך?
+                  </button>
+                </>
+              )}
+              {completed && (
+                <>
+                  <button type="button" className="quick-chip" onClick={() => sendTemplate('thanks')}>
+                    <Heart size={13} aria-hidden="true" />
+                    תודה
+                  </button>
+                  <button type="button" className="quick-chip" onClick={() => sendTemplate('rebook')}>
+                    <Repeat size={13} aria-hidden="true" />
+                    הזמן בחזרה
+                  </button>
+                </>
+              )}
+            </div>
+            <p className="quick-templates-hint">
+              <span>השם, השעה והשירות של {(booking.clientName || '').split(/\s+/)[0] || 'הלקוח'} כבר נכנסים אוטומטית — רק לוחצים שלח ב-WhatsApp.</span>
+            </p>
+          </div>
         )}
 
         {/* AI message composer — relevant for any booking status */}
