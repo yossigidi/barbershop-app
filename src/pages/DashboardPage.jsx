@@ -346,16 +346,27 @@ export default function DashboardPage() {
       setVacationSaved({ from, to, reason });
     } catch (e) { alert('שגיאה: ' + e.message); }
   }
+  // Vacation-broadcast pre-fill — when the operator saves vacation
+  // dates, we hand the BroadcastModal a message body already filled
+  // with their dates so they can send to ALL clients in one batch
+  // (BroadcastModal loads every barbers/{uid}/clients/{phone} on open
+  // and opens one wa.me window per client, batched 5 at a time).
+  const [broadcastBody, setBroadcastBody] = useState(null);
+
   async function shareVacationToClients() {
     if (!vacationSaved) return;
     const fromLabel = formatDateHe(new Date(vacationSaved.from));
     const toLabel = formatDateHe(new Date(vacationSaved.to));
     const body =
-      `שלום! 🪒\n\n${barber.businessName} ייסגר ` +
-      (vacationSaved.from === vacationSaved.to ? `ב-${fromLabel}` : `מ-${fromLabel} עד ${toLabel}`) +
+      `שלום,\n\n${barber.businessName} ייסגר ` +
+      (vacationSaved.from === vacationSaved.to
+        ? `ב-${fromLabel}`
+        : `מ-${fromLabel} עד ${toLabel}`) +
       `${vacationSaved.reason ? ` (${vacationSaved.reason})` : ''}.\n\n` +
-      `כשנחזור אפשר לקבוע תור חדש בלינק:\n${shortLink}\n\nתודה על ההבנה! 🙏`;
-    window.open(whatsappUrl(body), '_blank');
+      `אשמח לקבוע תור לפני או אחרי.\nלקביעת תור: ${shortLink}\n\nתודה על ההבנה.`;
+    setBroadcastBody(body);
+    setShowBroadcast(true);
+    setVacationSaved(null);
   }
   async function removeVacation(v) {
     if (!confirm('להסיר חופש? התאריכים ייפתחו מחדש.')) return;
@@ -716,7 +727,9 @@ export default function DashboardPage() {
           barberId={user.uid}
           businessName={barber.businessName || 'העסק שלי'}
           shortLink={shortLink}
-          onClose={() => setShowBroadcast(false)}
+          initialBody={broadcastBody || undefined}
+          initialTemplateKey={broadcastBody ? 'custom' : undefined}
+          onClose={() => { setShowBroadcast(false); setBroadcastBody(null); }}
         />
       )}
       {showYesterday && (

@@ -80,12 +80,20 @@ function buildTemplates(shortLink) {
 const PROGRESS_KEY = 'bs_broadcastProgress_v1';
 const BATCH_SIZE = 5;
 
-export default function BroadcastModal({ open, onClose, barberId, businessName, shortLink }) {
+export default function BroadcastModal({ open, onClose, barberId, businessName, shortLink, initialBody, initialTemplateKey }) {
   const TEMPLATES = useMemo(() => buildTemplates(shortLink), [shortLink]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [templateKey, setTemplateKey] = useState('custom');
-  const [body, setBody] = useState('');
+  const [templateKey, setTemplateKey] = useState(initialTemplateKey || 'custom');
+  const [body, setBody] = useState(initialBody || '');
+  // Sync if the parent re-opens us with a different pre-fill (e.g. user
+  // saved a NEW vacation right after the previous one).
+  useEffect(() => {
+    if (!open) return;
+    if (initialBody !== undefined) setBody(initialBody || '');
+    if (initialTemplateKey !== undefined) setTemplateKey(initialTemplateKey || 'custom');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialBody, initialTemplateKey]);
   const [personalize, setPersonalize] = useState(true);
   const [activeOnly, setActiveOnly] = useState(false);
   const [sentIds, setSentIds] = useState(new Set());
