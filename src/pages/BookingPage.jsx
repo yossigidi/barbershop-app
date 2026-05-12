@@ -812,12 +812,48 @@ export default function BookingPage() {
           </button>
         </div>
 
-        {totalPrice > 0 && (barber.bitLink || barber.payboxLink || barber.bitPhone || barber.payboxPhone) && (
+        {totalPrice > 0 && (
           <div className="card">
             <h3 style={{ marginTop: 0 }}><CreditCard size={18} className="icon-inline" />שלם ₪{totalPrice}</h3>
             <p className="muted" style={{ marginTop: -6 }}>
-              לחץ → המספר יועתק ויפתח את האפליקציה.
+              {(barber.bitLink || barber.payboxLink || barber.bitPhone || barber.payboxPhone)
+                ? 'לחץ → המספר יועתק ויפתח את האפליקציה.'
+                : 'בחר/י אופן תשלום:'}
             </p>
+
+            {/* Cash payment — always an option. No action needed, it's
+                just an acknowledgment for the client + a reminder to the
+                barber. */}
+            <div
+              className="pay-cash-row"
+              style={{
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '14px 16px',
+                marginBottom: 10,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+              }}
+            >
+              <span style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                color: '#fff',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.1rem',
+                flex: 'none',
+              }}>
+                ₪
+              </span>
+              <div style={{ flex: 1 }}>
+                <strong style={{ display: 'block' }}>תשלום במזומן</strong>
+                <span className="muted" style={{ fontSize: '0.84rem' }}>
+                  משלמים בבית העסק בעת התור.
+                </span>
+              </div>
+            </div>
 
             {/* Order matters: PayBox first (one-tap URL with amount),
                 Bit last (always manual copy-paste — Bit dropped business

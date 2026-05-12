@@ -26,6 +26,10 @@ export default function AccessibleModal({
   const dialogRef = useRef(null);
   const previousActiveRef = useRef(null);
 
+  // Focus management — runs ONLY when `open` flips. Including onClose in
+  // deps caused the effect to re-run on every parent render (callers
+  // pass inline arrow functions), which re-grabbed focus mid-typing
+  // and made it impossible to type in any field except the first one.
   useEffect(() => {
     if (!open) return;
 
@@ -36,13 +40,34 @@ export default function AccessibleModal({
     // dialog DOM is mounted and any autofocus inside has a chance to set first.
     const t = setTimeout(() => {
       if (!dialogRef.current) return;
+      // If the user has already moved focus into another field inside the
+      // dialog (e.g. by tabbing or tapping), do NOT yank it back.
+      if (dialogRef.current.contains(document.activeElement)) return;
       const auto = dialogRef.current.querySelector('[autofocus], [data-autofocus]');
       if (auto) { auto.focus(); return; }
       const first = dialogRef.current.querySelector(FOCUSABLE);
       first?.focus();
     }, 0);
 
-    // Keyboard: Escape closes; Tab / Shift+Tab is trapped within the dialog.
+    // Lock background scroll while the modal is open
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      clearTimeout(t);
+      document.body.style.overflow = prevOverflow;
+      // Return focus to the trigger that opened the modal (if it still exists)
+      const prev = previousActiveRef.current;
+      if (prev && typeof prev.focus === 'function' && document.body.contains(prev)) {
+        prev.focus();
+      }
+    };
+  }, [open]);
+
+  // Keyboard handlers — Escape + Tab trap. Separated from the focus
+  // effect above so re-creating `onClose` doesn't invalidate focus.
+  useEffect(() => {
+    if (!open) return;
     function onKey(e) {
       if (e.key === 'Escape') { e.preventDefault(); onClose?.(); return; }
       if (e.key !== 'Tab') return;
@@ -56,21 +81,7 @@ export default function AccessibleModal({
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
     window.addEventListener('keydown', onKey);
-
-    // Lock background scroll while the modal is open
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-      // Return focus to the trigger that opened the modal (if it still exists)
-      const prev = previousActiveRef.current;
-      if (prev && typeof prev.focus === 'function' && document.body.contains(prev)) {
-        prev.focus();
-      }
-    };
+    return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
   if (!open) return null;
