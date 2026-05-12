@@ -509,13 +509,6 @@ export default function SettingsPage() {
 
         {showPayHelp && (
           <div className="card-inset" style={{ marginBottom: 16, fontSize: '0.9rem', lineHeight: 1.6 }}>
-            <strong>🅿️ PayPal (התשלום הכי חלק — סכום אוטומטי, ללא הקלדה)</strong>
-            <ol style={{ paddingInlineStart: 20, marginTop: 4, marginBottom: 12 }}>
-              <li>היכנס ל-<a href="https://www.paypal.com/il" target="_blank" rel="noopener">paypal.com/il</a> ופתח חשבון (חינם)</li>
-              <li>לך ל-<a href="https://www.paypal.com/paypalme/" target="_blank" rel="noopener">paypal.me</a> ובחר שם משתמש</li>
-              <li>הדבק את ה-username בלבד (למשל <code>danibarber</code>) — לא את ה-URL המלא</li>
-            </ol>
-
             <strong>🔵 Bit</strong>
             <p style={{ marginTop: 4, marginBottom: 0 }}>
               Bit מבוססת על מספרי טלפון בלבד — אין יותר חשבונות עסקיים נפרדים ואין לינקים לתשלום. מלא את <strong>"מספר Bit"</strong> למטה (המספר שלך באפליקציה). כשהלקוח לוחץ "שלם ב-Bit" המספר שלך מועתק לקליפבורד עם הסכום, והוא פותח את Bit, מדביק וישלם.
@@ -530,22 +523,6 @@ export default function SettingsPage() {
             </ol>
           </div>
         )}
-
-        <div className="field">
-          <label>🅿️ PayPal — שם משתמש (Best!)</label>
-          <input
-            value={paypalUsername}
-            onChange={(e) => setPaypalUsername(e.target.value)}
-            placeholder="danibarber"
-            dir="ltr"
-            style={{ direction: 'ltr', textAlign: 'left' }}
-          />
-          {paypalUsername && (
-            <p className="muted" style={{ fontSize: '0.75rem', marginTop: 4, direction: 'ltr', textAlign: 'left' }}>
-              paypal.me/{paypalUsername.replace(/^.*paypal\.me\//i, '')}/AMOUNT/ILS
-            </p>
-          )}
-        </div>
 
         <div className="field">
           <label>🟣 PayBox — לינק עסקי לתשלום</label>

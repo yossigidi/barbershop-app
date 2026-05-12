@@ -773,32 +773,17 @@ export default function BookingPage() {
           </button>
         </div>
 
-        {totalPrice > 0 && (barber.paypalUsername || barber.bitLink || barber.payboxLink || barber.bitPhone || barber.payboxPhone) && (
+        {totalPrice > 0 && (barber.bitLink || barber.payboxLink || barber.bitPhone || barber.payboxPhone) && (
           <div className="card">
             <h3 style={{ marginTop: 0 }}><CreditCard size={18} className="icon-inline" />שלם ₪{totalPrice}</h3>
             <p className="muted" style={{ marginTop: -6 }}>
-              {barber.paypalUsername ? 'PayPal פותח עם הסכום מוכן.' : 'לחץ → המספר יועתק ויפתח את האפליקציה.'}
+              לחץ → המספר יועתק ויפתח את האפליקציה.
             </p>
 
-            {barber.paypalUsername && (
-              <a
-                href={`https://www.paypal.com/paypalme/${barber.paypalUsername.replace(/^.*paypal\.me\//i, '')}/${totalPrice}/ILS`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: 'none', display: 'block' }}
-              >
-                <button className="btn-primary pay-btn pay-paypal" style={{ width: '100%', marginBottom: 8 }} type="button">
-                  <Wallet size={16} className="icon-inline" aria-hidden="true" />
-                  שלם ב-PayPal — תשלום מיידי
-                  <ExternalLink size={13} className="icon-inline" aria-hidden="true" style={{ opacity: 0.7 }} />
-                </button>
-              </a>
-            )}
-
-            {/* Order matters: PayPal first (auto-amount), PayBox next
-                (one-tap URL with amount), Bit last (always manual
-                copy-paste — Bit dropped business accounts mid-2026 so
-                no URL flow exists for it anymore). */}
+            {/* Order matters: PayBox first (one-tap URL with amount),
+                Bit last (always manual copy-paste — Bit dropped business
+                accounts mid-2026 so no URL flow exists for it anymore).
+                PayPal removed: Israelis don't use it for P2P. */}
 
             {barber.payboxLink && (
               <a href={barber.payboxLink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
