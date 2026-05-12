@@ -516,14 +516,16 @@ export default function SettingsPage() {
               <li>הדבק את ה-username בלבד (למשל <code>danibarber</code>) — לא את ה-URL המלא</li>
             </ol>
 
-            <strong>🔵 Bit לעסק</strong>
-            <ol style={{ paddingInlineStart: 20, marginTop: 4, marginBottom: 12 }}>
-              <li>פתח אפליקציית Bit → תפריט עליון → "Bit לעסק"</li>
-              <li>אם אין לך — לחץ "פתיחת חשבון עסקי" (חינם, דרך הבנק)</li>
-              <li>במסך עסק לחץ "קישור לתשלום" → "צור קישור" → העתק</li>
-              <li>הדבק כאן (URL מלא שמתחיל ב-https://)</li>
-              <li>אם אין לך עסקי — מלא רק את שדה "מספר Bit (גיבוי)" למטה</li>
-            </ol>
+            <strong>🔵 Bit</strong>
+            <p style={{ marginTop: 4, marginBottom: 4 }}>
+              ב-Bit היום אין URL לתשלום — האפליקציה מציגה רק <strong>QR לסריקה</strong>, וזה לא עוזר ללקוח שמזמין מהטלפון שלו (לא יסרוק QR על אותו מסך).
+            </p>
+            <p style={{ margin: '4px 0 8px' }}>
+              <strong>הפתרון המעשי:</strong> מלא <strong>"מספר Bit"</strong> למטה. כשהלקוח לוחץ "שלם ב-Bit" המספר שלך מועתק לקליפבורד עם הסכום — הוא פותח את Bit, מדביק וישלם. עובד לכולם, גם ללקוחות פרטיים בלי "Bit לעסק".
+            </p>
+            <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--text-dim)' }}>
+              אם בכל זאת יש לך לינק עסקי (חלק מהבנקים מציעים — בדוק עם הסניף שלך) — תוכל להדביק אותו בשדה "Bit — לינק עסקי" למטה.
+            </p>
 
             <strong>🟣 PayBox</strong>
             <ol style={{ paddingInlineStart: 20, marginTop: 4, marginBottom: 0 }}>
