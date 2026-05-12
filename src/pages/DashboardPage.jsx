@@ -551,6 +551,16 @@ export default function DashboardPage() {
           </button>
         )}
 
+        {/* Screen Wake Lock — keeps the device screen on for tablet/phone
+            use at the workstation. Renders only if the browser supports
+            the Wake Lock API (WakeLockToggle returns null otherwise). */}
+        <div className="card wake-lock-card">
+          <WakeLockToggle />
+          <p className="muted" style={{ margin: '6px 0 0', fontSize: '0.82rem', lineHeight: 1.5 }}>
+            כשהאופציה דלוקה — המסך של הטאבלט/טלפון לא יכבה לאורך כל היום. נשמר בין רענונים.
+          </p>
+        </div>
+
         <button className="btn-danger" onClick={logout} style={{ width: '100%' }}>יציאה</button>
       </>
     );
@@ -563,7 +573,6 @@ export default function DashboardPage() {
           <img src={barber.logoUrl} alt="logo" className="dashboard-logo" />
         )}
         <h1>{barber.businessName || 'העסק שלי'}</h1>
-        <WakeLockToggle />
       </div>
 
       <TrialExpiryBanner access={access} />

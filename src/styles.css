@@ -4832,21 +4832,21 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 /* ─────────────────────────────────────────────────────────────────────────
    Wake-lock toggle in dashboard header
    ─────────────────────────────────────────────────────────────────────── */
+.wake-lock-card { padding: 14px 16px !important; }
 .wake-lock-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  color: var(--text-dim);
-  padding: 6px 12px;
+  color: var(--text);
+  padding: 10px 16px;
   border-radius: 999px;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s var(--ease);
-  margin-inline-start: auto;
 }
 .wake-lock-toggle:hover { border-color: var(--gold); color: var(--text); }
 .wake-lock-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
