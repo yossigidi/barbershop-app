@@ -5836,3 +5836,97 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 }
 .promo-footer a { color: rgba(255, 255, 255, 0.70); text-decoration: none; }
 .promo-footer a:hover { color: var(--gold-2); }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   DASHBOARD — premium themed backdrop per profession
+   The dashboard used to sit on a flat cream surface that read as "generic
+   admin UI". Now it's layered:
+     · Fixed full-bleed photo per profession (the same hero photo the
+       client sees on the booking page — keeps the brand consistent)
+     · Heavy dark overlay so text on the cream cards stays high-contrast
+     · Gold-tinted radial halo for depth
+   Cards inside get a subtle glass elevation so they stand out against
+   the new backdrop without going dark.
+   ═════════════════════════════════════════════════════════════════════ */
+
+.app.dashboard {
+  position: relative;
+  background: transparent;
+  z-index: 1;
+}
+
+/* Fixed full-bleed photo — sits behind the entire viewport. We can't put
+   it on `body` directly because other pages (booking, promo, legal)
+   manage their own backgrounds; scoping to `.app.dashboard::before`
+   keeps it isolated to this page. */
+.app.dashboard::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+.app.dashboard[data-profession="barber"]::before {
+  background-image: url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600&q=70&auto=format&fit=crop');
+}
+.app.dashboard[data-profession="manicurist"]::before {
+  background-image: url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1600&q=70&auto=format&fit=crop');
+}
+.app.dashboard[data-profession="pedicurist"]::before {
+  background-image: url('https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1600&q=70&auto=format&fit=crop');
+}
+.app.dashboard[data-profession="cosmetician"]::before {
+  background-image: url('https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=1600&q=70&auto=format&fit=crop');
+}
+
+/* Overlay — softens the photo to a near-paper tone so cards stay
+   readable. The gold radial halo at top adds warmth and depth without
+   touching the photo itself. */
+.app.dashboard::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(184, 137, 58, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(250, 248, 243, 0.94) 0%, rgba(250, 248, 243, 0.97) 50%, rgba(250, 248, 243, 0.99) 100%);
+  pointer-events: none;
+}
+
+/* Cards lift slightly off the textured background — stronger shadows
+   and a hairline of warmth at the top edge make them feel like floating
+   tiles instead of flat boxes. */
+.app.dashboard .card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 1px 3px rgba(24, 24, 27, 0.04),
+    0 8px 24px rgba(24, 24, 27, 0.06);
+  position: relative;
+}
+
+/* The sticky black header gets a gold-thin top accent so it reads as
+   premium, not "admin panel". */
+.app.dashboard .dashboard-header {
+  border-top: 1px solid rgba(184, 137, 58, 0.45);
+}
+
+/* Bottom nav — already dark; subtle gold glow so it reads premium */
+.app.dashboard .bottom-nav {
+  box-shadow: 0 -8px 24px rgba(24, 24, 27, 0.10), 0 -1px 0 rgba(184, 137, 58, 0.20);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app.dashboard::before { background-attachment: scroll; }
+}
+
+/* iOS Safari can't render `background-attachment: fixed` correctly on
+   elements that scroll — falls back to scroll-with-content which looks
+   weird. Detect with `@supports` and disable on iOS-like contexts. */
+@supports (-webkit-touch-callout: none) {
+  .app.dashboard::before { background-attachment: scroll; }
+}

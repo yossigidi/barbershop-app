@@ -567,7 +567,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="app dashboard">
+    <div
+      className="app dashboard"
+      data-profession={barber?.profession || barber?.professions?.[0] || 'barber'}
+    >
       <div className="header dashboard-header">
         {barber.logoUrl && (
           <img src={barber.logoUrl} alt="logo" className="dashboard-logo" />
