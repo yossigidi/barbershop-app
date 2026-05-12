@@ -10,10 +10,18 @@
     "not_found_handling": "single-page-application"
   },
   "triggers": {
-    // Cron schedules — `event.cron` in worker/index.js scheduled() dispatches:
+    // Cron schedules — `event.cron` in worker/index.js scheduled() dispatches.
+    // Cloudflare's cron parser rejects comma lists in the weekday field
+    // (api error 10100), so the Sun/Tue/Thu schedule is expanded into
+    // three separate single-day entries.
     //   "0 6 * * *"      → handleCronBilling (Tranzila daily renewal)
-    //   "0 8 * * 0,2,4"  → handleCronFacebookPost (Sun/Tue/Thu ~10 IL)
-    "crons": ["0 6 * * *", "0 8 * * 0,2,4"]
+    //   "0 8 * * 0|2|4"  → handleCronFacebookPost (~10 IL on those days)
+    "crons": [
+      "0 6 * * *",
+      "0 8 * * 0",
+      "0 8 * * 2",
+      "0 8 * * 4"
+    ]
   },
   "observability": {
     "enabled": true

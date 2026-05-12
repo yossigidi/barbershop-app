@@ -94,7 +94,13 @@ export default {
       return;
     }
     // Facebook post — runs Sun / Tue / Thu at 08:00 UTC (10-11 IL with DST).
-    if (event.cron === '0 8 * * 0,2,4') {
+    // Cloudflare doesn't accept comma lists in the weekday field, so
+    // the three days are registered as separate crons; match any of them.
+    if (
+      event.cron === '0 8 * * 0' ||
+      event.cron === '0 8 * * 2' ||
+      event.cron === '0 8 * * 4'
+    ) {
       ctx.waitUntil(
         handleCronFacebookPost(env).catch((e) => console.error('FB_CRON_FATAL', e?.message, e?.stack)),
       );
