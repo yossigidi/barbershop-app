@@ -6179,3 +6179,133 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   inset-inline-start: 4px;
   inset-inline-end: 4px;
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   DASHBOARD — premium purple/blue palette
+   The barber's internal dashboard gets a distinct purple+indigo theme
+   (separate from Toron's public gold+black brand on landing/booking).
+   Scoped to .app.dashboard so the rest of the app is unaffected.
+   ═════════════════════════════════════════════════════════════════════ */
+.app.dashboard {
+  --d-bg: #F5F3FF;
+  --d-surface: #FFFFFF;
+  --d-surface-2: #EEF2FF;
+  --d-primary: #7C3AED;
+  --d-primary-2: #6D28D9;
+  --d-indigo: #4F46E5;
+  --d-blue: #3B82F6;
+  --d-text: #1E1B4B;
+  --d-text-dim: #4F46E5;
+  --d-border: #E0E7FF;
+  --d-success: #10B981;
+}
+
+/* Replace the profession-photo fixed backdrop with a soft purple gradient
+   wash so the dashboard feels like a calm admin surface, not a marketing
+   page. The photo backdrop (added earlier) still ships for branding
+   moments but is dimmed dramatically. */
+.app.dashboard::after {
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(124, 58, 237, 0.10), transparent 65%),
+    radial-gradient(ellipse 50% 30% at 100% 70%, rgba(59, 130, 246, 0.06), transparent 65%),
+    linear-gradient(180deg, rgba(245, 243, 255, 0.97) 0%, rgba(245, 243, 255, 0.99) 100%);
+}
+
+/* Sticky header — gradient purple→indigo→blue ribbon with a subtle
+   shimmer line at the top. Replaces the previous near-black bar. */
+.app.dashboard .dashboard-header {
+  background:
+    linear-gradient(135deg, var(--d-primary) 0%, var(--d-indigo) 60%, var(--d-blue) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 4px 16px rgba(124, 58, 237, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+}
+.app.dashboard .dashboard-header::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45) 50%, transparent);
+}
+.app.dashboard .dashboard-header h1 { color: #FFFFFF; }
+.app.dashboard .dashboard-header .dashboard-logo {
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+/* Cards — white-on-lavender with soft purple border. The previous
+   white-cream feel is replaced with the new palette throughout the
+   dashboard. */
+.app.dashboard .card {
+  background: var(--d-surface);
+  border: 1px solid var(--d-border);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 1px 3px rgba(79, 70, 229, 0.04),
+    0 8px 24px rgba(79, 70, 229, 0.06);
+  color: var(--d-text);
+}
+.app.dashboard .card h2,
+.app.dashboard .card h3,
+.app.dashboard .card h4 { color: var(--d-text); }
+.app.dashboard .muted { color: var(--d-text-dim); opacity: 0.75; }
+
+/* Primary action buttons inside dashboard re-skin to purple gradient */
+.app.dashboard .btn-primary {
+  background: linear-gradient(135deg, var(--d-primary), var(--d-indigo));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    0 6px 14px rgba(124, 58, 237, 0.30);
+}
+.app.dashboard .btn-primary:hover {
+  background: linear-gradient(135deg, var(--d-primary-2), #3730A3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 10px 22px rgba(124, 58, 237, 0.40);
+}
+
+/* The "🪒 קטלוג מהיר" gold CTA stays gold on purpose — keeps the brand
+   accent visible for the most important upgrade action. No override. */
+
+/* Bottom nav — blends with the purple theme */
+.app.dashboard .bottom-nav {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 243, 255, 0.98) 100%);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  box-shadow: 0 -8px 24px rgba(79, 70, 229, 0.08), 0 -1px 0 var(--d-border);
+}
+.app.dashboard .bottom-nav .nav-tab {
+  color: rgba(30, 27, 75, 0.55);
+}
+.app.dashboard .bottom-nav .nav-tab.active {
+  color: var(--d-primary);
+}
+.app.dashboard .bottom-nav .nav-tab.active .nav-icon {
+  color: var(--d-primary);
+}
+
+/* Timeline accents inside dashboard pick up purple */
+.app.dashboard .dt-hour-line { border-top-color: rgba(124, 58, 237, 0.10); }
+.app.dashboard .dt-booking {
+  background: linear-gradient(135deg, var(--d-primary), var(--d-indigo));
+  color: #FFFFFF;
+}
+.app.dashboard .dt-booking.in-progress {
+  background: linear-gradient(135deg, #10B981, #059669);
+}
+.app.dashboard .dt-booking.completed {
+  background: linear-gradient(135deg, #94A3B8, #64748B);
+  opacity: 0.85;
+}
+.app.dashboard .dt-free {
+  background: rgba(124, 58, 237, 0.04);
+  border: 1px dashed rgba(124, 58, 237, 0.30);
+  color: var(--d-primary);
+}
+.app.dashboard .dt-free:hover {
+  background: rgba(124, 58, 237, 0.10);
+  border-color: var(--d-primary);
+}
+
+/* Wake lock card / accent cards — purple instead of gold */
+.app.dashboard .wake-lock-toggle.is-on {
+  background: linear-gradient(135deg, var(--d-primary), var(--d-blue));
+  color: #FFFFFF;
+}
