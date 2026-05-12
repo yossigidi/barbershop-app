@@ -52,17 +52,25 @@ export default function TomorrowReminders({
   }, [sent, sentKey]);
 
   function buildMsg(b, isToday) {
+    // Neutral, ungendered Hebrew — same wording works for any client
+    // regardless of name / gender. The barber sends the same template
+    // to everyone in the day so we keep it factual + polite, no
+    // "לך/לך/ה" wording that would feel oddly informal across the
+    // whole client list. Also drops profession-specific emojis (was
+    // "💈" — wrong for manicurist / cosmetician).
     const dateLabel = formatDateHe(new Date(b.date));
+    const firstName = (b.clientName || '').split(/\s+/)[0] || '';
     const intro = isToday
-      ? `שלום ${b.clientName}! 👋 תזכורת קצרה — היש לך תור היום ב-${businessName}:`
-      : `שלום ${b.clientName}! 👋\n\nתזכורת לתור מחר ב-${businessName}:`;
-    return (
-      `${intro}\n` +
-      `📅 ${dateLabel} בשעה ${b.time}` +
-      (b.serviceName ? `\n💈 ${b.serviceName}` : '') +
-      (b.addons?.length ? ` + ${b.addons.map((a) => a.name).join(', ')}` : '') +
-      `\n\nנתראה!`
-    );
+      ? `שלום ${firstName},\nתזכורת לתור היום ב-${businessName}:`
+      : `שלום ${firstName},\nתזכורת לתור מחר ב-${businessName}:`;
+    const lines = [intro, '', `תאריך: ${dateLabel}`, `שעה: ${b.time}`];
+    if (b.serviceName) {
+      let svcLine = `שירות: ${b.serviceName}`;
+      if (b.addons?.length) svcLine += ` (+ ${b.addons.map((a) => a.name).join(', ')})`;
+      lines.push(svcLine);
+    }
+    lines.push('', 'נתראה.');
+    return lines.join('\n');
   }
 
   function sendOne(b) {
