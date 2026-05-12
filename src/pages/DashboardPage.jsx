@@ -391,9 +391,50 @@ export default function DashboardPage() {
   // --- Tab content ---
   const todayHeading = `${DAY_LABELS_HE[dayKeyFromDate(today)]}, ${formatDateHe(today)}`;
 
+  // Quick-actions row — sits at the top of every main tab so the most
+  // common "blast to all clients" CTA is reachable in one tap (used to
+  // live only in the "עוד" tab where operators couldn't find it).
+  function QuickActionsRow() {
+    return (
+      <div className="quick-actions-row">
+        <button
+          type="button"
+          className="quick-action-btn quick-action-broadcast"
+          onClick={() => setShowBroadcast(true)}
+          aria-label="שלח הודעה לכל הלקוחות"
+        >
+          <Megaphone size={18} aria-hidden="true" />
+          <span>הודעה לכולם</span>
+        </button>
+        {tomorrowBookingsCount > 0 && (
+          <button
+            type="button"
+            className="quick-action-btn quick-action-reminders"
+            onClick={() => setShowTomorrow(true)}
+            aria-label="שלח תזכורת לכל לקוחות מחר"
+          >
+            <Send size={18} aria-hidden="true" />
+            <span>תזכורת מחר ({tomorrowBookingsCount})</span>
+          </button>
+        )}
+        <button
+          type="button"
+          className="quick-action-btn quick-action-vacation"
+          onClick={() => setShowVacation(true)}
+          aria-label="הוסף חופש"
+        >
+          <Palmtree size={18} aria-hidden="true" />
+          <span>חופש</span>
+        </button>
+      </div>
+    );
+  }
+
   function TodayTab() {
     return (
       <>
+        <QuickActionsRow />
+
         <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
 
         <AIBriefingCard businessName={barber.businessName} />
@@ -490,6 +531,8 @@ export default function DashboardPage() {
   function CalendarTab() {
     return (
       <>
+        <QuickActionsRow />
+
         <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
 
         <AIBriefingCard businessName={barber.businessName} />

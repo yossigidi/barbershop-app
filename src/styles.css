@@ -6649,3 +6649,46 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   color: var(--text-dim);
   line-height: 1.45;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Quick actions row — sits at the very top of the Today / Calendar tabs
+   so the most common "blast" CTAs (broadcast / tomorrow reminders /
+   vacation) are reachable in one tap. Was previously buried inside the
+   "עוד" tab; operators were missing them entirely.
+   ─────────────────────────────────────────────────────────────────────── */
+.quick-actions-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.quick-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 12px;
+  border-radius: 14px;
+  border: none;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  color: #FFFFFF;
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), filter 0.15s var(--ease);
+}
+.quick-action-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.quick-action-btn:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 3px; }
+
+.quick-action-broadcast {
+  background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%);
+  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.32);
+}
+.quick-action-reminders {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  box-shadow: 0 6px 14px rgba(37, 211, 102, 0.32);
+}
+.quick-action-vacation {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.32);
+}
