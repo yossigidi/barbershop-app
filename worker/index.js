@@ -93,17 +93,19 @@ export default {
       );
       return;
     }
-    // Facebook post — runs Sun / Tue / Thu at 08:00 UTC (10-11 IL with DST).
-    // Cloudflare doesn't accept comma lists in the weekday field, so
-    // the three days are registered as separate crons; match any of them.
-    if (
-      event.cron === '0 8 * * 0' ||
-      event.cron === '0 8 * * 2' ||
-      event.cron === '0 8 * * 4'
-    ) {
-      ctx.waitUntil(
-        handleCronFacebookPost(env).catch((e) => console.error('FB_CRON_FATAL', e?.message, e?.stack)),
-      );
+    // Facebook post — registered as daily 08:00 UTC because Cloudflare's
+    // cron parser refused weekday-specific patterns. The handler itself
+    // skips out on days other than Sun (0) / Tue (2) / Thu (4) so the
+    // net schedule is the same: 3 posts/week ~10-11 IL.
+    if (event.cron === '0 8 * * *') {
+      const day = new Date().getUTCDay();
+      if (day === 0 || day === 2 || day === 4) {
+        ctx.waitUntil(
+          handleCronFacebookPost(env).catch((e) => console.error('FB_CRON_FATAL', e?.message, e?.stack)),
+        );
+      } else {
+        console.log('FB_CRON_SKIP day=', day);
+      }
       return;
     }
     console.warn('CRON_UNHANDLED', event.cron);
