@@ -89,6 +89,111 @@ export default function DayTimeline({
     hours.push({ h, top: (h * 60 - dayStart) * PX_PER_MIN });
   }
 
+  // Single-chair mode → render the original flat structure (matches what
+  // the dashboard was before multi-chair shipped). The grid + chair-
+  // columns layout only kicks in when there's actually >1 chair to show.
+  if (chairs === 1) {
+    const occ = perChair[0];
+    const free = freePerChair[0];
+    return (
+      <div className="day-timeline" style={{ height: totalHeight + 10 }}>
+        {hours.map(({ h, top }) => (
+          <div key={h} className="dt-hour" style={{ top }}>
+            <span className="dt-hour-label">{`${String(h).padStart(2, '0')}:00`}</span>
+            <div className="dt-hour-line" />
+          </div>
+        ))}
+        {free.flatMap((f, fi) => {
+          if (f.end - f.start < 20) return [];
+          const cells = [];
+          for (let s = f.start; s + 20 <= f.end; s += 20) {
+            const top = (s - dayStart) * PX_PER_MIN;
+            const height = 20 * PX_PER_MIN - 1;
+            cells.push(
+              <div
+                key={`f${fi}-${s}`}
+                className="dt-free"
+                style={{ top, height }}
+                onClick={() => onFreeSlotTap?.(minToTime(s), 20, 1)}
+              >
+                <span className="dt-free-label">+ {minToTime(s)}</span>
+              </div>
+            );
+          }
+          return cells;
+        })}
+        {occ.map((o, i) => {
+          const top = (o.start - dayStart) * PX_PER_MIN;
+          const height = (o.end - o.start) * PX_PER_MIN;
+          if (o.kind === 'break') {
+            return (
+              <div key={`br${i}`} className="dt-break" style={{ top, height }}>
+                <Coffee size={13} className="icon-inline" />הפסקה
+              </div>
+            );
+          }
+          if (o.kind === 'block') {
+            const bl = o.data;
+            return (
+              <div
+                key={bl.id}
+                className={`dt-block ${bl.wholeDay ? 'whole-day' : ''}`}
+                style={{ top, height }}
+                onClick={() => !bl.wholeDay && onBlockTap?.(bl)}
+              >
+                <Ban size={13} className="icon-inline" />{bl.reason || 'חסום'}
+                {height > 40 && bl.duration > 60 && (
+                  <div className="dt-block-meta">{Math.round(bl.duration / 60)} שעות</div>
+                )}
+              </div>
+            );
+          }
+          const b = o.data;
+          const inProgress = b.status === 'inProgress';
+          const completed = b.status === 'completed';
+          const compact = height < 32;
+          return (
+            <div
+              key={b.id}
+              className={`dt-booking ${inProgress ? 'in-progress' : ''} ${completed ? 'completed' : ''} ${compact ? 'compact' : ''}`}
+              style={{ top, height }}
+              onClick={() => onBookingTap?.(b)}
+            >
+              {compact ? (
+                <div className="dt-compact">
+                  <span className="dt-name-compact">{b.clientName || 'תור'}</span>
+                  <span className="dt-time-compact">
+                    {b.time}
+                    {inProgress && <span className="dt-badge" style={{ color: '#4ade80', marginInlineStart: 4 }}><Circle size={8} fill="currentColor" /></span>}
+                    {completed && <span className="dt-badge" style={{ marginInlineStart: 4 }}><Check size={9} /></span>}
+                    {b.recurringId && <span className="dt-badge" style={{ marginInlineStart: 4 }}><Repeat size={9} /></span>}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="dt-name">
+                    {b.clientName || 'תור'}
+                    {inProgress && <span className="dt-badge" style={{ color: '#4ade80', marginInlineStart: 6 }}><Circle size={9} fill="currentColor" /></span>}
+                    {completed && <span className="dt-badge" style={{ marginInlineStart: 6 }}><Check size={11} /></span>}
+                    {b.recurringId && <span className="dt-badge" style={{ marginInlineStart: 6 }}><Repeat size={11} /></span>}
+                  </div>
+                  <div className="dt-time">{b.time}–{addMinToTime(b.time, b.duration || 20)}</div>
+                  {b.serviceName && height > 56 && (
+                    <div className="dt-svc">
+                      {b.serviceName}
+                      {b.addons?.length > 0 && ` + ${b.addons.length} תוספות`}
+                      {b.price > 0 && ` • ₪${b.price}`}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className={`day-timeline ${chairs > 1 ? 'is-multi-chair' : ''}`}>
       {/* Per-chair column header (only when multi-chair) */}
