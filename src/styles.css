@@ -6309,3 +6309,282 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(135deg, var(--d-primary), var(--d-blue));
   color: #FFFFFF;
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   MorningSummaryCard — redesign
+   Replaces the old bullet-list "morning summary" with a layered
+   storytelling layout:
+     1. Hero greeting card (gradient backdrop + greeting text + share)
+     2. 3-card stat grid (bookings / revenue / next-up)
+     3. Spotlight card (current customer or next, with LIVE pulse)
+   Liquid-glass treatment: translucent surfaces, soft backdrop blur,
+   smooth gradient borders, purple/blue palette.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* Hero greeting */
+.msc-hero {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  padding: 22px 22px 24px;
+  margin-bottom: 12px;
+  color: #FFFFFF;
+  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.22), 0 4px 10px rgba(79, 70, 229, 0.12);
+}
+.msc-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 0% 100%, rgba(59, 130, 246, 0.55), transparent 60%),
+    radial-gradient(ellipse 50% 70% at 100% 0%, rgba(167, 139, 250, 0.45), transparent 65%),
+    linear-gradient(135deg, #7C3AED 0%, #4F46E5 55%, #3B82F6 100%);
+  z-index: 0;
+}
+.msc-hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18) 0%, transparent 30%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.12) 0%, transparent 30%);
+  mix-blend-mode: overlay;
+}
+.msc-hero-content {
+  position: relative;
+  z-index: 1;
+}
+.msc-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.msc-icon-wrap {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.20);
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex: none;
+}
+.msc-greeting {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+.msc-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.15s var(--ease);
+}
+.msc-share-btn:hover { background: rgba(255, 255, 255, 0.28); }
+
+/* Empty state hero — softer gradient, single column */
+.msc-empty .msc-hero-bg {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 20%, rgba(167, 139, 250, 0.50), transparent 60%),
+    linear-gradient(135deg, #818CF8 0%, #A78BFA 55%, #93C5FD 100%);
+}
+.msc-empty {
+  text-align: center;
+  padding: 28px 22px 30px;
+}
+.msc-empty .msc-icon-wrap { margin: 0 auto 12px; }
+.msc-empty .msc-greeting { font-size: 1.4rem; margin-bottom: 6px; }
+.msc-empty-line {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 4px 0 4px;
+  color: #FFFFFF;
+}
+.msc-empty-sub {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 320px;
+  margin-inline: auto;
+}
+
+/* Stat grid — 3 cards, responsive */
+.msc-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+@media (min-width: 540px) {
+  .msc-stats { grid-template-columns: repeat(3, 1fr); }
+  .msc-stat-card-wide { grid-column: auto; }
+}
+.msc-stat-card-wide {
+  grid-column: 1 / -1;
+}
+.msc-stat-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(124, 58, 237, 0.14);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.msc-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.14);
+}
+.msc-stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex: none;
+}
+.msc-stat-icon-purple { background: linear-gradient(135deg, #7C3AED, #6D28D9); }
+.msc-stat-icon-indigo { background: linear-gradient(135deg, #4F46E5, #4338CA); }
+.msc-stat-icon-blue   { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+.msc-stat-body { flex: 1; min-width: 0; }
+.msc-stat-label {
+  font-size: 0.72rem;
+  color: #6366F1;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+}
+.msc-stat-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.65rem;
+  color: #1E1B4B;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+}
+.msc-stat-sub {
+  font-size: 0.74rem;
+  color: #6366F1;
+  margin-top: 2px;
+}
+
+/* Spotlight — featured current/next booking */
+.msc-spotlight {
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: start;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: 16px;
+  padding: 16px 18px;
+  font-family: inherit;
+  cursor: pointer;
+  margin-bottom: 12px;
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.10);
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+  overflow: hidden;
+}
+.msc-spotlight:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(79, 70, 229, 0.18);
+}
+.msc-spotlight-active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02));
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.30), 0 4px 14px rgba(16, 185, 129, 0.18);
+}
+.msc-spotlight-done {
+  background: rgba(248, 250, 252, 0.95);
+  border-color: rgba(148, 163, 184, 0.30);
+}
+.msc-spotlight-pulse {
+  position: absolute;
+  inset-inline-end: 16px;
+  top: 16px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.20);
+  animation: msc-pulse 1.6s ease-in-out infinite;
+}
+@keyframes msc-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.20); }
+  50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .msc-spotlight-pulse { animation: none; }
+}
+.msc-spotlight-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #6366F1;
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+.msc-spotlight-active .msc-spotlight-head { color: #059669; }
+.msc-spotlight-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: #1E1B4B;
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+}
+.msc-spotlight-meta {
+  font-size: 0.88rem;
+  color: #6366F1;
+}
+
+.msc-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-inline-start: 4px;
+}
+.msc-pill-live {
+  background: #10B981;
+  color: #FFFFFF;
+}
+.msc-pill-soon {
+  background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  color: #FFFFFF;
+}
+
+/* When dashboard is in purple theme, ensure the old morning-card CSS
+   doesn't bleed in (some legacy selectors). The new components carry
+   their own .msc-* names so override risk is minimal. */
