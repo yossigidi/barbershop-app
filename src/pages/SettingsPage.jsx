@@ -21,6 +21,9 @@ function emptyService() {
 function emptyAddon() {
   return { id: Math.random().toString(36).slice(2, 9), name: '', duration: 0, price: 0 };
 }
+function emptyProduct() {
+  return { id: Math.random().toString(36).slice(2, 9), name: '', price: 0, description: '' };
+}
 const ADDON_DURATION_OPTIONS = [0, 10, 20, 30, 40, 50, 60];
 
 export default function SettingsPage() {
@@ -37,6 +40,11 @@ export default function SettingsPage() {
   const [hours, setHours] = useState(defaultWorkingHours());
   const [services, setServices] = useState([]);
   const [addons, setAddons] = useState([]);
+  // Products — physical retail items the barber sells alongside services
+  // (shampoo, wax, gel, accessories). For now we only collect them in
+  // Settings; future iterations can surface them on the booking page or
+  // for in-person sale tracking.
+  const [products, setProducts] = useState([]);
   const [defaultDuration, setDefaultDuration] = useState(20);
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [professions, setProfessions] = useState(['barber']);
@@ -83,6 +91,7 @@ export default function SettingsPage() {
         setHours({ ...defaultWorkingHours(), ...(data.workingHours || {}) });
         setServices(Array.isArray(data.services) ? data.services : []);
         setAddons(Array.isArray(data.addons) ? data.addons : []);
+        setProducts(Array.isArray(data.products) ? data.products : []);
         setDefaultDuration(data.defaultDuration || 20);
         setDefaultPrice(data.defaultPrice || 0);
         setProfessions(readProfessions(data));
@@ -148,6 +157,15 @@ export default function SettingsPage() {
   function removeAddon(id) {
     setAddons((list) => list.filter((a) => a.id !== id));
   }
+  function updateProduct(id, patch) {
+    setProducts((list) => list.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }
+  function addProduct() {
+    setProducts((list) => [...list, emptyProduct()]);
+  }
+  function removeProduct(id) {
+    setProducts((list) => list.filter((p) => p.id !== id));
+  }
 
   async function save() {
     setSlugError('');
@@ -191,6 +209,14 @@ export default function SettingsPage() {
           price: Number(a.price) || 0,
         }))
         .filter((a) => a.name.length > 0);
+      const cleanedProducts = products
+        .map((p) => ({
+          id: p.id,
+          name: (p.name || '').trim(),
+          description: (p.description || '').trim(),
+          price: Number(p.price) || 0,
+        }))
+        .filter((p) => p.name.length > 0);
       await updateDoc(doc(db, 'barbers', user.uid), {
         businessName: businessName.trim() || 'העסק שלי',
         logoUrl: logoUrl || '',
@@ -202,6 +228,7 @@ export default function SettingsPage() {
         workingHours: hours,
         services: cleanedServices,
         addons: cleanedAddons,
+        products: cleanedProducts,
         defaultDuration: Number(defaultDuration) || 20,
         defaultPrice: Number(defaultPrice) || 0,
         professions,
@@ -657,6 +684,56 @@ export default function SettingsPage() {
         ))}
         <button className="btn-secondary" onClick={addAddon} type="button" style={{ width: '100%', marginTop: 8 }}>
           + הוסף תוספת
+        </button>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Sparkles size={18} className="icon-inline" />מוצרים למכירה</h3>
+        <p className="muted" style={{ marginTop: -6 }}>
+          מוצרים פיזיים שאת/ה מוכר/ת בעסק (שמפו, ג'ל, שעוות, אביזרים). מוצגים כקטלוג ללקוח — בלי עגלת קניות עדיין.
+        </p>
+        {products.map((p) => (
+          <div key={p.id} className="service-row">
+            <input
+              placeholder="שם המוצר (לדוגמה: שמפו מקצועי)"
+              value={p.name}
+              onChange={(e) => updateProduct(p.id, { name: e.target.value })}
+              style={{ marginBottom: 6 }}
+            />
+            <input
+              placeholder="תיאור קצר (אופציונלי)"
+              value={p.description}
+              onChange={(e) => updateProduct(p.id, { description: e.target.value })}
+              style={{ marginBottom: 6, fontSize: '0.88rem' }}
+            />
+            <div className="row">
+              <div style={{ flex: 1 }}>
+                <label className="muted" style={{ fontSize: '0.85rem' }}>מחיר ₪</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={p.price}
+                  onChange={(e) => updateProduct(p.id, { price: e.target.value })}
+                />
+              </div>
+              <div style={{ flex: 'none' }}>
+                <label className="muted" style={{ fontSize: '0.85rem', visibility: 'hidden' }}>מחק</label>
+                <button
+                  className="btn-danger"
+                  style={{ padding: '12px 14px' }}
+                  onClick={() => removeProduct(p.id)}
+                  type="button"
+                  aria-label="מחק"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        <button className="btn-secondary" onClick={addProduct} type="button" style={{ width: '100%', marginTop: 8 }}>
+          + הוסף מוצר
         </button>
       </div>
 

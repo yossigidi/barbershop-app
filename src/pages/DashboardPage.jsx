@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
   MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X, Sparkles,
-  Wallet, Megaphone,
+  Wallet, Megaphone, Trash2,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useSubscription } from '../hooks/useSubscription';
@@ -222,6 +222,14 @@ export default function DashboardPage() {
       setPushStatus('enabled');
     } catch (e) { console.error(e); setPushStatus('error'); }
   }
+  // After a cancellation we surface the matching waitlist clients in a
+  // modal so the barber can hit one WhatsApp button per person — each
+  // opens wa.me directly to that client's number with a pre-filled
+  // message. Beats the previous flow which only opened a generic
+  // (recipient-less) wa.me and asked the barber to forward manually.
+  const [waitlistNotify, setWaitlistNotify] = useState(null);
+  // shape: { date, time, clients: [{ clientName, clientPhone, ... }] }
+
   async function cancelBooking(b) {
     if (!confirm(`לבטל את התור של ${b.clientName} ב-${b.time}?`)) return;
     try {
@@ -230,12 +238,31 @@ export default function DashboardPage() {
         collection(db, 'barbers', user.uid, 'waitlist'),
         where('fromDate', '<=', b.date),
       ));
-      const matches = wl.docs.map((d) => ({ id: d.id, ...d.data() })).filter((w) => (w.toDate || w.fromDate) >= b.date);
-      if (matches.length > 0 && confirm(`📢 ${matches.length} לקוחות ממתינים. לפתוח WhatsApp עם הודעה?`)) {
-        const text = `שלום! 🎉 התפנה תור ב-${barber.businessName} ל-${formatDateHe(new Date(b.date))} בשעה ${b.time}.\nהיכנס מהר ללינק: ${shortLink}`;
-        window.open(whatsappUrl(text), '_blank');
+      const matches = wl.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((w) => (w.toDate || w.fromDate) >= b.date);
+      if (matches.length > 0) {
+        setWaitlistNotify({ date: b.date, time: b.time, clients: matches });
       }
     } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+
+  function whatsappForWaitlist(client) {
+    if (!waitlistNotify) return '';
+    const text =
+      `שלום ${client.clientName || ''}! 🎉\n` +
+      `התפנה תור ב-${barber.businessName} ל-${formatDateHe(new Date(waitlistNotify.date))} בשעה ${waitlistNotify.time}.\n` +
+      `אם זה מתאים — הזמן/י מהר בלינק:\n${shortLink}`;
+    return whatsappUrl(text, client.clientPhone || '');
+  }
+
+  async function removeWaitlistEntry(entry) {
+    try {
+      await deleteDoc(doc(db, 'barbers', user.uid, 'waitlist', entry.id));
+      setWaitlistNotify((cur) =>
+        cur ? { ...cur, clients: cur.clients.filter((c) => c.id !== entry.id) } : cur,
+      );
+    } catch { /* non-fatal — they can re-cancel later */ }
   }
   async function startBooking(b) {
     try { await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'inProgress', startedAt: serverTimestamp() }); }
@@ -655,6 +682,84 @@ export default function DashboardPage() {
           googleReviewUrl={barber.googleReviewUrl || ''}
           onClose={() => setShowYesterday(false)}
         />
+      )}
+      {waitlistNotify && waitlistNotify.clients.length > 0 && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setWaitlistNotify(null)}
+          role="presentation"
+        >
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wl-notify-title"
+            dir="rtl"
+            lang="he"
+          >
+            <h2 id="wl-notify-title">
+              <MessageCircle size={20} className="icon-inline" />
+              {waitlistNotify.clients.length} לקוחות ממתינים לתור
+            </h2>
+            <p className="muted" style={{ marginTop: -6, fontSize: '0.9rem' }}>
+              התור של {formatDateHe(new Date(waitlistNotify.date))} בשעה {waitlistNotify.time} התפנה.
+              לחץ/י על "WhatsApp" ליד כל לקוח כדי לשלוח הודעה אישית עם הלינק להזמנה.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
+              {waitlistNotify.clients.map((c) => (
+                <div
+                  key={c.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: 12,
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-sm)',
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong style={{ display: 'block' }}>{c.clientName || 'ללא שם'}</strong>
+                    <span className="muted" style={{ fontSize: '0.84rem', direction: 'ltr' }}>
+                      {c.clientPhone || ''}
+                    </span>
+                  </div>
+                  <a
+                    href={whatsappForWaitlist(c)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary"
+                    style={{ padding: '8px 14px', textDecoration: 'none', fontSize: '0.9rem' }}
+                  >
+                    <MessageCircle size={14} className="icon-inline" />
+                    WhatsApp
+                  </a>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ padding: '8px 10px' }}
+                    onClick={() => removeWaitlistEntry(c)}
+                    aria-label="הסר מרשימת המתנה"
+                    title="הסר מרשימת המתנה"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="spacer" />
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setWaitlistNotify(null)}
+              style={{ width: '100%' }}
+            >
+              סגור
+            </button>
+          </div>
+        </div>
       )}
       {actionFor && (
         <BookingActionSheet
