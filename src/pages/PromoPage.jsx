@@ -134,6 +134,14 @@ export default function PromoPage() {
       <main id="main">
         {/* ── Hero ──────────────────────────────────────────────────── */}
         <section className="promo-hero">
+          <div
+            className="promo-hero-photo"
+            aria-hidden="true"
+            style={{
+              backgroundImage:
+                'url(https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=1600&q=75&auto=format&fit=crop)',
+            }}
+          />
           <div className="promo-hero-bg" aria-hidden="true" />
 
           <div className="promo-hero-inner">
