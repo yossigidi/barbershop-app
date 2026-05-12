@@ -18,6 +18,7 @@ import { handleSendConfirmationEmail } from './email.js';
 import { handleBrevoStatus, handleAuthDomainsStatus } from './admin.js';
 import { handleCronBilling } from './cron.js';
 import { handleCronFacebookPost, postToFacebookNow } from './fb-cron.js';
+import { maybeRewriteOg } from './og.js';
 
 const apiHandlers = {
   '/api/notify': handleNotify,
@@ -63,6 +64,18 @@ export default {
           headers: { 'Content-Type': 'application/json' },
         });
       }
+    }
+
+    // Barber booking pages (/b/<code> or /<slug>) get their OG meta
+    // tags rewritten with the barber's logo + business name so that
+    // WhatsApp / Facebook / iMessage link previews show the barber's
+    // brand instead of Toron's generic shell. Falls through to the
+    // standard asset pipeline if the path isn't a barber slug.
+    try {
+      const og = await maybeRewriteOg(request, env);
+      if (og) return og;
+    } catch (e) {
+      console.warn('OG_REWRITE_FAIL', e?.message);
     }
 
     return env.ASSETS.fetch(request);
