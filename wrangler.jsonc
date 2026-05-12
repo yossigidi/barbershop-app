@@ -10,9 +10,10 @@
     "not_found_handling": "single-page-application"
   },
   "triggers": {
-    // Daily at 06:00 UTC (09:00 Israel time) — runs the Tranzila billing cron
-    // (worker/cron.js → handleCronBilling). Mirrors Engleez's daily renewal job.
-    "crons": ["0 6 * * *"]
+    // Cron schedules — `event.cron` in worker/index.js scheduled() dispatches:
+    //   "0 6 * * *"      → handleCronBilling (Tranzila daily renewal)
+    //   "0 8 * * 0,2,4"  → handleCronFacebookPost (Sun/Tue/Thu ~10 IL)
+    "crons": ["0 6 * * *", "0 8 * * 0,2,4"]
   },
   "observability": {
     "enabled": true

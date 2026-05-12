@@ -17,6 +17,7 @@ import { handleAiBriefing } from './briefing.js';
 import { handleSendConfirmationEmail } from './email.js';
 import { handleBrevoStatus, handleAuthDomainsStatus } from './admin.js';
 import { handleCronBilling } from './cron.js';
+import { handleCronFacebookPost, postToFacebookNow } from './fb-cron.js';
 
 const apiHandlers = {
   '/api/notify': handleNotify,
@@ -32,6 +33,19 @@ const apiHandlers = {
   '/api/send-confirmation-email': handleSendConfirmationEmail,
   '/api/admin/brevo-status': handleBrevoStatus,
   '/api/admin/auth-domains': handleAuthDomainsStatus,
+  // Manual trigger — POST with header `x-admin-key: <ADMIN_KEY>` to test
+  // a Facebook post before the cron fires.
+  '/api/admin/fb-post-now': async (req, env) => {
+    if (req.headers.get('x-admin-key') !== env.ADMIN_KEY) {
+      return new Response('forbidden', { status: 403 });
+    }
+    const body = await req.json().catch(() => ({}));
+    const r = await postToFacebookNow(env, body?.message);
+    return new Response(JSON.stringify(r), {
+      status: r.ok ? 200 : 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  },
 };
 
 export default {
@@ -54,11 +68,25 @@ export default {
     return env.ASSETS.fetch(request);
   },
 
-  // Cloudflare Cron Trigger — see wrangler.jsonc "triggers.crons"
+  // Cloudflare Cron Trigger — see wrangler.jsonc "triggers.crons".
+  // We register more than one schedule there; `event.cron` is the matched
+  // cron pattern so we can dispatch to the right handler.
   async scheduled(event, env, ctx) {
     console.log('CRON_TRIGGER', event.cron, new Date().toISOString());
-    ctx.waitUntil(
-      handleCronBilling(env).catch((e) => console.error('CRON_FATAL', e?.message, e?.stack)),
-    );
+    // Daily billing — runs at 06:00 UTC, every day.
+    if (event.cron === '0 6 * * *') {
+      ctx.waitUntil(
+        handleCronBilling(env).catch((e) => console.error('CRON_FATAL', e?.message, e?.stack)),
+      );
+      return;
+    }
+    // Facebook post — runs Sun / Tue / Thu at 08:00 UTC (10-11 IL with DST).
+    if (event.cron === '0 8 * * 0,2,4') {
+      ctx.waitUntil(
+        handleCronFacebookPost(env).catch((e) => console.error('FB_CRON_FATAL', e?.message, e?.stack)),
+      );
+      return;
+    }
+    console.warn('CRON_UNHANDLED', event.cron);
   },
 };
