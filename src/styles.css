@@ -6692,3 +6692,68 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
   box-shadow: 0 6px 14px rgba(59, 130, 246, 0.32);
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   LIVING LANDING — palette + tokens (Claude Design)
+   New marketing-landing-only design system. Scoped to .living-landing
+   so the warm cream / honey / peach / sage palette stays out of the
+   dashboard (purple) and booking (dark cinematic) surfaces.
+   ═════════════════════════════════════════════════════════════════════ */
+.living-landing {
+  /* Backgrounds */
+  --bg: #FAF6EE;           /* warm cream */
+  --bg-deep: #F1E9D6;      /* deeper sand */
+  --bg-warm: #FAF1E1;      /* hero wash */
+  --paper: #FFFFFF;        /* card surface */
+  --rule: #E8DFC9;         /* dividers / borders */
+
+  /* Ink (text) */
+  --ink: #2A1F12;          /* espresso */
+  --ink-soft: #5C4A36;     /* secondary text */
+  --ink-mute: #8C7A5F;     /* tertiary / muted */
+
+  /* Accent palette — kept tonal so the page reads as one warm scene */
+  --gold: #B8893A;
+  --gold-deep: #8A6628;
+  --gold-glow: rgba(184, 137, 58, 0.30);
+  --gold-soft: rgba(184, 137, 58, 0.10);
+  --shadow-gold: 0 14px 40px rgba(184, 137, 58, 0.22);
+  --peach: #E89F71;
+  --blush: #D97A82;
+  --sage: #8AA88A;
+  --sand: #D9C7A4;
+
+  /* Effects */
+  --shadow-1: 0 2px 6px rgba(42, 31, 18, 0.05), 0 12px 30px rgba(42, 31, 18, 0.08);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Typography — distinct serif for the editorial feel, monospace for
+     stat numbers / countdown / inline code. Both Google Fonts. */
+  --font-serif: 'Frank Ruhl Libre', 'Heebo', serif;
+  --font-mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Base */
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-family: var(--font-sans);
+}
+
+/* Reveal animation — fades + lifts elements as they scroll into view.
+   Set by useReveal() in the page (adds .is-in when in viewport). */
+.living-landing .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+.living-landing .reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .living-landing .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* The page handles its own width; remove .app's max-width clamp. */
+.living-landing { max-width: none; margin: 0; padding: 0; }
