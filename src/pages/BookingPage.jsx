@@ -79,6 +79,9 @@ export default function BookingPage() {
   const [pickedTime, setPickedTime] = useState(null);
   const [pickedService, setPickedService] = useState(null);
   const [pickedAddonIds, setPickedAddonIds] = useState([]);
+  // Picked employee — only relevant when barber.employees has any
+  // active entries. Stays null when the barber works alone.
+  const [pickedEmployeeId, setPickedEmployeeId] = useState(null);
   const [addonsOpen, setAddonsOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState('date'); // 'date' | 'time' | 'summary'
   // Group booking — extra people booked back-to-back after the main client.
@@ -447,6 +450,12 @@ export default function BookingPage() {
         .filter((a) => pickedAddonIds.includes(a.id))
         .map((a) => ({ id: a.id, name: a.name, duration: a.duration || 0, price: a.price || 0 }));
 
+      // If the barber has staff, the client must pick one before reaching
+      // step 3, so pickedEmployeeId should be set. Capture name + id so
+      // the dashboard can display "with [employee]" without an extra
+      // lookup, and the worker can filter bookings by employee later.
+      const pickedEmployee = activeEmployees.find((e) => e.id === pickedEmployeeId) || null;
+
       const baseDoc = {
         time,
         duration: totalDuration,
@@ -458,6 +467,8 @@ export default function BookingPage() {
         clientPhone: c.phone,
         clientEmail: c.email || '',
         status: 'booked',
+        employeeId: pickedEmployee?.id || '',
+        employeeName: pickedEmployee?.name || '',
       };
 
       // Build dates: first one + optional recurring
@@ -839,6 +850,7 @@ export default function BookingPage() {
 
   const services = barber.services || [];
   const addons = barber.addons || [];
+  const activeEmployees = (barber.employees || []).filter((e) => e.active !== false);
 
   return (
     <div className="app booking-app" data-theme={getThemeKey(barber)}>
@@ -959,6 +971,58 @@ export default function BookingPage() {
         </div>
       )}
 
+      {/* Employee picker — only shown when the barber has added staff
+          in Settings. The client picks who they want to book with;
+          the choice is stored as employeeId on the booking doc and
+          shown alongside the client name on the operator dashboard. */}
+      {activeEmployees.length > 0 && pickedService && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>בחר/י עם מי לקבוע</h3>
+          <p className="muted" style={{ marginTop: -6, fontSize: '0.86rem' }}>
+            {activeEmployees.length} עובדים זמינים
+          </p>
+          <div className="service-list">
+            {activeEmployees.map((emp) => {
+              const active = pickedEmployeeId === emp.id;
+              return (
+                <button
+                  key={emp.id}
+                  type="button"
+                  className={`service-card ${active ? 'active' : ''}`}
+                  onClick={() => setPickedEmployeeId(emp.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12 }}
+                >
+                  {emp.photoUrl ? (
+                    <img
+                      src={emp.photoUrl}
+                      alt=""
+                      aria-hidden="true"
+                      style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flex: 'none', border: '2px solid var(--border)' }}
+                    />
+                  ) : (
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        width: 44, height: 44, borderRadius: '50%', flex: 'none',
+                        background: 'linear-gradient(180deg, var(--gold-2), var(--gold-deep))',
+                        color: '#ffffff',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem',
+                      }}
+                    >
+                      {(emp.name || '?').trim()[0] || '?'}
+                    </div>
+                  )}
+                  <div className="service-card-name" style={{ textAlign: 'start' }}>
+                    {emp.name}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {addons.length > 0 && pickedService && !pickedService.isPackage && (
         <div className="card addons-card">
           <button
@@ -1006,7 +1070,7 @@ export default function BookingPage() {
         </div>
       )}
 
-      {pickedService && (
+      {pickedService && (activeEmployees.length === 0 || pickedEmployeeId) && (
         <div className="wizard-progress" aria-label="התקדמות בתהליך">
           <div className={`wizard-step ${wizardStep === 'date' ? 'is-current' : 'is-done'}`}>
             <span className="wizard-step-num">1</span>
@@ -1026,7 +1090,7 @@ export default function BookingPage() {
       )}
 
       {/* ─── Step 1 — Pick date ───────────────────────────────────────── */}
-      {pickedService && wizardStep === 'date' && (
+      {pickedService && (activeEmployees.length === 0 || pickedEmployeeId) && wizardStep === 'date' && (
         <div className="card">
           <h3 style={{ marginTop: 0 }}>בחר/י תאריך</h3>
           <p className="muted" style={{ marginTop: -6, fontSize: '0.86rem' }}>
@@ -1110,7 +1174,7 @@ export default function BookingPage() {
       )}
 
       {/* ─── Step 2 — Pick time ───────────────────────────────────────── */}
-      {pickedService && wizardStep === 'time' && (
+      {pickedService && (activeEmployees.length === 0 || pickedEmployeeId) && wizardStep === 'time' && (
         <div className="card">
           <h3 style={{ marginTop: 0 }}>בחר/י שעה</h3>
           <button
@@ -1175,7 +1239,7 @@ export default function BookingPage() {
       )}
 
       {/* ─── Step 3 — Summary + confirm ───────────────────────────────── */}
-      {pickedService && wizardStep === 'summary' && pickedTime && (
+      {pickedService && (activeEmployees.length === 0 || pickedEmployeeId) && wizardStep === 'summary' && pickedTime && (
         <div className="card">
           <h3 style={{ marginTop: 0 }}>סיכום ואישור</h3>
           <p className="muted" style={{ marginTop: -6, fontSize: '0.86rem' }}>
@@ -1221,6 +1285,16 @@ export default function BookingPage() {
               <strong>{client.firstName} {client.lastName}</strong>
             </div>
           )}
+          {pickedEmployeeId && (() => {
+            const emp = activeEmployees.find((e) => e.id === pickedEmployeeId);
+            if (!emp) return null;
+            return (
+              <div className="confirm-row">
+                <span className="confirm-label"><User size={14} className="icon-inline" />עם</span>
+                <strong>{emp.name}</strong>
+              </div>
+            );
+          })()}
           {recurring && (
             <div className="confirm-row" style={{ borderTop: '1px dashed var(--gold)', paddingTop: 8, marginTop: 8 }}>
               <span className="confirm-label"><Repeat size={14} className="icon-inline" />חוזר</span>

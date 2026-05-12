@@ -24,6 +24,9 @@ function emptyAddon() {
 function emptyProduct() {
   return { id: Math.random().toString(36).slice(2, 9), name: '', price: 0, description: '' };
 }
+function emptyEmployee() {
+  return { id: Math.random().toString(36).slice(2, 9), name: '', photoUrl: '', active: true };
+}
 const ADDON_DURATION_OPTIONS = [0, 10, 20, 30, 40, 50, 60];
 
 export default function SettingsPage() {
@@ -45,6 +48,13 @@ export default function SettingsPage() {
   // Settings; future iterations can surface them on the booking page or
   // for in-person sale tracking.
   const [products, setProducts] = useState([]);
+  // Employees — lite multi-staff. The owner stays the primary user but
+  // can add additional people (e.g. a partner barber, a junior staff
+  // member). Each has just a name + optional photo URL for now;
+  // working hours and per-employee services are TODO for a later
+  // iteration. The booking page will show a "pick employee" step when
+  // employees.length > 0.
+  const [employees, setEmployees] = useState([]);
   const [defaultDuration, setDefaultDuration] = useState(20);
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [professions, setProfessions] = useState(['barber']);
@@ -92,6 +102,7 @@ export default function SettingsPage() {
         setServices(Array.isArray(data.services) ? data.services : []);
         setAddons(Array.isArray(data.addons) ? data.addons : []);
         setProducts(Array.isArray(data.products) ? data.products : []);
+        setEmployees(Array.isArray(data.employees) ? data.employees : []);
         setDefaultDuration(data.defaultDuration || 20);
         setDefaultPrice(data.defaultPrice || 0);
         setProfessions(readProfessions(data));
@@ -166,6 +177,15 @@ export default function SettingsPage() {
   function removeProduct(id) {
     setProducts((list) => list.filter((p) => p.id !== id));
   }
+  function updateEmployee(id, patch) {
+    setEmployees((list) => list.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  }
+  function addEmployee() {
+    setEmployees((list) => [...list, emptyEmployee()]);
+  }
+  function removeEmployee(id) {
+    setEmployees((list) => list.filter((e) => e.id !== id));
+  }
 
   async function save() {
     setSlugError('');
@@ -217,6 +237,14 @@ export default function SettingsPage() {
           price: Number(p.price) || 0,
         }))
         .filter((p) => p.name.length > 0);
+      const cleanedEmployees = employees
+        .map((e) => ({
+          id: e.id,
+          name: (e.name || '').trim(),
+          photoUrl: (e.photoUrl || '').trim(),
+          active: e.active !== false,
+        }))
+        .filter((e) => e.name.length > 0);
       await updateDoc(doc(db, 'barbers', user.uid), {
         businessName: businessName.trim() || 'העסק שלי',
         logoUrl: logoUrl || '',
@@ -229,6 +257,7 @@ export default function SettingsPage() {
         services: cleanedServices,
         addons: cleanedAddons,
         products: cleanedProducts,
+        employees: cleanedEmployees,
         defaultDuration: Number(defaultDuration) || 20,
         defaultPrice: Number(defaultPrice) || 0,
         professions,
@@ -734,6 +763,69 @@ export default function SettingsPage() {
         ))}
         <button className="btn-secondary" onClick={addProduct} type="button" style={{ width: '100%', marginTop: 8 }}>
           + הוסף מוצר
+        </button>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Briefcase size={18} className="icon-inline" />ניהול עובדים</h3>
+        <p className="muted" style={{ marginTop: -6 }}>
+          הוסף עובדים נוספים שעובדים אצלך. כשהלקוח קובע תור הוא יבחר עם איזה עובד. ביומן תוכל לראות את התורים של כל עובד בנפרד.
+        </p>
+        {employees.length === 0 && (
+          <p className="muted" style={{ fontSize: '0.84rem', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>
+            אין עובדים נוספים — אתה עובד/ת לבד. הוסף/י עובדים כדי לאפשר ללקוחות לבחור מי יטפל בהם.
+          </p>
+        )}
+        {employees.map((e) => (
+          <div key={e.id} className="service-row">
+            <input
+              placeholder="שם העובד (לדוגמה: דני)"
+              value={e.name}
+              onChange={(ev) => updateEmployee(e.id, { name: ev.target.value })}
+              style={{ marginBottom: 6 }}
+              maxLength={40}
+            />
+            <input
+              placeholder="קישור לתמונה (אופציונלי)"
+              value={e.photoUrl}
+              onChange={(ev) => updateEmployee(e.id, { photoUrl: ev.target.value })}
+              style={{ marginBottom: 6, fontSize: '0.88rem' }}
+              dir="ltr"
+            />
+            <div className="row" style={{ alignItems: 'center', gap: 12 }}>
+              <label className="row" style={{ alignItems: 'center', cursor: 'pointer', gap: 8, flex: 1 }}>
+                <div
+                  className={`toggle ${e.active !== false ? 'on' : ''}`}
+                  onClick={() => updateEmployee(e.id, { active: e.active === false })}
+                  role="switch"
+                  aria-checked={e.active !== false}
+                  tabIndex={0}
+                  onKeyDown={(ev) => {
+                    if (ev.key === ' ' || ev.key === 'Enter') {
+                      ev.preventDefault();
+                      updateEmployee(e.id, { active: e.active === false });
+                    }
+                  }}
+                  style={{ flex: 'none' }}
+                />
+                <span className="muted" style={{ fontSize: '0.86rem' }}>
+                  {e.active !== false ? 'פעיל — מופיע ללקוחות' : 'לא פעיל — מוסתר ללקוחות'}
+                </span>
+              </label>
+              <button
+                className="btn-danger"
+                style={{ padding: '10px 14px', flex: 'none' }}
+                onClick={() => removeEmployee(e.id)}
+                type="button"
+                aria-label="מחק עובד"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
+        <button className="btn-secondary" onClick={addEmployee} type="button" style={{ width: '100%', marginTop: 8 }}>
+          + הוסף עובד
         </button>
       </div>
 
