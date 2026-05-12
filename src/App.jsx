@@ -10,22 +10,54 @@ import AccessibilityWidget from './components/AccessibilityWidget.jsx';
 import HomePage from './pages/HomePage.jsx';
 import BookingPage from './pages/BookingPage.jsx';
 
+// Stale-chunk recovery. When we deploy a new version, the old index.html
+// in a user's cache still references the previous JS chunk filenames.
+// Our Cloudflare SPA fallback (`not_found_handling: single-page-application`)
+// returns index.html for any missing path — including those stale chunks —
+// so the browser ends up trying to execute HTML as JS and crashes with a
+// blank screen on iOS Safari.
+//
+// Wrap every lazy() import so we recover automatically: on first failure
+// we force-reload once (which refetches the current index.html and gets
+// the up-to-date chunk names). The session flag prevents an infinite
+// reload loop if the second attempt also fails (real broken build).
+function lazyRetry(loader) {
+  return lazy(async () => {
+    const RELOAD_KEY = 'toron_chunk_reload_v1';
+    const alreadyReloaded = sessionStorage.getItem(RELOAD_KEY) === '1';
+    try {
+      const mod = await loader();
+      sessionStorage.removeItem(RELOAD_KEY);
+      return mod;
+    } catch (e) {
+      if (!alreadyReloaded) {
+        sessionStorage.setItem(RELOAD_KEY, '1');
+        window.location.reload();
+        // Return a never-resolving promise so React doesn't surface the
+        // error before the reload happens.
+        return new Promise(() => {});
+      }
+      throw e;
+    }
+  });
+}
+
 // Everything behind auth is lazy so a client opening /b/<code> doesn't
 // download the full dashboard / settings / reports bundle they will never
 // use. Dropped ~50-60% off the booking-page initial JS.
-const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
-const OnboardingPage = lazy(() => import('./pages/OnboardingPage.jsx'));
-const ReportsPage = lazy(() => import('./pages/ReportsPage.jsx'));
-const PricingPage = lazy(() => import('./pages/PricingPage.jsx'));
-const TermsPage = lazy(() => import('./pages/TermsPage.jsx'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage.jsx'));
-const RefundPage = lazy(() => import('./pages/RefundPage.jsx'));
-const AccessibilityPage = lazy(() => import('./pages/AccessibilityPage.jsx'));
-const ManageBookingPage = lazy(() => import('./pages/ManageBookingPage.jsx'));
-const WhatsAppTemplatesPage = lazy(() => import('./pages/WhatsAppTemplatesPage.jsx'));
-const PromoPage = lazy(() => import('./pages/PromoPage.jsx'));
+const AuthPage = lazyRetry(() => import('./pages/AuthPage.jsx'));
+const DashboardPage = lazyRetry(() => import('./pages/DashboardPage.jsx'));
+const SettingsPage = lazyRetry(() => import('./pages/SettingsPage.jsx'));
+const OnboardingPage = lazyRetry(() => import('./pages/OnboardingPage.jsx'));
+const ReportsPage = lazyRetry(() => import('./pages/ReportsPage.jsx'));
+const PricingPage = lazyRetry(() => import('./pages/PricingPage.jsx'));
+const TermsPage = lazyRetry(() => import('./pages/TermsPage.jsx'));
+const PrivacyPage = lazyRetry(() => import('./pages/PrivacyPage.jsx'));
+const RefundPage = lazyRetry(() => import('./pages/RefundPage.jsx'));
+const AccessibilityPage = lazyRetry(() => import('./pages/AccessibilityPage.jsx'));
+const ManageBookingPage = lazyRetry(() => import('./pages/ManageBookingPage.jsx'));
+const WhatsAppTemplatesPage = lazyRetry(() => import('./pages/WhatsAppTemplatesPage.jsx'));
+const PromoPage = lazyRetry(() => import('./pages/PromoPage.jsx'));
 
 function Loading() {
   return <div className="loading" role="status" aria-live="polite">טוען…</div>;
