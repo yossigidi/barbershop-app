@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import AccessibleModal from '../components/AccessibleModal.jsx';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 // Toron landing page — public-facing marketing surface.
 // Sections (top-to-bottom):
@@ -27,6 +28,7 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [studioOpen, setStudioOpen] = useState(false);
+  useScrollReveal();
 
   useEffect(() => {
     if (!loading && user) navigate('/dashboard', { replace: true });
@@ -79,45 +81,58 @@ export default function HomePage() {
               <li><Check size={14} aria-hidden="true" />ביטול בכל רגע</li>
             </ul>
           </div>
-          <div className="hero-mockup" aria-hidden="true">
-            <div className="mock-card mock-day">
-              <div className="mock-row">
-                <span className="mock-time">09:00</span>
-                <span className="mock-name">דני כהן</span>
-                <span className="mock-tag">VIP</span>
-              </div>
-              <div className="mock-row">
-                <span className="mock-time">10:30</span>
-                <span className="mock-name">נטלי לוי</span>
-                <span className="mock-tag mock-tag-new">חדש</span>
-              </div>
-              <div className="mock-row mock-empty">
-                <span className="mock-time">12:00</span>
-                <span className="mock-name muted">פנוי · מומלץ ללקוחה הבאה</span>
-              </div>
-              <div className="mock-row">
-                <span className="mock-time">14:00</span>
-                <span className="mock-name">יוסי אברהם</span>
-              </div>
-              <div className="mock-row mock-row-revenue">
-                <span>הכנסה צפויה היום</span>
-                <strong>₪780</strong>
+          <div className="hero-phone-stage" aria-hidden="true">
+            <div className="iphone-frame iphone-frame-main">
+              <div className="iphone-notch" />
+              <div className="iphone-screen">
+                <div className="iphone-status">
+                  <span className="iphone-time">09:42</span>
+                  <span className="iphone-icons">●●●●● 100%</span>
+                </div>
+                <div className="iphone-header">
+                  <span className="iphone-brand">Toron · יום שלישי</span>
+                </div>
+                <div className="iphone-card">
+                  <div className="iphone-row">
+                    <span className="iphone-time-cell">09:00</span>
+                    <span className="iphone-name">דני כהן</span>
+                    <span className="iphone-tag">VIP</span>
+                  </div>
+                  <div className="iphone-row">
+                    <span className="iphone-time-cell">10:30</span>
+                    <span className="iphone-name">נטלי לוי</span>
+                    <span className="iphone-tag iphone-tag-new">חדש</span>
+                  </div>
+                  <div className="iphone-row iphone-row-empty">
+                    <span className="iphone-time-cell">12:00</span>
+                    <span className="iphone-name iphone-muted">פנוי</span>
+                  </div>
+                  <div className="iphone-row">
+                    <span className="iphone-time-cell">14:00</span>
+                    <span className="iphone-name">יוסי אברהם</span>
+                  </div>
+                </div>
+                <div className="iphone-card iphone-card-revenue">
+                  <span>הכנסה היום</span>
+                  <strong>₪780</strong>
+                </div>
+                <div className="iphone-ai-card">
+                  <div className="iphone-ai-head">
+                    <Sparkles size={12} aria-hidden="true" />
+                    <span>AI כתב תזכורת</span>
+                  </div>
+                  <div className="iphone-ai-body">
+                    "היי דני, תזכורת — תור מחר ב-10:30. נתראה!"
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="mock-card mock-ai">
-              <div className="mock-ai-head">
-                <Sparkles size={14} className="icon-inline" />
-                <span>AI כתב הודעת תזכורת</span>
-              </div>
-              <div className="mock-ai-body">
-                "היי דני, מזכירה שיש לך תור מחר ב-10:30 לתספורת. נתראה! ✂️"
-              </div>
-            </div>
+            <div className="hero-phone-glow" aria-hidden="true" />
           </div>
         </section>
 
         {/* ── Who's it for ───────────────────────────────────────────── */}
-        <section className="who" aria-labelledby="who-title">
+        <section className="who reveal" aria-labelledby="who-title">
           <h2 id="who-title" className="section-title">מי שמשתמש ב-Toron</h2>
           <p className="section-sub">
             תוכננה במיוחד לבעלי מקצועות שירות שכל היום שלהם מתנהל סביב היומן והפגישות.
@@ -147,7 +162,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Features grid ──────────────────────────────────────────── */}
-        <section className="features" aria-labelledby="features-title">
+        <section className="features reveal" aria-labelledby="features-title">
           <h2 id="features-title" className="section-title">כל מה שצריך כדי לנהל יום עבודה מלא</h2>
           <div className="feature-grid">
             <article className="feature-card">
@@ -184,7 +199,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Pricing teaser ─────────────────────────────────────────── */}
-        <section className="pricing-teaser" aria-labelledby="pricing-title">
+        <section className="pricing-teaser reveal" aria-labelledby="pricing-title">
           <h2 id="pricing-title" className="section-title">מסלולים פשוטים, ללא הפתעות</h2>
           <div className="price-grid">
             <article className="price-card">
@@ -245,7 +260,7 @@ export default function HomePage() {
         </section>
 
         {/* ── FAQ ────────────────────────────────────────────────────── */}
-        <section className="faq" aria-labelledby="faq-title">
+        <section className="faq reveal" aria-labelledby="faq-title">
           <h2 id="faq-title" className="section-title">שאלות נפוצות</h2>
           <div className="faq-list">
             <details className="faq-item">
@@ -291,7 +306,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Final CTA ──────────────────────────────────────────────── */}
-        <section className="final-cta" aria-labelledby="final-title">
+        <section className="final-cta reveal" aria-labelledby="final-title">
           <h2 id="final-title">מוכנ/ה להפסיק לרשום תורים בנייר?</h2>
           <p>30 ימים חינם. ללא כרטיס אשראי. הרשמה ב-2 דקות.</p>
           <div className="hero-cta" style={{ justifyContent: 'center' }}>

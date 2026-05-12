@@ -5930,3 +5930,193 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 @supports (-webkit-touch-callout: none) {
   .app.dashboard::before { background-attachment: scroll; }
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   HomePage hero — iPhone frame mockup
+   Replaces the previous two floating cards with a single proper iPhone
+   silhouette holding a calendar mock + AI message card inside. Adds
+   weight and product-feel to the hero in the Smartor style.
+   ═════════════════════════════════════════════════════════════════════ */
+.hero-phone-stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
+.hero-phone-glow {
+  position: absolute;
+  width: 90%;
+  height: 90%;
+  background: radial-gradient(ellipse at center, rgba(184, 137, 58, 0.30), transparent 65%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.iphone-frame {
+  position: relative;
+  width: 280px;
+  height: 580px;
+  background: linear-gradient(180deg, #1a1a1d 0%, #0c0c0e 100%);
+  border-radius: 42px;
+  border: 2px solid #2e2e34;
+  padding: 12px;
+  box-shadow:
+    inset 0 0 0 4px #0a0a0c,
+    0 30px 60px rgba(0, 0, 0, 0.35),
+    0 12px 30px rgba(184, 137, 58, 0.20);
+}
+@media (max-width: 540px) {
+  .iphone-frame { width: 250px; height: 520px; }
+}
+.iphone-frame-main {
+  transform: rotate(-2deg);
+}
+@media (max-width: 879px) {
+  .iphone-frame-main { transform: rotate(0); }
+}
+
+.iphone-notch {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 22px;
+  background: #0a0a0c;
+  border-radius: 16px;
+  z-index: 2;
+}
+
+.iphone-screen {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #faf8f3 0%, #f4f1e9 100%);
+  border-radius: 32px;
+  padding: 32px 14px 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.iphone-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.62rem;
+  color: #18181b;
+  font-weight: 600;
+  padding: 0 6px;
+  margin-bottom: 4px;
+}
+.iphone-time { font-weight: 700; }
+.iphone-icons { letter-spacing: 0.5px; font-size: 0.56rem; }
+
+.iphone-header {
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+  color: #ffffff;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: center;
+  font-family: var(--font-display);
+}
+
+.iphone-card {
+  background: #ffffff;
+  border: 1px solid #e8e2d2;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 2px 6px rgba(24, 24, 27, 0.04);
+}
+.iphone-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 4px;
+  font-size: 0.72rem;
+  border-bottom: 1px dashed #e8e2d2;
+}
+.iphone-row:last-child { border-bottom: none; }
+.iphone-row-empty .iphone-name { color: #8a8a92; font-style: italic; }
+.iphone-time-cell {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--gold-deep);
+  width: 36px;
+  font-size: 0.68rem;
+}
+.iphone-name { flex: 1; font-weight: 500; color: #18181b; }
+.iphone-muted { color: #8a8a92; }
+.iphone-tag {
+  font-size: 0.52rem;
+  font-weight: 700;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
+  color: #ffffff;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.iphone-tag-new {
+  background: rgba(99, 102, 241, 0.10);
+  color: #4338ca;
+  border: 1px solid rgba(99, 102, 241, 0.30);
+}
+
+.iphone-card-revenue {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(184, 137, 58, 0.10), rgba(184, 137, 58, 0.04));
+  border-color: rgba(184, 137, 58, 0.30);
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.iphone-card-revenue strong {
+  font-family: var(--font-display);
+  font-size: 0.96rem;
+  color: var(--gold-deep);
+}
+
+.iphone-ai-card {
+  background: linear-gradient(180deg, rgba(184, 137, 58, 0.12), #ffffff);
+  border: 1px solid rgba(184, 137, 58, 0.40);
+  border-radius: 10px;
+  padding: 9px 11px;
+  margin-top: auto;
+  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.15);
+}
+.iphone-ai-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.62rem;
+  color: var(--gold-deep);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.iphone-ai-head svg { color: var(--gold); }
+.iphone-ai-body {
+  font-size: 0.70rem;
+  color: #18181b;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+/* ── Scroll-reveal animation on sections ─────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
