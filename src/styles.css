@@ -6120,3 +6120,62 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   DayTimeline — multi-chair column headers
+   When the barber has > 1 chair the timeline splits into N columns; this
+   block renders a header strip above the grid so the operator can see
+   "כסא 1 / כסא 2 / כסא 3" labels.
+   ─────────────────────────────────────────────────────────────────────── */
+.dt-chair-headers { padding-inline-start: 56px; }
+.dt-chair-header {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid var(--gold);
+  color: var(--gold-deep);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.84rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.dt-chair-header svg { color: var(--gold); }
+
+/* DT-Grid container — uses an inline-start offset to leave room for the
+   hour-of-day labels on the right side of the grid (RTL flips this
+   automatically — the labels sit on the visual right). */
+.dt-grid { padding-inline-start: 56px; }
+
+.dt-chair-column {
+  position: relative;
+  background: rgba(255,255,255,0.40);
+  border: 1px dashed rgba(184, 137, 58, 0.20);
+  border-radius: 8px;
+}
+
+/* Multi-chair mode — hour labels sit on top of all columns and need to
+   not overlap chair content. Push the line / label slightly. */
+.day-timeline.is-multi-chair .dt-hour { z-index: 1; }
+.day-timeline.is-multi-chair .dt-hour-label {
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  background: rgba(250, 248, 243, 0.92);
+  padding: 0 4px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+/* Bookings inside chair columns — refresh the look: stronger card feel,
+   client name larger, service name on the next line, all readable at a
+   glance. */
+.dt-chair-column .dt-booking,
+.dt-chair-column .dt-free,
+.dt-chair-column .dt-break,
+.dt-chair-column .dt-block {
+  inset-inline-start: 4px;
+  inset-inline-end: 4px;
+}

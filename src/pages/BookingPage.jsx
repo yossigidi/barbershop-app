@@ -456,6 +456,33 @@ export default function BookingPage() {
       // lookup, and the worker can filter bookings by employee later.
       const pickedEmployee = activeEmployees.find((e) => e.id === pickedEmployeeId) || null;
 
+      // Round-robin chair assignment when the barber has > 1 chair.
+      // Sum the chair occupancy on the target date and pick the chair
+      // with the fewest minutes booked, so load stays balanced. Falls
+      // back to chair 1 for legacy single-chair shops.
+      const chairsCount = Math.max(1, Math.min(10, Number(barber?.chairsCount) || 1));
+      let pickedChair = 1;
+      if (chairsCount > 1) {
+        const byChair = Array.from({ length: chairsCount }, () => 0);
+        const iso = dateToISO(selectedDate);
+        const dayQ = query(
+          collection(db, 'barbers', barberId, 'bookings'),
+          where('date', '==', iso),
+          where('status', '==', 'booked'),
+        );
+        const daySnap = await getDocs(dayQ);
+        for (const d of daySnap.docs) {
+          const data = d.data();
+          const ch = Math.max(1, Math.min(chairsCount, Number(data.chairNumber) || 1));
+          byChair[ch - 1] += Number(data.duration) || 20;
+        }
+        // Pick the chair with the lowest minutes booked today
+        let min = Infinity;
+        for (let i = 0; i < chairsCount; i++) {
+          if (byChair[i] < min) { min = byChair[i]; pickedChair = i + 1; }
+        }
+      }
+
       const baseDoc = {
         time,
         duration: totalDuration,
@@ -469,6 +496,7 @@ export default function BookingPage() {
         status: 'booked',
         employeeId: pickedEmployee?.id || '',
         employeeName: pickedEmployee?.name || '',
+        chairNumber: pickedChair,
       };
 
       // Build dates: first one + optional recurring

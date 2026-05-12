@@ -55,6 +55,12 @@ export default function SettingsPage() {
   // iteration. The booking page will show a "pick employee" step when
   // employees.length > 0.
   const [employees, setEmployees] = useState([]);
+  // Number of physical chairs / stations in the shop. Default 1 means
+  // the dashboard timeline stays a single column (current behaviour).
+  // When > 1, the timeline splits into N parallel columns so the owner
+  // can see who's at which station; bookings get round-robin assigned
+  // to a chair on creation.
+  const [chairsCount, setChairsCount] = useState(1);
   const [defaultDuration, setDefaultDuration] = useState(20);
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [professions, setProfessions] = useState(['barber']);
@@ -103,6 +109,7 @@ export default function SettingsPage() {
         setAddons(Array.isArray(data.addons) ? data.addons : []);
         setProducts(Array.isArray(data.products) ? data.products : []);
         setEmployees(Array.isArray(data.employees) ? data.employees : []);
+        setChairsCount(Number(data.chairsCount) || 1);
         setDefaultDuration(data.defaultDuration || 20);
         setDefaultPrice(data.defaultPrice || 0);
         setProfessions(readProfessions(data));
@@ -258,6 +265,7 @@ export default function SettingsPage() {
         addons: cleanedAddons,
         products: cleanedProducts,
         employees: cleanedEmployees,
+        chairsCount: Math.max(1, Math.min(10, Number(chairsCount) || 1)),
         defaultDuration: Number(defaultDuration) || 20,
         defaultPrice: Number(defaultPrice) || 0,
         professions,
@@ -827,6 +835,31 @@ export default function SettingsPage() {
         <button className="btn-secondary" onClick={addEmployee} type="button" style={{ width: '100%', marginTop: 8 }}>
           + הוסף עובד
         </button>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Briefcase size={18} className="icon-inline" />כמות כסאות / עמדות עבודה</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.86rem' }}>
+          אם יש לך יותר מעמדה אחת (למשל 2-3 כסאות במספרה), היומן יתחלק לעמודות נפרדות — תוכל לראות מי יושב באיזה כסא. כל תור חדש יקבל מספר כסא אוטומטית. השאר על 1 אם אתה עובד/ת בכסא אחד.
+        </p>
+        <div className="row" style={{ alignItems: 'center', gap: 12 }}>
+          <label className="muted" style={{ fontSize: '0.9rem', flex: 'none' }}>מספר כסאות</label>
+          <select
+            value={chairsCount}
+            onChange={(e) => setChairsCount(Number(e.target.value) || 1)}
+            style={{ flex: 1 }}
+          >
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <option key={n} value={n}>{n === 1 ? 'כסא אחד (ברירת מחדל)' : `${n} כסאות`}</option>
+            ))}
+          </select>
+        </div>
+        {chairsCount > 1 && (
+          <p className="muted" style={{ fontSize: '0.82rem', marginTop: 10, marginBottom: 0, padding: 10, background: 'var(--gold-soft)', border: '1px solid rgba(184, 137, 58, 0.30)', borderRadius: 'var(--radius-sm)' }}>
+            <Sparkles size={12} className="icon-inline" />
+            <strong>{chairsCount} כסאות נבחרו.</strong> היומן ה-Day Timeline יציג {chairsCount} עמודות במקביל, וכל תור חדש יקבל מספר כסא (1-{chairsCount}) באופן אוטומטי.
+          </p>
+        )}
       </div>
 
       <div className="card">

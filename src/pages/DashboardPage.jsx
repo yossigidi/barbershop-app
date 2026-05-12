@@ -443,6 +443,7 @@ export default function DashboardPage() {
           workingHours={barber.workingHours}
           bookings={todayBookings}
           blocks={todayBlocks}
+          chairsCount={barber.chairsCount || 1}
           onBookingTap={(b) => setActionFor(b)}
           onFreeSlotTap={(time) => setQuickBook({ time, date: todayISO })}
           onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
@@ -484,6 +485,7 @@ export default function DashboardPage() {
             workingHours={barber.workingHours}
             bookings={dayBookings}
             blocks={dayBlocks}
+            chairsCount={barber.chairsCount || 1}
             onBookingTap={(b) => setActionFor(b)}
             onFreeSlotTap={(time) => setQuickBook({ time, date: selectedISO })}
             onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
