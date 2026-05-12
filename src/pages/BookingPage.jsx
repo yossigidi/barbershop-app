@@ -795,15 +795,10 @@ export default function BookingPage() {
               </a>
             )}
 
-            {barber.bitLink && (
-              <a href={barber.bitLink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
-                <button className="btn-primary pay-btn pay-bit" style={{ width: '100%', marginBottom: 8 }} type="button">
-                  <Wallet size={16} className="icon-inline" aria-hidden="true" />
-                  שלם ב-Bit
-                  <ExternalLink size={13} className="icon-inline" aria-hidden="true" style={{ opacity: 0.7 }} />
-                </button>
-              </a>
-            )}
+            {/* Order matters: PayPal first (auto-amount), PayBox next
+                (one-tap URL with amount), Bit last (always manual
+                copy-paste — Bit dropped business accounts mid-2026 so
+                no URL flow exists for it anymore). */}
 
             {barber.payboxLink && (
               <a href={barber.payboxLink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
@@ -815,27 +810,40 @@ export default function BookingPage() {
               </a>
             )}
 
-            {!barber.bitLink && barber.bitPhone && (
-              <button
-                className="btn-primary pay-btn pay-bit"
-                style={{ width: '100%', marginBottom: 8 }}
-                onClick={() => openPay('bit', barber.bitPhone, totalPrice)}
-                type="button"
-              >
-                <Wallet size={16} className="icon-inline" aria-hidden="true" />
-                העתק מספר Bit
-              </button>
-            )}
-
             {!barber.payboxLink && barber.payboxPhone && (
               <button
                 className="btn-primary pay-btn pay-paybox"
-                style={{ width: '100%' }}
+                style={{ width: '100%', marginBottom: 8 }}
                 onClick={() => openPay('paybox', barber.payboxPhone, totalPrice)}
                 type="button"
               >
                 <Wallet size={16} className="icon-inline" aria-hidden="true" />
                 העתק מספר PayBox
+              </button>
+            )}
+
+            {/* Bit — legacy URL kept working for users who saved one
+                before the business-accounts shutdown, but the primary
+                path is the phone copy-paste flow. */}
+            {barber.bitLink && (
+              <a href={barber.bitLink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block' }}>
+                <button className="btn-primary pay-btn pay-bit" style={{ width: '100%', marginBottom: 8 }} type="button">
+                  <Wallet size={16} className="icon-inline" aria-hidden="true" />
+                  שלם ב-Bit
+                  <ExternalLink size={13} className="icon-inline" aria-hidden="true" style={{ opacity: 0.7 }} />
+                </button>
+              </a>
+            )}
+
+            {!barber.bitLink && barber.bitPhone && (
+              <button
+                className="btn-primary pay-btn pay-bit"
+                style={{ width: '100%' }}
+                onClick={() => openPay('bit', barber.bitPhone, totalPrice)}
+                type="button"
+              >
+                <Wallet size={16} className="icon-inline" aria-hidden="true" />
+                העתק מספר Bit
               </button>
             )}
           </div>

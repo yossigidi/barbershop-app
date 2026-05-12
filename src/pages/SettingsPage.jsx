@@ -517,14 +517,8 @@ export default function SettingsPage() {
             </ol>
 
             <strong>🔵 Bit</strong>
-            <p style={{ marginTop: 4, marginBottom: 4 }}>
-              ב-Bit היום אין URL לתשלום — האפליקציה מציגה רק <strong>QR לסריקה</strong>, וזה לא עוזר ללקוח שמזמין מהטלפון שלו (לא יסרוק QR על אותו מסך).
-            </p>
-            <p style={{ margin: '4px 0 8px' }}>
-              <strong>הפתרון המעשי:</strong> מלא <strong>"מספר Bit"</strong> למטה. כשהלקוח לוחץ "שלם ב-Bit" המספר שלך מועתק לקליפבורד עם הסכום — הוא פותח את Bit, מדביק וישלם. עובד לכולם, גם ללקוחות פרטיים בלי "Bit לעסק".
-            </p>
-            <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--text-dim)' }}>
-              אם בכל זאת יש לך לינק עסקי (חלק מהבנקים מציעים — בדוק עם הסניף שלך) — תוכל להדביק אותו בשדה "Bit — לינק עסקי" למטה.
+            <p style={{ marginTop: 4, marginBottom: 0 }}>
+              Bit מבוססת על מספרי טלפון בלבד — אין יותר חשבונות עסקיים נפרדים ואין לינקים לתשלום. מלא את <strong>"מספר Bit"</strong> למטה (המספר שלך באפליקציה). כשהלקוח לוחץ "שלם ב-Bit" המספר שלך מועתק לקליפבורד עם הסכום, והוא פותח את Bit, מדביק וישלם.
             </p>
 
             <strong>🟣 PayBox</strong>
@@ -554,17 +548,6 @@ export default function SettingsPage() {
         </div>
 
         <div className="field">
-          <label>🔵 Bit — לינק עסקי לתשלום</label>
-          <input
-            value={bitLink}
-            onChange={(e) => setBitLink(e.target.value)}
-            placeholder="https://www.bitpay.co.il/..."
-            dir="ltr"
-            style={{ direction: 'ltr', textAlign: 'left' }}
-          />
-        </div>
-
-        <div className="field">
           <label>🟣 PayBox — לינק עסקי לתשלום</label>
           <input
             value={payboxLink}
@@ -575,12 +558,31 @@ export default function SettingsPage() {
           />
         </div>
 
+        {/* Legacy Bit URL field — only show if a user has one saved from
+            before Bit removed business accounts (May 2026). New users
+            don't get this field at all. */}
+        {bitLink && (
+          <div className="field">
+            <label>🔵 Bit — לינק עסקי (לגאסי, לא קיים יותר ב-Bit החדשה)</label>
+            <input
+              value={bitLink}
+              onChange={(e) => setBitLink(e.target.value)}
+              placeholder=""
+              dir="ltr"
+              style={{ direction: 'ltr', textAlign: 'left' }}
+            />
+            <p className="muted" style={{ fontSize: '0.75rem', marginTop: 4 }}>
+              Bit ביטלה את שירות "Bit לעסקים" — תוכל למחוק את השדה ולהשתמש רק במספר Bit שלך למטה.
+            </p>
+          </div>
+        )}
+
         <div className="card-inset">
           <p className="muted" style={{ fontSize: '0.85rem', margin: '0 0 8px' }}>
-            <strong>גיבוי:</strong> אם אין לך לינק עסקי, מלא רק את מספרי הטלפון. הלקוח יראה את המספר ויוכל להעתיק אותו ולשלם ידנית באפליקציה.
+            <strong>Bit ו-PayBox:</strong> Bit עובדת לפי מספר טלפון בלבד. PayBox תומך גם בלינק וגם במספר. תמלא לפחות מספר אחד כדי שהלקוחות יוכלו לשלם.
           </p>
           <div className="field" style={{ marginBottom: 8 }}>
-            <label className="muted">📞 מספר Bit (אם אין לינק)</label>
+            <label className="muted">📞 מספר Bit שלך</label>
             <input type="tel" inputMode="numeric" value={bitPhone} onChange={(e) => setBitPhone(e.target.value)} placeholder="050-1234567" />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
