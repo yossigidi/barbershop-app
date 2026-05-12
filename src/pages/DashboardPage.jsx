@@ -160,6 +160,16 @@ export default function DashboardPage() {
 
   const todayBookings = bookings.filter((b) => b.date === todayISO);
   const todayBlocks = blocks.filter((b) => b.date === todayISO);
+  // Tomorrow's bookings (used by the bulk-reminders CTA so the button
+  // label can carry the count and decide whether to render at all).
+  const tomorrowISO = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + 1);
+    return dateToISO(d);
+  }, [today]);
+  const tomorrowBookingsCount = bookings.filter(
+    (b) => b.date === tomorrowISO && b.status === 'booked',
+  ).length;
   const dayBookings = bookings.filter((b) => b.date === selectedISO);
   const dayBlocks = blocks.filter((b) => b.date === selectedISO);
 
@@ -438,6 +448,20 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Bulk-reminder shortcut — keeps the operator one tap away
+            from blasting tomorrow's clients without digging into the
+            "More" tab. Only renders when there's anyone to remind. */}
+        {tomorrowBookingsCount > 0 && (
+          <button
+            className="btn-gold"
+            onClick={() => setShowTomorrow(true)}
+            style={{ width: '100%', marginBottom: 12 }}
+          >
+            <Send size={18} className="icon-inline" />
+            שלח תזכורת לכל לקוחות מחר ({tomorrowBookingsCount}) — בקליק אחד
+          </button>
+        )}
+
         <DayTimeline
           date={today}
           workingHours={barber.workingHours}
@@ -524,9 +548,27 @@ export default function DashboardPage() {
           <Send size={18} className="icon-inline" />
           תזכורת להיום ({todayBookings.length}) — שלח לכולם בלחיצה
         </button>
-        <button className="btn-secondary" onClick={() => setShowTomorrow(true)} style={{ width: '100%', marginBottom: 8 }}>
-          <Send size={18} className="icon-inline" />תזכורות WhatsApp ללקוחות מחר
-        </button>
+        {tomorrowBookingsCount > 0 ? (
+          <button
+            className="btn-gold"
+            onClick={() => setShowTomorrow(true)}
+            style={{ width: '100%', marginBottom: 8 }}
+          >
+            <Send size={18} className="icon-inline" />
+            תזכורת WhatsApp לכל לקוחות מחר ({tomorrowBookingsCount}) — בקליק אחד
+          </button>
+        ) : (
+          <button
+            className="btn-secondary"
+            onClick={() => setShowTomorrow(true)}
+            style={{ width: '100%', marginBottom: 8 }}
+            disabled
+            title="אין תורים מחר"
+          >
+            <Send size={18} className="icon-inline" />
+            תזכורות מחר — אין תורים
+          </button>
+        )}
         <button className="btn-secondary" onClick={() => setShowYesterday(true)} style={{ width: '100%', marginBottom: 8 }}>
           <MessageCircle size={18} className="icon-inline" />הודעות תודה ללקוחות מאתמול
         </button>
