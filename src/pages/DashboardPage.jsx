@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import {
   Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
   MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X, Sparkles,
-  Wallet, Megaphone, Trash2,
+  Wallet, Megaphone, Trash2, ImagePlus,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useSubscription } from '../hooks/useSubscription';
@@ -644,6 +644,16 @@ export default function DashboardPage() {
             <button className="btn-secondary" onClick={() => setShowQr(true)} style={{ flex: 'none' }} aria-label="QR"><QrCode size={18} /></button>
             <button className="btn-secondary" onClick={copyLink} style={{ flex: 'none' }} aria-label="העתק"><Copy size={18} /></button>
           </div>
+          {!barber.logoUrl && (
+            <div className="logo-nudge" role="status">
+              <div className="logo-nudge-icon"><ImagePlus size={20} /></div>
+              <div className="logo-nudge-body">
+                <strong>הוסף לוגו כדי שהלינק שלך ייראה מקצועי</strong>
+                <span>בלי לוגו, התצוגה ב-WhatsApp תציג את המותג של Toron במקום שלך.</span>
+              </div>
+              <Link to="/settings" className="logo-nudge-cta">העלה לוגו ←</Link>
+            </div>
+          )}
         </div>
 
         <Link to="/onboarding">

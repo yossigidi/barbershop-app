@@ -1,50 +1,48 @@
 :root {
-  /* Toron — vibrant royal purple on white. One unified language across
-     dashboard, booking, settings, and marketing. Designed against IS 5568
-     contrast targets: ink #1A1530 on white = 17.3:1, accent #6D28D9 on
-     white = 7.4:1 (AAA), accent on white surface = AA Large for any role
-     used as a button background with white text. */
-  --bg: #FAF8FF;             /* lavender-tinted white — barely there */
+  /* Toron — vibrant Smartor palette. Magenta→purple→cyan gradient signature.
+     Var names ("--gold", "--mint") kept so call-sites don't churn — they're
+     now just labels for "vibrant pop" and "cool secondary" respectively. */
+  --bg: #FAF6FB;             /* pale magenta-lavender wash */
   --surface: #FFFFFF;         /* pure white cards */
-  --surface-2: #F3EEFF;       /* violet-50 input / soft fill */
-  --border: #E6DCFF;          /* violet-100 hairlines */
-  --text: #1A1530;            /* near-black with violet undertone */
-  --text-dim: #5B5577;
+  --surface-2: #FBEEF7;       /* very pale magenta tint for inputs */
+  --border: #F1DAEA;          /* pale magenta hairlines */
+  --text: #150A33;            /* smartor deep navy as ink */
+  --text-dim: #555077;
   --text-soft: #8B85AA;
-  --accent: #5B3EE6;          /* electric indigo-violet — primary action */
-  --accent-2: #6E4FEF;        /* indigo-violet lighter — gradient top */
-  --accent-3: #3818C2;        /* deep indigo — gradient bottom */
-  /* "Gold" var names retained so the 200+ call-sites don't churn.
-     Re-mapped to vibrant purple highlight tones. */
-  --gold: #8B5CF6;            /* violet-500 — vibrant pop */
-  --gold-2: #A78BFA;           /* violet-400 — hover lift */
-  --gold-deep: #6D28D9;        /* violet-700 — deep saturation */
-  --gold-soft: rgba(139, 92, 246, 0.10);
-  --gold-glow: rgba(139, 92, 246, 0.30);
-  /* Mint — energetic counter to the violet. Used for: positive
-     primary CTAs in the booking flow ("אשר וקבע תור"), success
-     checks, "today"/"next available" indicators. Picked against
-     #1A1530 ink and white surface for AA Large at body weight. */
-  --mint: #4FE3B7;            /* aqua-mint — vibrant CTA / success */
-  --mint-2: #58F0C2;           /* lighter — gradient top */
-  --mint-deep: #2DC59A;        /* deep — gradient bottom / hover */
-  --mint-ink: #064E3B;          /* readable text on mint */
-  --mint-soft: rgba(79, 227, 183, 0.14);
-  --mint-glow: rgba(79, 227, 183, 0.36);
+  --accent: #6541C1;          /* smartor deep purple — primary action */
+  --accent-2: #7D56D8;        /* purple lighter — gradient top */
+  --accent-3: #4A2D8E;        /* deep purple — gradient bottom */
+  /* "Gold" = the vibrant magenta pop. Used for hover-glow, chips, highlights. */
+  --gold: #D43396;            /* magenta — vibrant pop */
+  --gold-2: #EA60B5;          /* magenta lighter — hover lift */
+  --gold-deep: #9D2570;       /* deep magenta */
+  --gold-soft: rgba(212, 51, 150, 0.10);
+  --gold-glow: rgba(212, 51, 150, 0.32);
+  /* "Mint" slot = cyan secondary. Replaces aqua-mint as the cool counter-
+     punch to magenta/purple. Used for success states, "today" indicators,
+     moments-of-truth like the final booking confirm. */
+  --mint: #14B8FE;            /* electric cyan — secondary CTA / success */
+  --mint-2: #4EC9FF;          /* lighter cyan — gradient top */
+  --mint-deep: #0091CC;       /* deep cyan — gradient bottom / hover */
+  --mint-ink: #052E3F;        /* readable text on cyan */
+  --mint-soft: rgba(20, 184, 254, 0.14);
+  --mint-glow: rgba(20, 184, 254, 0.36);
+  /* The signature rainbow used for hero CTAs and the brand mark */
+  --rainbow: linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%);
+  --rainbow-soft: linear-gradient(135deg, rgba(212,51,150,0.15), rgba(101,65,193,0.15), rgba(20,184,254,0.15));
   --danger: #DC2626;
-  --success: #16A34A;
+  --success: #14B8FE;
   --radius: 14px;
   --radius-sm: 10px;
   --radius-lg: 18px;
-  --shadow-1: 0 1px 2px rgba(26, 21, 48, 0.04), 0 1px 3px rgba(26, 21, 48, 0.04);
-  --shadow-2: 0 1px 2px rgba(26, 21, 48, 0.04), 0 4px 12px rgba(91, 33, 182, 0.08);
-  --shadow-3: 0 2px 4px rgba(26, 21, 48, 0.06), 0 12px 28px rgba(91, 33, 182, 0.14);
-  --shadow-gold: 0 4px 16px rgba(139, 92, 246, 0.24), 0 2px 6px rgba(139, 92, 246, 0.14);
+  --shadow-1: 0 1px 2px rgba(21, 10, 51, 0.05), 0 1px 3px rgba(21, 10, 51, 0.05);
+  --shadow-2: 0 1px 2px rgba(21, 10, 51, 0.05), 0 4px 12px rgba(101, 65, 193, 0.10);
+  --shadow-3: 0 2px 4px rgba(21, 10, 51, 0.07), 0 12px 28px rgba(101, 65, 193, 0.18);
+  --shadow-gold: 0 4px 16px rgba(212, 51, 150, 0.26), 0 2px 6px rgba(212, 51, 150, 0.16);
   --shadow: var(--shadow-2);
-  --font-sans: 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  /* Display = same family as sans — visual hierarchy comes from weight + size only.
-     The variable stays so call-sites don't need to change if we ever swap back. */
-  --font-display: 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Noto Sans Hebrew', 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  /* Display = same family as sans — visual hierarchy comes from weight + size only. */
+  --font-display: 'Noto Sans Hebrew', 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: light;
@@ -104,21 +102,26 @@ button:active { transform: scale(0.985) translateY(0); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .btn-primary {
-  background: linear-gradient(180deg, var(--accent-2) 0%, var(--accent) 60%, var(--accent-3) 100%);
+  /* Signature Smartor rainbow: magenta → purple → cyan */
+  background: var(--rainbow);
+  background-size: 130% 130%;
+  background-position: 0% 0%;
   color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.18),
-    0 6px 14px rgba(0, 0, 0, 0.10);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 1px 2px rgba(101, 65, 193, 0.34),
+    0 8px 22px rgba(212, 51, 150, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  transition: background-position 0.4s var(--ease), transform 0.18s var(--ease), box-shadow 0.22s var(--ease);
 }
 .btn-primary:hover {
-  background: linear-gradient(180deg, #34343a 0%, var(--accent-2) 60%, var(--accent) 100%);
+  background-position: 100% 100%;
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    0 4px 8px rgba(0, 0, 0, 0.18),
-    0 12px 28px rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(139, 92, 246, 0.30);
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 4px 10px rgba(101, 65, 193, 0.36),
+    0 16px 36px rgba(212, 51, 150, 0.42);
 }
 .btn-primary:active { transform: translateY(0) scale(0.99); }
 
@@ -147,48 +150,49 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 14px rgba(220, 38, 38, 0.30);
 }
 
-/* Premium gold variant — for the absolute hero CTA */
+/* "Gold" CTA = the magenta-leaning solid variant. Use for nav-bar CTAs and
+   secondary primary actions where the full rainbow would be too loud. */
 .btn-gold {
   background: linear-gradient(180deg, var(--gold-2) 0%, var(--gold) 55%, var(--gold-deep) 100%);
   color: #ffffff;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.18);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 1px 2px rgba(91, 33, 182, 0.30),
-    0 8px 20px rgba(139, 92, 246, 0.26);
+    0 1px 2px rgba(157, 37, 112, 0.30),
+    0 8px 20px rgba(212, 51, 150, 0.30);
 }
 .btn-gold:hover {
-  filter: brightness(1.04);
+  filter: brightness(1.05);
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.26),
-    0 4px 8px rgba(91, 33, 182, 0.30),
-    0 14px 32px rgba(139, 92, 246, 0.36);
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 4px 8px rgba(157, 37, 112, 0.34),
+    0 14px 32px rgba(212, 51, 150, 0.40);
 }
 
-/* Mint CTA — energetic counter to the violet for moments-of-truth:
-   the final "אשר וקבע תור", the success-state primary action. Reads
-   as "alive, go". Pairs against the deep-indigo gradient elsewhere on
-   the page so the page has two voices instead of one. */
+/* Cyan CTA (var name kept as "mint" for back-compat). Used for moments
+   of truth: the final "אשר וקבע תור" booking confirm, success states,
+   "today"/"next available" indicators. Cool counterpoint to the magenta-
+   purple rainbow elsewhere on the page. */
 .btn-mint {
   background: linear-gradient(180deg, var(--mint-2) 0%, var(--mint) 55%, var(--mint-deep) 100%);
-  color: var(--mint-ink);
+  color: #ffffff;
   font-weight: 700;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.40);
+  text-shadow: 0 1px 1px rgba(5, 46, 63, 0.30);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    0 1px 2px rgba(6, 78, 59, 0.18),
-    0 10px 24px rgba(45, 197, 154, 0.34),
-    0 0 0 1px rgba(45, 197, 154, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    0 1px 2px rgba(5, 46, 63, 0.20),
+    0 10px 24px rgba(20, 184, 254, 0.40),
+    0 0 0 1px rgba(20, 184, 254, 0.45);
 }
 .btn-mint:hover {
-  filter: brightness(1.04);
+  filter: brightness(1.05);
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.60),
-    0 4px 10px rgba(6, 78, 59, 0.22),
-    0 16px 36px rgba(45, 197, 154, 0.44),
-    0 0 0 1px rgba(45, 197, 154, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    0 4px 10px rgba(5, 46, 63, 0.26),
+    0 16px 36px rgba(20, 184, 254, 0.50),
+    0 0 0 1px rgba(20, 184, 254, 0.55);
 }
 .btn-mint:active { transform: translateY(0); }
 .btn-mint:disabled {
@@ -1752,6 +1756,69 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   transform: none;
 }
 .copy-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+/* Logo-upload nudge — shown beneath the share-link card when the barber
+   hasn't uploaded a logo yet. Reminds them that WhatsApp previews fall
+   back to the generic Toron-branded image until they upload their own.
+   Styled with the magenta→cyan rainbow's signature soft wash so it
+   feels like part of the same design language. */
+.logo-nudge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(212, 51, 150, 0.07), rgba(20, 184, 254, 0.07));
+  border: 1px solid rgba(212, 51, 150, 0.18);
+}
+.logo-nudge-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-shadow: 0 4px 12px rgba(212, 51, 150, 0.32);
+}
+.logo-nudge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.logo-nudge-body strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.logo-nudge-body span {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+.logo-nudge-cta {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.15s var(--ease);
+  flex: none;
+}
+.logo-nudge-cta:hover {
+  background: rgba(212, 51, 150, 0.10);
+}
+@media (max-width: 540px) {
+  .logo-nudge { flex-wrap: wrap; }
+  .logo-nudge-cta { width: 100%; text-align: center; background: rgba(212, 51, 150, 0.10); }
+}
 
 /* Success state — animated check + display headline.
    Backdrop: mint + violet radial wash so the check feels like it's
@@ -7026,41 +7093,51 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
    dashboard (purple) and booking (dark cinematic) surfaces.
    ═════════════════════════════════════════════════════════════════════ */
 .living-landing {
-  /* Backgrounds — vibrant violet on white, one cohesive scene */
-  --bg: #FAF8FF;           /* lavender-tinted paper */
-  --bg-deep: #EFE7FF;      /* deeper violet wash */
-  --bg-warm: #F5EFFF;      /* hero wash */
+  /* Hybrid Premium: light aqua wash (F's bg) + magenta/cyan rainbow CTAs
+     (A's vibe). Ink stays dark navy for readability. Noto Sans Hebrew. */
+  --bg: #F8FCFE;           /* aqua-tinted near-white canvas */
+  --bg-deep: #EEF7FB;      /* deeper aqua wash for inset sections */
+  --bg-deep-2: #E4F2F8;
+  --bg-warm: #FBFCFE;      /* hero wash — barely lifted */
   --paper: #FFFFFF;        /* card surface */
-  --rule: #E6DCFF;         /* dividers / borders */
+  --rule: rgba(14, 31, 61, 0.08);
+  --rule-2: rgba(14, 31, 61, 0.14);
 
-  /* Ink (text) */
-  --ink: #1A1530;          /* near-black with violet undertone */
-  --ink-soft: #4A4170;     /* secondary text */
-  --ink-mute: #7B72A3;     /* tertiary / muted */
+  /* Ink (text) — dark navy on light bg */
+  --ink: #0E1F3D;
+  --ink-soft: #2E4263;
+  --ink-mute: #6B7A95;
 
-  /* Accent palette — vibrant royal violet drives the page */
-  --gold: #7C3AED;
-  --gold-deep: #5B21B6;
-  --gold-glow: rgba(124, 58, 237, 0.30);
-  --gold-soft: rgba(124, 58, 237, 0.10);
-  --shadow-gold: 0 14px 40px rgba(91, 33, 182, 0.22);
-  --peach: #8B5CF6;        /* secondary vibrant violet (was warm peach) */
-  --blush: #C084FC;        /* lighter purple highlight (was blush pink) */
-  --sage: #A78BFA;         /* soft lavender for status / chips */
-  --sand: #DDD6FE;         /* cool violet wash (was sand beige) */
+  /* Accent palette — Smartor magenta + purple + cyan trio */
+  --gold: #D43396;         /* magenta dominant */
+  --gold-2: #EA60B5;       /* magenta lighter */
+  --gold-deep: #9D2570;    /* deep magenta */
+  --gold-glow: rgba(212, 51, 150, 0.34);
+  --gold-soft: rgba(212, 51, 150, 0.10);
+  --shadow-gold: 0 14px 38px rgba(212, 51, 150, 0.32);
+  --peach: #6541C1;        /* purple secondary (was peach) */
+  --blush: #14B8FE;        /* electric cyan (was blush pink) */
+  --sage: #EA60B5;         /* magenta light for status / chips */
+  --sand: rgba(212, 51, 150, 0.10);
+
+  /* The signature rainbow gradient — magenta → purple → cyan */
+  --rainbow: linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%);
+  --rainbow-soft: linear-gradient(135deg, rgba(212,51,150,0.10), rgba(101,65,193,0.10), rgba(20,184,254,0.10));
 
   /* Effects */
-  --shadow-1: 0 2px 6px rgba(42, 31, 18, 0.05), 0 12px 30px rgba(42, 31, 18, 0.08);
+  --shadow-1: 0 2px 6px rgba(14, 31, 61, 0.04), 0 12px 30px rgba(14, 31, 61, 0.06);
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* Typography — distinct serif for the editorial feel, monospace for
-     stat numbers / countdown / inline code. Both Google Fonts. */
-  --font-serif: 'Frank Ruhl Libre', 'Heebo', serif;
+  /* Typography — Noto Sans Hebrew everywhere, mono for stat numbers. */
+  --font-serif: 'Noto Sans Hebrew', 'Heebo', sans-serif;
   --font-mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* Base */
-  background: var(--bg);
+  /* Base — aqua wash with two soft color glows */
+  background:
+    radial-gradient(60% 50% at 85% 0%, rgba(20, 184, 254, 0.14), transparent 60%),
+    radial-gradient(50% 40% at 5% 100%, rgba(212, 51, 150, 0.10), transparent 60%),
+    linear-gradient(180deg, #f8fcfe 0%, #f2f9fc 100%);
   color: var(--ink);
   min-height: 100vh;
   font-family: var(--font-sans);

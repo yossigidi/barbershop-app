@@ -314,36 +314,36 @@ function NavBar() {
     <header style={{
       position: 'sticky', top: 0, zIndex: 50,
       padding: '14px 40px',
-      background: scrolled ? 'rgba(248, 244, 255, 0.85)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(14px) saturate(160%)' : 'none',
-      borderBottom: scrolled ? '1px solid var(--rule)' : '1px solid transparent',
+      background: scrolled ? 'rgba(248, 252, 254, 0.72)' : 'transparent',
+      backdropFilter: scrolled ? 'blur(18px) saturate(170%)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(18px) saturate(170%)' : 'none',
+      borderBottom: scrolled ? '1px solid rgba(14, 31, 61, 0.08)' : '1px solid transparent',
       transition: 'background 0.3s var(--ease), backdrop-filter 0.3s, border-color 0.3s',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     }}>
-      <a style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
-        <BrandMark />
-        <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em' }}>Toron</span>
-      </a>
+      <Link to="/" aria-label="Toron" style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <img src="/toron-wordmark.png" alt="Toron" style={{ height: 32, width: 'auto', display: 'block' }} />
+      </Link>
       <nav style={{ display: 'flex', alignItems: 'center', gap: 26, fontSize: 14, fontWeight: 500, color: 'var(--ink-soft)' }}>
         <a href="#how">איך זה עובד</a>
         <a href="#features">תכונות</a>
         <a href="#pricing">מסלולים</a>
         <a href="#faq">שאלות</a>
         <span style={{ width: 1, height: 20, background: 'var(--rule-2)' }} />
-        <a style={{ color: 'var(--ink)' }}>כניסה</a>
-        <a className="gold-cta">
+        <Link to="/auth?mode=login" style={{ color: 'var(--ink)' }}>כניסה</Link>
+        <Link to="/auth?mode=signup" className="gold-cta">
           התחל חינם <IArrow size={14} stroke={2.4} />
-        </a>
+        </Link>
       </nav>
       <style>{`.gold-cta {
         background: linear-gradient(180deg, var(--gold-2), var(--gold));
         color: var(--ink); padding: 10px 18px; border-radius: 999px;
         font-weight: 700; font-size: 13px;
         display: inline-flex; align-items: center; gap: 8px;
-        box-shadow: 0 4px 14px rgba(109, 68, 232, 0.30);
+        box-shadow: 0 4px 14px rgba(212, 51, 150, 0.30);
         transition: transform 0.2s var(--ease-back), box-shadow 0.3s;
       }
-      .gold-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(109, 68, 232, 0.45); }`}</style>
+      .gold-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(212, 51, 150, 0.45); }`}</style>
     </header>
   );
 }
@@ -352,10 +352,10 @@ function BrandMark({ size = 34 }) {
   return (
     <span style={{
       width: size, height: size, borderRadius: 12,
-      background: 'linear-gradient(135deg, var(--gold-2) 0%, var(--gold) 55%, var(--gold-deep) 100%)',
-      color: 'var(--bg-deep)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      background: 'linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%)',
+      color: '#ffffff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       fontWeight: 900, fontSize: size * 0.5, letterSpacing: '-0.04em',
-      boxShadow: '0 4px 14px rgba(109, 68, 232, 0.45), inset 0 1px 0 rgba(255,255,255,0.35)',
+      boxShadow: '0 4px 14px rgba(212, 51, 150, 0.45), 0 0 0 1px rgba(255,255,255,0.10) inset, 0 1px 0 rgba(255,255,255,0.35) inset',
     }}>T</span>
   );
 }
@@ -413,7 +413,7 @@ function HeroCopy() {
     <div className="reveal is-in" style={{ position: 'relative' }}>
       <span style={{
         display: 'inline-flex', alignItems: 'center', gap: 8,
-        background: 'rgba(155, 122, 255, 0.18)', border: '1px solid rgba(109, 68, 232, 0.30)',
+        background: 'rgba(234, 96, 181, 0.18)', border: '1px solid rgba(212, 51, 150, 0.30)',
         color: 'var(--gold-deep)', fontSize: 12.5, fontWeight: 700,
         padding: '7px 14px', borderRadius: 999, marginBottom: 22,
         letterSpacing: '0.02em',
@@ -444,12 +444,12 @@ function HeroCopy() {
         זיהוי לקוחות שנעלמו. הכל במקום אחד — בעברית, מ-50 ש״ח לחודש.
       </p>
       <div style={{ display: 'flex', gap: 14, marginBottom: 28, flexWrap: 'wrap' }}>
-        <a className="cta-primary">
+        <Link to="/auth?mode=signup" className="cta-primary">
           <ISparkles size={17} />
           התחל 30 יום חינם
           <span className="cta-shimmer" />
-        </a>
-        <a className="cta-secondary">
+        </Link>
+        <a href="#how" className="cta-secondary">
           ראה הדגמה חיה <IArrow size={15} stroke={2.4} />
         </a>
       </div>
@@ -464,11 +464,12 @@ function HeroCopy() {
       <style>{`
         .cta-primary {
           position: relative; overflow: hidden;
-          background: linear-gradient(180deg, var(--gold-2) 0%, var(--gold) 55%, var(--gold-deep) 100%);
-          color: var(--bg-deep); padding: 18px 28px; border-radius: 14px;
+          background: linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%);
+          color: #ffffff; padding: 18px 28px; border-radius: 14px;
           font-weight: 800; font-size: 16px;
           display: inline-flex; align-items: center; gap: 10px;
-          box-shadow: var(--shadow-gold), inset 0 1px 0 rgba(255,255,255,0.35);
+          text-shadow: 0 1px 1px rgba(0,0,0,0.18);
+          box-shadow: var(--shadow-gold), inset 0 1px 0 rgba(255,255,255,0.25);
           transition: transform 0.25s var(--ease-back), box-shadow 0.3s;
           animation: glow-cycle 3.5s var(--ease) infinite;
         }
@@ -480,14 +481,14 @@ function HeroCopy() {
           pointer-events: none;
         }
         .cta-secondary {
-          background: var(--paper); color: var(--ink); border: 1px solid var(--rule-2);
+          background: rgba(255,255,255,0.85); color: var(--ink); border: 1px solid var(--rule-2);
           padding: 18px 26px; border-radius: 14px;
           font-weight: 700; font-size: 15px;
           display: inline-flex; align-items: center; gap: 10px;
-          box-shadow: var(--shadow-1);
-          transition: transform 0.25s var(--ease-back), border-color 0.25s, box-shadow 0.25s;
+          backdrop-filter: blur(10px);
+          transition: transform 0.25s var(--ease-back), border-color 0.25s, background 0.25s;
         }
-        .cta-secondary:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: var(--shadow-2); }
+        .cta-secondary:hover { transform: translateY(-2px); border-color: var(--gold); background: white; }
       `}</style>
     </div>
   );
@@ -552,7 +553,7 @@ function LivePhone({ phrases }) {
         position: 'relative', zIndex: 1, animation: 'float-y 6s var(--ease) infinite',
         width: 360, height: 720, borderRadius: 52,
         background: 'linear-gradient(180deg, #241158, #16093B)',
-        padding: 12, boxShadow: '0 50px 100px rgba(20, 9, 58, 0.40), 0 0 0 2px rgba(109, 68, 232, 0.30)',
+        padding: 12, boxShadow: '0 50px 100px rgba(13, 6, 31, 0.40), 0 0 0 2px rgba(212, 51, 150, 0.30)',
       }}>
         <div style={{
           width: '100%', height: '100%', borderRadius: 42,
@@ -620,7 +621,7 @@ function LivePhone({ phrases }) {
             background: 'linear-gradient(135deg, var(--gold-2), var(--gold-deep))', color: 'var(--bg)',
             borderRadius: 12, padding: '12px 14px',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            boxShadow: '0 8px 18px rgba(109, 68, 232, 0.30)',
+            boxShadow: '0 8px 18px rgba(212, 51, 150, 0.30)',
             marginBottom: 10,
           }}>
             <div>
@@ -649,7 +650,7 @@ function LivePhone({ phrases }) {
               position: 'absolute', top: 56, right: 16, left: 16,
               background: 'white', border: '1px solid var(--gold)', borderRadius: 12,
               padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10,
-              boxShadow: '0 10px 28px rgba(20, 9, 58, 0.18)',
+              boxShadow: '0 10px 28px rgba(13, 6, 31, 0.18)',
               animation: 'toast-pop 3.2s var(--ease) forwards',
               zIndex: 5,
             }}>
@@ -698,7 +699,7 @@ function PhoneRow({ b, visible }) {
       {b.tag && !isEmpty && (
         <span style={{
           fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 999, letterSpacing: '0.08em',
-          background: b.tag === 'VIP' ? 'linear-gradient(180deg, var(--gold-2), var(--gold-deep))' : 'rgba(255, 119, 87, 0.18)',
+          background: b.tag === 'VIP' ? 'linear-gradient(180deg, var(--gold-2), var(--gold-deep))' : 'rgba(20, 184, 254, 0.18)',
           color: b.tag === 'VIP' ? 'white' : '#9E2A4A',
         }}>{b.tag}</span>
       )}
@@ -713,7 +714,7 @@ function FloatingCallout({ style, icon: Icon, label, sub, color }) {
       position: 'absolute', ...style, zIndex: 2,
       background: 'white', borderRadius: 14, padding: '12px 14px',
       display: 'flex', alignItems: 'center', gap: 12, minWidth: 180,
-      boxShadow: '0 18px 36px rgba(20, 9, 58, 0.14), 0 2px 6px rgba(20, 9, 58, 0.06)',
+      boxShadow: '0 18px 36px rgba(13, 6, 31, 0.14), 0 2px 6px rgba(13, 6, 31, 0.06)',
       border: '1px solid var(--rule)',
       animation: 'float-y 5s var(--ease) infinite',
     }}>
@@ -975,7 +976,7 @@ function StepVisual02() {
             color: s.b ? 'white' : 'var(--ink)',
             fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 13,
             position: 'relative',
-            boxShadow: s.b ? '0 4px 10px rgba(109, 68, 232, 0.25)' : 'none',
+            boxShadow: s.b ? '0 4px 10px rgba(212, 51, 150, 0.25)' : 'none',
             animation: s.b ? `booking-pop 0.5s var(--ease-back) ${i * 80}ms both` : 'none',
           }}>
             {s.t}
@@ -1076,7 +1077,7 @@ function Numbers() {
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 60 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(155, 122, 255, 0.18)', color: 'var(--gold-2)',
+            background: 'rgba(234, 96, 181, 0.18)', color: 'var(--gold-2)',
             fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 999,
             letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 18,
           }}>
@@ -1110,7 +1111,7 @@ function BigNumber({ value, prefix = '', suffix = '', label, delta, mono, highli
     <div ref={ref} style={{
       padding: '28px 24px', borderRadius: 20,
       background: highlight ? 'linear-gradient(135deg, var(--gold-deep), var(--gold))' : 'rgba(248, 244, 255, 0.04)',
-      border: highlight ? 'none' : '1px solid rgba(155, 122, 255, 0.20)',
+      border: highlight ? 'none' : '1px solid rgba(234, 96, 181, 0.20)',
       color: highlight ? 'var(--bg-deep)' : 'var(--bg)',
     }}>
       <div className="num" style={{
@@ -1121,7 +1122,7 @@ function BigNumber({ value, prefix = '', suffix = '', label, delta, mono, highli
         {prefix}{formatted}{suffix}
       </div>
       <div style={{ fontSize: 14, fontWeight: 600, color: highlight ? 'var(--bg-deep)' : 'var(--bg)', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 11.5, color: highlight ? 'rgba(20, 9, 58, 0.7)' : 'rgba(248, 244, 255, 0.55)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
+      <div style={{ fontSize: 11.5, color: highlight ? 'rgba(13, 6, 31, 0.7)' : 'rgba(248, 244, 255, 0.55)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
         ↗ {delta}
       </div>
     </div>
@@ -1145,7 +1146,7 @@ function FeatureShowcase() {
       <div className="reveal" style={{ textAlign: 'center', marginBottom: 56 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'rgba(109, 68, 232, 0.14)', color: 'var(--gold-deep)',
+          background: 'rgba(212, 51, 150, 0.14)', color: 'var(--gold-deep)',
           fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 999,
           letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 18,
         }}>
@@ -1334,7 +1335,7 @@ function FeatureMiniDemo({ idx }) {
             <div style={{ fontSize: 11, color: 'var(--ink-mute)' }}>לא חזר {c.days}</div>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999,
-              background: c.state === 'back' ? 'rgba(0, 201, 167, 0.18)' : 'rgba(255, 119, 87, 0.18)',
+              background: c.state === 'back' ? 'rgba(0, 201, 167, 0.18)' : 'rgba(20, 184, 254, 0.18)',
               color: c.state === 'back' ? 'var(--sage)' : '#9E2A4A',
             }}>{c.state === 'back' ? '✓ חזר!' : 'שלח הודעה'}</span>
           </div>
@@ -1374,8 +1375,8 @@ function FeatureMiniDemo({ idx }) {
         toron.co.il/<span style={{ color: 'var(--gold-2)' }}>ramos</span>
       </div>
       <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-        <span style={{ background: 'rgba(155, 122, 255, 0.18)', color: 'var(--gold-2)', padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600 }}>העתק</span>
-        <span style={{ background: 'rgba(155, 122, 255, 0.18)', color: 'var(--gold-2)', padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600 }}>קוד QR</span>
+        <span style={{ background: 'rgba(234, 96, 181, 0.18)', color: 'var(--gold-2)', padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600 }}>העתק</span>
+        <span style={{ background: 'rgba(234, 96, 181, 0.18)', color: 'var(--gold-2)', padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600 }}>קוד QR</span>
         <span style={{ marginInlineStart: 'auto', background: '#25D366', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <IWhats size={12} stroke={0} /> שתף
         </span>
@@ -1418,8 +1419,8 @@ function BAColumn({ before }) {
         <div style={{
           background: '#F0EAFF', borderRadius: 22, padding: 30,
           border: '1px solid #CCC2F0', transform: 'rotate(-1deg)',
-          boxShadow: '0 14px 30px rgba(20, 9, 58, 0.08)',
-          backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, rgba(20, 9, 58, 0.08) 31px, rgba(20, 9, 58, 0.08) 32px)',
+          boxShadow: '0 14px 30px rgba(13, 6, 31, 0.08)',
+          backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, rgba(13, 6, 31, 0.08) 31px, rgba(13, 6, 31, 0.08) 32px)',
           minHeight: 380,
           position: 'relative',
         }}>
@@ -1504,7 +1505,7 @@ function BAColumn({ before }) {
           {b.tag && (
             <span style={{
               fontSize: 9.5, fontWeight: 800, padding: '3px 8px', borderRadius: 999, letterSpacing: '0.06em',
-              background: b.tag === 'VIP' ? 'linear-gradient(180deg, var(--gold-2), var(--gold-deep))' : 'rgba(255, 119, 87, 0.18)',
+              background: b.tag === 'VIP' ? 'linear-gradient(180deg, var(--gold-2), var(--gold-deep))' : 'rgba(20, 184, 254, 0.18)',
               color: b.tag === 'VIP' ? 'white' : '#9E2A4A',
             }}>{b.tag}</span>
           )}
@@ -1516,7 +1517,7 @@ function BAColumn({ before }) {
         marginTop: 16, padding: '12px 14px',
         background: 'linear-gradient(135deg, var(--gold-2), var(--gold-deep))', color: 'white',
         borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        boxShadow: '0 8px 18px rgba(109, 68, 232, 0.30)',
+        boxShadow: '0 8px 18px rgba(212, 51, 150, 0.30)',
       }}>
         <span style={{ fontSize: 12, fontWeight: 600 }}>הכנסה היום</span>
         <span className="num" style={{ fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 700 }}>₪ 530</span>
@@ -1534,7 +1535,7 @@ function PricingSection() {
       <div className="reveal" style={{ textAlign: 'center', marginBottom: 48 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'rgba(109, 68, 232, 0.14)', color: 'var(--gold-deep)',
+          background: 'rgba(212, 51, 150, 0.14)', color: 'var(--gold-deep)',
           fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 999,
           letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 18,
         }}>
@@ -1581,7 +1582,7 @@ function PriceCard({ tag, title, price, extra, line, items, cta, featured }) {
       color: featured ? 'var(--bg)' : 'var(--ink)',
       border: featured ? '1px solid var(--gold)' : '1px solid var(--rule)',
       borderRadius: 24, padding: 36, position: 'relative', overflow: 'hidden',
-      boxShadow: featured ? '0 30px 60px rgba(20, 9, 58, 0.35)' : 'var(--shadow-1)',
+      boxShadow: featured ? '0 30px 60px rgba(13, 6, 31, 0.35)' : 'var(--shadow-1)',
       transition: 'transform 0.3s var(--ease)',
     }}>
       {featured && (
@@ -1594,7 +1595,7 @@ function PriceCard({ tag, title, price, extra, line, items, cta, featured }) {
       <div style={{ position: 'relative' }}>
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: featured ? 'rgba(155, 122, 255, 0.18)' : 'var(--bg-warm)',
+          background: featured ? 'rgba(234, 96, 181, 0.18)' : 'var(--bg-warm)',
           color: featured ? 'var(--gold-2)' : 'var(--gold-deep)',
           fontSize: 11.5, fontWeight: 700, padding: '6px 14px', borderRadius: 999,
           letterSpacing: '0.04em', marginBottom: 18,
@@ -1627,15 +1628,15 @@ function PriceCard({ tag, title, price, extra, line, items, cta, featured }) {
             </li>
           ))}
         </ul>
-        <a style={{
+        <Link to="/auth?mode=signup" style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
           background: featured ? 'linear-gradient(180deg, var(--gold-2), var(--gold))' : 'var(--ink)',
           color: featured ? 'var(--bg-deep)' : 'var(--bg)',
           padding: '16px 0', borderRadius: 12, fontWeight: 800, fontSize: 15,
-          boxShadow: featured ? '0 14px 28px rgba(109, 68, 232, 0.35)' : 'var(--shadow-1)',
+          boxShadow: featured ? '0 14px 28px rgba(212, 51, 150, 0.35)' : 'var(--shadow-1)',
           transition: 'transform 0.25s var(--ease-back)',
-          cursor: 'pointer',
-        }}>{cta} <IArrow size={15} stroke={2.4} /></a>
+          cursor: 'pointer', textDecoration: 'none',
+        }}>{cta} <IArrow size={15} stroke={2.4} /></Link>
       </div>
     </div>
   );
@@ -1654,7 +1655,7 @@ function TestimonialMarquee() {
       <div className="reveal" style={{ textAlign: 'center', marginBottom: 48, padding: '0 40px' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'rgba(109, 68, 232, 0.14)', color: 'var(--gold-deep)',
+          background: 'rgba(212, 51, 150, 0.14)', color: 'var(--gold-deep)',
           fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 999,
           letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 18,
         }}>
@@ -1778,7 +1779,7 @@ function FinalCTA() {
       <div className="reveal" style={{ position: 'relative', maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'rgba(155, 122, 255, 0.18)', color: 'var(--gold-2)',
+          background: 'rgba(234, 96, 181, 0.18)', color: 'var(--gold-2)',
           fontSize: 12, fontWeight: 700, padding: '7px 16px', borderRadius: 999,
           letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 28,
         }}>
@@ -1796,11 +1797,11 @@ function FinalCTA() {
           30 ימים חינם. ללא כרטיס אשראי. הרשמה ב-2 דקות.
           <br />הצטרף ל-1,247 בעלי עסק שכבר עברו ל-Toron.
         </p>
-        <a className="cta-mega">
+        <Link to="/auth?mode=signup" className="cta-mega">
           <ISparkles size={20} />
           התחל 30 יום חינם
           <IArrow size={20} stroke={2.4} />
-        </a>
+        </Link>
         <ul style={{ display: 'flex', justifyContent: 'center', gap: 28, marginTop: 32, color: 'rgba(248, 244, 255, 0.55)', fontSize: 13, flexWrap: 'wrap' }}>
           <li style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><ICheck size={14} stroke={2.5} style={{ color: 'var(--gold-2)' }} />ללא התקנה</li>
           <li style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><ICheck size={14} stroke={2.5} style={{ color: 'var(--gold-2)' }} />ביטול בלחיצה</li>
@@ -1811,10 +1812,11 @@ function FinalCTA() {
           .cta-mega {
             position: relative; overflow: hidden;
             display: inline-flex; align-items: center; gap: 14px;
-            background: linear-gradient(180deg, var(--gold-2) 0%, var(--gold) 50%, var(--gold-deep) 100%);
-            color: var(--bg-deep); padding: 24px 42px; border-radius: 18px;
+            background: linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%);
+            color: #ffffff; padding: 24px 42px; border-radius: 18px;
             font-weight: 800; font-size: 19px;
-            box-shadow: 0 24px 60px rgba(109, 68, 232, 0.45), inset 0 1px 0 rgba(255,255,255,0.35);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.20);
+            box-shadow: 0 24px 60px rgba(212, 51, 150, 0.45), 0 0 0 1px rgba(255,255,255,0.10) inset, inset 0 1px 0 rgba(255,255,255,0.30);
             animation: glow-cycle 3.5s var(--ease) infinite;
             transition: transform 0.25s var(--ease-back);
           }
@@ -1839,26 +1841,45 @@ function Footer() {
     <footer style={{ background: '#16093B', color: 'rgba(248, 244, 255, 0.65)', padding: '48px 40px 32px' }}>
       <div style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 36 }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-            <BrandMarkFooter />
-            <span style={{ fontWeight: 800, fontSize: 22, color: 'var(--bg)' }}>Toron</span>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
+            <img src="/toron-wordmark.png" alt="Toron" style={{ height: 32, width: 'auto', display: 'block' }} />
           </div>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, maxWidth: 320 }}>
             ניהול תורים חכם לבעלי מקצועות שירות בישראל. בעברית, מהיום הראשון.
           </p>
         </div>
         {[
-          ['מוצר', ['הרשמה', 'כניסה', 'מסלולים', 'הדגמה']],
-          ['חוקי', ['תקנון', 'פרטיות', 'ביטולים', 'נגישות']],
-          ['תמיכה', ['support@toron.co.il', 'privacy@toron.co.il', 'accessibility@toron.co.il']],
+          ['מוצר', [
+            ['הרשמה', '/auth?mode=signup', 'link'],
+            ['כניסה', '/auth?mode=login', 'link'],
+            ['מסלולים', '#pricing', 'anchor'],
+            ['הדגמה', '#how', 'anchor'],
+          ]],
+          ['חוקי', [
+            ['תקנון', '/terms', 'link'],
+            ['פרטיות', '/privacy', 'link'],
+            ['ביטולים', '/refund', 'link'],
+            ['נגישות', '/accessibility', 'link'],
+          ]],
+          ['תמיכה', [
+            ['support@toron.co.il', 'mailto:support@toron.co.il', 'anchor'],
+            ['privacy@toron.co.il', 'mailto:privacy@toron.co.il', 'anchor'],
+            ['accessibility@toron.co.il', 'mailto:accessibility@toron.co.il', 'anchor'],
+          ]],
         ].map(([h, items], i) => (
           <div key={i}>
             <h4 style={{
               fontSize: 11.5, fontWeight: 800, color: 'var(--gold-2)', letterSpacing: '0.18em',
               textTransform: 'uppercase', margin: '0 0 14px',
             }}>{h}</h4>
-            {items.map((x, j) => (
-              <div key={j} style={{ padding: '4px 0', fontSize: 13.5, color: 'rgba(248, 244, 255, 0.75)' }}>{x}</div>
+            {items.map(([label, href, kind], j) => (
+              <div key={j} style={{ padding: '4px 0', fontSize: 13.5 }}>
+                {kind === 'link' ? (
+                  <Link to={href} style={{ color: 'rgba(248, 244, 255, 0.75)', textDecoration: 'none' }}>{label}</Link>
+                ) : (
+                  <a href={href} style={{ color: 'rgba(248, 244, 255, 0.75)', textDecoration: 'none' }}>{label}</a>
+                )}
+              </div>
             ))}
           </div>
         ))}
@@ -1875,8 +1896,8 @@ function BrandMarkFooter() {
   return (
     <span style={{
       width: 34, height: 34, borderRadius: 12,
-      background: 'linear-gradient(135deg, var(--gold-2) 0%, var(--gold) 55%, var(--gold-deep) 100%)',
-      color: '#16093B', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      background: 'linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%)',
+      color: '#ffffff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       fontWeight: 900, fontSize: 17,
     }}>T</span>
   );

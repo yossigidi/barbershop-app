@@ -53,25 +53,25 @@ async function fetchBarberFromSlug(env, slug) {
   };
 }
 
-// Photo IDs for the per-profession hero. Single source of truth — both
-// OG (1200×630, q=80) and the in-page hero (responsive w=720/1080/1440,
-// q=65) are derived from this map. Mirrors the same map in
-// src/pages/BookingPage.jsx; if you change one, change the other.
+// Photo IDs for the per-profession hero. Single source of truth — used
+// by the in-page hero (responsive w=720/1080/1440, q=65). Mirrors the
+// same map in src/pages/BookingPage.jsx; if you change one, change the
+// other.
 const PROFESSION_PHOTO_ID = {
   barber: '1503951914875-452162b0f3f1',
   manicurist: '1604654894610-df63bc536371',
   pedicurist: '1519415510236-718bdfcd89c8',
   cosmetician: '1616394584738-fc6e612e71b9',
 };
-const unsplashOg = (id) =>
-  `https://images.unsplash.com/photo-${id}?w=1200&h=630&q=80&auto=format&fit=crop`;
 const unsplashHero = (id, w) =>
   `https://images.unsplash.com/photo-${id}?w=${w}&q=65&auto=format&fit=crop`;
 
-// Back-compat alias — some call-sites still reference this name.
-const PROFESSION_OG_FALLBACK = Object.fromEntries(
-  Object.entries(PROFESSION_PHOTO_ID).map(([k, id]) => [k, unsplashOg(id)]),
-);
+// OG fallback when a barber hasn't uploaded a logo — a Toron-branded
+// 1200×630 PNG with the magenta→cyan rainbow + "Toron" mark. Lives in
+// /public so it's served by the static asset binding. This keeps every
+// shared booking link looking like Toron's brand even before the barber
+// uploads their own logo.
+const OG_FALLBACK = '/og-fallback.png';
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
@@ -87,7 +87,11 @@ function escapeHtml(s) {
 function injectOgTags(html, barber, fullUrl) {
   const title = `${barber.businessName} — קביעת תור`;
   const desc = `קבעו תור ב-${barber.businessName} בקלות וביעילות. תורים זמינים עכשיו.`;
-  const ogImage = barber.logoUrl || PROFESSION_OG_FALLBACK[barber.profession] || PROFESSION_OG_FALLBACK.barber;
+  // Prefer the barber's own logo. Fall back to the Toron-branded image
+  // (NOT to Unsplash) so every link previews as a real branded asset.
+  // Resolve to absolute URL so social crawlers can fetch it.
+  const origin = new URL(fullUrl).origin;
+  const ogImage = barber.logoUrl || `${origin}${OG_FALLBACK}`;
   const photoId = PROFESSION_PHOTO_ID[barber.profession] || PROFESSION_PHOTO_ID.barber;
   // Responsive preload via imagesrcset/imagesizes — modern browsers
   // (Chrome 116+, Safari 17+, Firefox 124+) pick the closest width to
