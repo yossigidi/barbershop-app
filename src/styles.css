@@ -1,29 +1,35 @@
 :root {
-  /* Premium dark + gold — luxury barbershop */
-  --bg: #faf8f3;             /* warm off-white */
-  --surface: #ffffff;         /* pure white cards */
-  --surface-2: #f4f1e9;       /* soft cream input bg */
-  --border: #e8e2d2;
-  --text: #18181b;            /* near-black */
-  --text-dim: #6b6b73;
-  --text-soft: #8a8a92;
-  --accent: #18181b;          /* dark — modern primary action */
-  --accent-2: #2c2c30;
-  --accent-3: #0d0d0f;
-  --gold: #b8893a;            /* gold reserved for premium highlights */
-  --gold-2: #c9974a;           /* warmer hover gold */
-  --gold-deep: #8a6628;        /* deep gold for depth */
-  --gold-soft: rgba(184, 137, 58, 0.10);
-  --gold-glow: rgba(184, 137, 58, 0.28);
-  --danger: #dc2626;
-  --success: #16a34a;
+  /* Toron — vibrant royal purple on white. One unified language across
+     dashboard, booking, settings, and marketing. Designed against IS 5568
+     contrast targets: ink #1A1530 on white = 17.3:1, accent #6D28D9 on
+     white = 7.4:1 (AAA), accent on white surface = AA Large for any role
+     used as a button background with white text. */
+  --bg: #FAF8FF;             /* lavender-tinted white — barely there */
+  --surface: #FFFFFF;         /* pure white cards */
+  --surface-2: #F3EEFF;       /* violet-50 input / soft fill */
+  --border: #E6DCFF;          /* violet-100 hairlines */
+  --text: #1A1530;            /* near-black with violet undertone */
+  --text-dim: #5B5577;
+  --text-soft: #8B85AA;
+  --accent: #6D28D9;          /* violet-700 — primary action */
+  --accent-2: #7C3AED;        /* violet-600 — gradient top */
+  --accent-3: #4C1D95;        /* violet-900 — gradient bottom / depth */
+  /* "Gold" var names retained so the 200+ call-sites don't churn.
+     Re-mapped to vibrant purple highlight tones. */
+  --gold: #8B5CF6;            /* violet-500 — vibrant pop */
+  --gold-2: #A78BFA;           /* violet-400 — hover lift */
+  --gold-deep: #6D28D9;        /* violet-700 — deep saturation */
+  --gold-soft: rgba(139, 92, 246, 0.10);
+  --gold-glow: rgba(139, 92, 246, 0.30);
+  --danger: #DC2626;
+  --success: #16A34A;
   --radius: 14px;
   --radius-sm: 10px;
   --radius-lg: 18px;
-  --shadow-1: 0 1px 2px rgba(24, 24, 27, 0.04), 0 1px 3px rgba(24, 24, 27, 0.04);
-  --shadow-2: 0 1px 2px rgba(24, 24, 27, 0.04), 0 4px 12px rgba(24, 24, 27, 0.06);
-  --shadow-3: 0 2px 4px rgba(24, 24, 27, 0.06), 0 12px 28px rgba(24, 24, 27, 0.10);
-  --shadow-gold: 0 4px 16px rgba(184, 137, 58, 0.18), 0 2px 6px rgba(184, 137, 58, 0.10);
+  --shadow-1: 0 1px 2px rgba(26, 21, 48, 0.04), 0 1px 3px rgba(26, 21, 48, 0.04);
+  --shadow-2: 0 1px 2px rgba(26, 21, 48, 0.04), 0 4px 12px rgba(91, 33, 182, 0.08);
+  --shadow-3: 0 2px 4px rgba(26, 21, 48, 0.06), 0 12px 28px rgba(91, 33, 182, 0.14);
+  --shadow-gold: 0 4px 16px rgba(139, 92, 246, 0.24), 0 2px 6px rgba(139, 92, 246, 0.14);
   --shadow: var(--shadow-2);
   --font-sans: 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   /* Display = same family as sans — visual hierarchy comes from weight + size only.
@@ -102,7 +108,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
     inset 0 1px 0 rgba(255, 255, 255, 0.10),
     0 4px 8px rgba(0, 0, 0, 0.18),
     0 12px 28px rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(184, 137, 58, 0.30);
+    0 0 0 1px rgba(139, 92, 246, 0.30);
 }
 .btn-primary:active { transform: translateY(0) scale(0.99); }
 
@@ -116,7 +122,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   border-color: var(--gold);
   background: var(--surface);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.14), var(--shadow-1);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.14), var(--shadow-1);
 }
 .btn-secondary:active { transform: translateY(0); }
 
@@ -138,16 +144,16 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   text-shadow: 0 1px 1px rgba(0,0,0,0.18);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 1px 2px rgba(138, 102, 40, 0.30),
-    0 8px 20px rgba(184, 137, 58, 0.26);
+    0 1px 2px rgba(91, 33, 182, 0.30),
+    0 8px 20px rgba(139, 92, 246, 0.26);
 }
 .btn-gold:hover {
   filter: brightness(1.04);
   transform: translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.26),
-    0 4px 8px rgba(138, 102, 40, 0.30),
-    0 14px 32px rgba(184, 137, 58, 0.36);
+    0 4px 8px rgba(91, 33, 182, 0.30),
+    0 14px 32px rgba(139, 92, 246, 0.36);
 }
 
 input, select {
@@ -429,7 +435,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   border-color: var(--gold);
   background: var(--surface);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.16);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.16);
 }
 .slot.booked {
   opacity: 0.35;
@@ -526,7 +532,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   box-shadow: var(--shadow-1);
   transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
 }
-.booking-item:hover { border-color: var(--gold); box-shadow: 0 4px 12px rgba(184, 137, 58, 0.10); }
+.booking-item:hover { border-color: var(--gold); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.10); }
 .booking-item .time {
   font-weight: 700;
   font-size: 1.15rem;
@@ -593,7 +599,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   border-color: var(--gold);
   background: var(--surface);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(184, 137, 58, 0.16);
+  box-shadow: 0 6px 18px rgba(139, 92, 246, 0.16);
 }
 .service-card:active { transform: scale(0.98); }
 .service-card.active {
@@ -657,7 +663,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-shadow: 0 1px 1px rgba(0,0,0,0.18);
-  box-shadow: 0 2px 6px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.30);
 }
 .service-card-desc {
   font-size: 0.75rem;
@@ -716,9 +722,9 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   padding: 20px 16px 18px;
   margin: -12px -12px 14px;
   background:
-    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(184, 137, 58, 0.22), transparent 70%),
-    radial-gradient(ellipse 40% 30% at 20% 100%, rgba(184, 137, 58, 0.08), transparent 70%),
-    linear-gradient(180deg, #0a0a0c 0%, #18181b 60%, #1d1d20 100%);
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(167, 139, 250, 0.30), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 20% 100%, rgba(124, 58, 237, 0.18), transparent 70%),
+    linear-gradient(180deg, #5B21B6 0%, #4C1D95 60%, #3F1486 100%);
   color: #ffffff;
   position: relative;
   overflow: hidden;
@@ -776,8 +782,8 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle at 20% 30%, rgba(184, 137, 58, 0.04) 0, transparent 35%),
-    radial-gradient(circle at 80% 70%, rgba(184, 137, 58, 0.04) 0, transparent 35%);
+    radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.04) 0, transparent 35%),
+    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.04) 0, transparent 35%);
   pointer-events: none;
   z-index: -1;
 }
@@ -809,7 +815,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   border: 2px solid var(--gold);
   box-shadow:
     0 6px 18px rgba(0, 0, 0, 0.4),
-    0 0 0 3px rgba(184, 137, 58, 0.12);
+    0 0 0 3px rgba(139, 92, 246, 0.12);
   background: white;
 }
 .brand-wordmark {
@@ -821,13 +827,13 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   font-weight: 700;
   color: var(--gold);
   background:
-    radial-gradient(circle at 50% 30%, rgba(184, 137, 58, 0.12), transparent 60%),
+    radial-gradient(circle at 50% 30%, rgba(139, 92, 246, 0.12), transparent 60%),
     rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(184, 137, 58, 0.40);
+  border: 1px solid rgba(139, 92, 246, 0.40);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 6px 18px rgba(0, 0, 0, 0.4),
-    0 0 0 3px rgba(184, 137, 58, 0.10);
+    0 0 0 3px rgba(139, 92, 246, 0.10);
   letter-spacing: -0.02em;
 }
 @media (min-width: 540px) {
@@ -912,10 +918,10 @@ h1 { font-family: var(--font-display); font-weight: 700; }
 /* Morning summary card — subtle gold tint matching brand */
 .morning-card {
   background:
-    radial-gradient(ellipse 80% 60% at 0% 0%, rgba(184, 137, 58, 0.10), transparent 60%),
+    radial-gradient(ellipse 80% 60% at 0% 0%, rgba(139, 92, 246, 0.10), transparent 60%),
     linear-gradient(135deg, var(--gold-soft), var(--surface) 70%);
   border: 1px solid var(--gold);
-  box-shadow: 0 6px 22px rgba(184, 137, 58, 0.10);
+  box-shadow: 0 6px 22px rgba(139, 92, 246, 0.10);
   padding: 22px;
 }
 .morning-greeting {
@@ -1301,9 +1307,9 @@ h1 { font-family: var(--font-display); font-weight: 700; }
 .live-status {
   border: 1px solid var(--gold);
   background:
-    radial-gradient(ellipse 60% 100% at 50% 0%, rgba(184, 137, 58, 0.16), transparent 70%),
+    radial-gradient(ellipse 60% 100% at 50% 0%, rgba(139, 92, 246, 0.16), transparent 70%),
     linear-gradient(180deg, var(--gold-soft), var(--surface));
-  box-shadow: 0 4px 16px rgba(184, 137, 58, 0.10);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.10);
   position: relative;
   overflow: hidden;
 }
@@ -1395,7 +1401,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   color: var(--gold-deep) !important;
   font-weight: 600 !important;
 }
-.onb-add-custom:hover { background: rgba(184, 137, 58, 0.18) !important; }
+.onb-add-custom:hover { background: rgba(139, 92, 246, 0.18) !important; }
 .onb-select-all {
   display: inline-flex;
   align-items: center;
@@ -1420,8 +1426,8 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   position: sticky;
   top: env(safe-area-inset-top);
   background:
-    radial-gradient(ellipse 60% 100% at 50% 0%, rgba(184, 137, 58, 0.10), transparent 70%),
-    linear-gradient(180deg, #0a0a0c 0%, #18181b 100%);
+    radial-gradient(ellipse 60% 100% at 50% 0%, rgba(167, 139, 250, 0.22), transparent 70%),
+    linear-gradient(180deg, #5B21B6 0%, #4C1D95 100%);
   color: var(--surface);
   z-index: 10;
   padding: 14px 16px 13px;
@@ -1433,7 +1439,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
 }
 .dashboard-header .dashboard-logo {
   border: 2px solid var(--gold);
-  box-shadow: 0 0 0 3px rgba(184, 137, 58, 0.18);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
   width: 36px;
   height: 36px;
 }
@@ -1630,7 +1636,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .copy-link:hover {
   background: var(--gold-soft);
   border-style: solid;
-  box-shadow: 0 4px 14px rgba(184, 137, 58, 0.16);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.16);
   transform: none;
 }
 .copy-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
@@ -1687,11 +1693,11 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   margin: 14px 0 18px;
   padding: 18px 16px 14px;
   background:
-    radial-gradient(ellipse 60% 40% at 0% 0%, rgba(184, 137, 58, 0.10), transparent 65%),
+    radial-gradient(ellipse 60% 40% at 0% 0%, rgba(139, 92, 246, 0.10), transparent 65%),
     var(--surface);
   border: 1px solid var(--gold);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(184, 137, 58, 0.12);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.12);
   position: relative;
   overflow: hidden;
 }
@@ -1912,7 +1918,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .trial-banner--warning .trial-banner-cta {
   background: linear-gradient(180deg, var(--gold-2), var(--gold), var(--gold-deep));
   color: white;
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.30);
   text-shadow: 0 1px 1px rgba(0,0,0,0.18);
 }
 
@@ -1965,8 +1971,8 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(184, 137, 58, 0.18), transparent 70%),
-    linear-gradient(180deg, #0a0a0c 0%, #18181b 100%);
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(167, 139, 250, 0.30), transparent 70%),
+    linear-gradient(180deg, #5B21B6 0%, #4C1D95 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2120,7 +2126,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   color: white;
   text-shadow: 0 1px 1px rgba(0,0,0,0.18);
-  box-shadow: 0 2px 6px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.30);
 }
 .cm-risky {
   background: rgba(220, 38, 38, 0.12);
@@ -2502,7 +2508,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .ai-variation.picked {
   border-color: var(--gold);
   background: var(--gold-soft);
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.16), inset 0 0 0 1px var(--gold);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.16), inset 0 0 0 1px var(--gold);
 }
 
 /* ─── Pricing page ──────────────────────────────────────────────────────── */
@@ -2526,7 +2532,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background:
     radial-gradient(ellipse 80% 50% at 50% 0%, var(--gold-soft), transparent 70%),
     var(--surface);
-  box-shadow: 0 8px 24px rgba(184, 137, 58, 0.16);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.16);
 }
 .pricing-plan-card--featured::before {
   content: '';
@@ -2549,7 +2555,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   border-radius: 999px;
   letter-spacing: 0.04em;
   text-shadow: 0 1px 1px rgba(0,0,0,0.18);
-  box-shadow: 0 4px 10px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 4px 10px rgba(139, 92, 246, 0.30);
 }
 .pricing-features {
   list-style: none;
@@ -2713,7 +2719,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   font-weight: 800;
   font-size: 1.15rem;
   text-shadow: 0 1px 1px rgba(0,0,0,0.18);
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.30);
 }
 .brand-name {
   font-family: var(--font-display);
@@ -2780,7 +2786,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   bottom: 30%;
   background:
     radial-gradient(ellipse 60% 50% at 30% 20%, var(--gold-soft), transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 60%, rgba(184, 137, 58, 0.05), transparent 60%);
+    radial-gradient(ellipse 50% 40% at 80% 60%, rgba(139, 92, 246, 0.05), transparent 60%);
   pointer-events: none;
   z-index: 0;
 }
@@ -2798,7 +2804,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   align-items: center;
   gap: 6px;
   background: var(--gold-soft);
-  border: 1px solid rgba(184, 137, 58, 0.30);
+  border: 1px solid rgba(139, 92, 246, 0.30);
   color: var(--gold-deep);
   font-size: 0.82rem;
   font-weight: 600;
@@ -3023,7 +3029,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   align-items: center;
   justify-content: center;
   margin-bottom: 14px;
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.25);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
 }
 .feature-card h3 {
   font-family: var(--font-display);
@@ -3518,7 +3524,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   height: 36px;
   border-radius: 8px;
   object-fit: cover;
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.30);
   flex: none;
 }
 .brand-mark-img.brand-mark-lg {
@@ -3671,7 +3677,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .a11y-toggle:hover { border-color: var(--gold); }
 .a11y-toggle:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
 .a11y-toggle.is-on {
-  background: linear-gradient(180deg, var(--gold-soft), rgba(184, 137, 58, 0.04));
+  background: linear-gradient(180deg, var(--gold-soft), rgba(139, 92, 246, 0.04));
   border-color: var(--gold);
 }
 .a11y-toggle-ico {
@@ -3687,7 +3693,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .a11y-toggle.is-on .a11y-toggle-ico {
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   color: white;
-  box-shadow: 0 2px 6px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.30);
 }
 .a11y-toggle-label {
   font-size: 0.86rem;
@@ -3781,7 +3787,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .a11y-headings h1,
 .a11y-headings h2,
 .a11y-headings h3 {
-  background: rgba(184, 137, 58, 0.18) !important;
+  background: rgba(139, 92, 246, 0.18) !important;
   outline: 2px solid var(--gold) !important;
   padding: 4px 8px !important;
   border-radius: 4px;
@@ -3873,7 +3879,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   align-items: center;
   justify-content: center;
   flex: none;
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.30);
 }
 .studio-list {
   list-style: none;
@@ -3938,7 +3944,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   color: white;
   border-color: transparent;
-  box-shadow: 0 2px 8px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.30);
 }
 .wizard-step.is-done .wizard-step-num {
   background: var(--accent);
@@ -4048,13 +4054,13 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   border-color: transparent;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(184, 137, 58, 0.35);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
 }
 .booking-app .month-nav-next {
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   border-color: transparent;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.30);
 }
 .booking-app .month-label { color: #ffffff; }
 .month-label {
@@ -4202,7 +4208,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   cursor: pointer;
   margin-top: 4px;
 }
-.extra-person-add:hover { background: rgba(184, 137, 58, 0.10); }
+.extra-person-add:hover { background: rgba(139, 92, 246, 0.10); }
 .extra-people-total {
   margin-top: 10px;
   padding-top: 10px;
@@ -4294,7 +4300,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   color: white;
   border-color: transparent;
-  box-shadow: 0 2px 8px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.30);
 }
 .broadcast-options {
   display: flex;
@@ -4340,7 +4346,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .broadcast-import-toggle:hover { background: var(--gold-soft); }
 .broadcast-import-panel {
   background: var(--gold-soft);
-  border: 1px solid rgba(184, 137, 58, 0.20);
+  border: 1px solid rgba(139, 92, 246, 0.20);
   border-radius: var(--radius-sm);
   padding: 12px;
   margin-top: 6px;
@@ -4368,7 +4374,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   --text: #3a2c1c;
   --text-dim: #6b5a44;
   --text-soft: #8d7a5e;
-  --gold: #c9974a;
+  --gold: #A78BFA;
   --gold-2: #d6a55a;
   --gold-deep: #8b6628;
   --gold-soft: rgba(201, 151, 74, 0.12);
@@ -4384,7 +4390,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   --text-soft: #6b6b73;
   --gold: #e8b15c;
   --gold-2: #f4c478;
-  --gold-deep: #c9974a;
+  --gold-deep: #A78BFA;
   --gold-soft: rgba(232, 177, 92, 0.18);
 }
 [data-theme="dark-modern"] .card,
@@ -4617,7 +4623,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .booking-hero {
   position: relative;
   min-height: 84vh;
-  background-color: #0c0c0e;
+  background-color: #1A1530;
   background-size: cover;
   background-position: center 20%;
   background-repeat: no-repeat;
@@ -4633,8 +4639,8 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .booking-hero-overlay {
   position: absolute; inset: 0;
   background:
-    linear-gradient(180deg, rgba(12,12,14,0.55) 0%, rgba(12,12,14,0.30) 30%, rgba(12,12,14,0.78) 75%, rgba(12,12,14,0.95) 100%),
-    radial-gradient(ellipse 60% 40% at 50% 30%, rgba(184, 137, 58, 0.18), transparent 70%);
+    linear-gradient(180deg, rgba(26,21,48,0.55) 0%, rgba(26,21,48,0.30) 30%, rgba(26,21,48,0.80) 75%, rgba(26,21,48,0.96) 100%),
+    radial-gradient(ellipse 60% 40% at 50% 30%, rgba(167, 139, 250, 0.30), transparent 70%);
   pointer-events: none;
   z-index: 1;
 }
@@ -4659,10 +4665,10 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   font-size: 0.92rem;
   cursor: pointer;
   text-shadow: none;
-  box-shadow: 0 4px 14px rgba(184, 137, 58, 0.40);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.40);
   transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
-.booking-hero-pill:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(184, 137, 58, 0.55); }
+.booking-hero-pill:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(139, 92, 246, 0.55); }
 .booking-hero-pill:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
 .booking-hero-brand {
   display: inline-flex;
@@ -4699,7 +4705,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   align-items: center;
   gap: 6px;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(184, 137, 58, 0.45);
+  border: 1px solid rgba(139, 92, 246, 0.45);
   color: var(--gold-2);
   padding: 8px 16px;
   border-radius: 999px;
@@ -4767,14 +4773,14 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   text-shadow: 0 1px 0 rgba(255,255,255,0.20);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.30),
-    0 6px 16px rgba(184, 137, 58, 0.35),
+    0 6px 16px rgba(139, 92, 246, 0.35),
     0 2px 4px rgba(0, 0, 0, 0.20);
 }
 .booking-hero-btn-primary:hover {
   transform: translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 10px 24px rgba(184, 137, 58, 0.45),
+    0 10px 24px rgba(139, 92, 246, 0.45),
     0 3px 6px rgba(0, 0, 0, 0.25);
 }
 .booking-hero-btn-secondary {
@@ -4854,7 +4860,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 2px 8px rgba(184, 137, 58, 0.35);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.35);
 }
 .wake-lock-toggle.is-on:hover { color: #ffffff; border-color: transparent; }
 .wake-lock-label { font-weight: 600; }
@@ -4925,8 +4931,8 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 }
 .wa-template-body code,
 .wa-template-card code {
-  background: rgba(184, 137, 58, 0.12);
-  border: 1px solid rgba(184, 137, 58, 0.30);
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.30);
   color: var(--gold-deep);
   padding: 0 5px;
   border-radius: 4px;
@@ -4995,14 +5001,14 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   0%, 100% {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.30),
-      0 0 0 0 rgba(184, 137, 58, 0.55),
-      0 4px 14px rgba(184, 137, 58, 0.40);
+      0 0 0 0 rgba(139, 92, 246, 0.55),
+      0 4px 14px rgba(139, 92, 246, 0.40);
   }
   50% {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.35),
-      0 0 0 10px rgba(184, 137, 58, 0.0),
-      0 6px 22px rgba(184, 137, 58, 0.55);
+      0 0 0 10px rgba(139, 92, 246, 0.0),
+      0 6px 22px rgba(139, 92, 246, 0.55);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -5059,7 +5065,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .slug-badge-mine {
   background: var(--gold-soft);
   color: var(--gold-deep);
-  border: 1px solid rgba(184, 137, 58, 0.35);
+  border: 1px solid rgba(139, 92, 246, 0.35);
 }
 .slug-badge-bad {
   background: rgba(220, 38, 38, 0.10);
@@ -5125,7 +5131,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .booking-app .brand-header,
 .booking-app .brand-header-row {
   background: linear-gradient(180deg, #1a1a1d 0%, #0c0c0e 100%);
-  border-bottom: 1px solid rgba(184, 137, 58, 0.30);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.30);
   margin: 0 0 16px;
   padding: 16px 22px;
   border-radius: 0;
@@ -5136,7 +5142,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .booking-app .brand-header-row .brand-logo,
 .booking-app .brand-header-row .brand-wordmark {
   width: 52px; height: 52px;
-  border: 1px solid rgba(184, 137, 58, 0.50);
+  border: 1px solid rgba(139, 92, 246, 0.50);
   border-radius: 12px;
 }
 .booking-app .brand-header-row .brand-wordmark {
@@ -5155,14 +5161,14 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   color: #e8e8eb;
 }
 .booking-app .service-card:hover:not(.active) {
-  border-color: rgba(184, 137, 58, 0.55);
-  background: rgba(184, 137, 58, 0.04);
+  border-color: rgba(139, 92, 246, 0.55);
+  background: rgba(139, 92, 246, 0.04);
 }
 .booking-app .service-card.active {
-  background: linear-gradient(180deg, rgba(184, 137, 58, 0.18), rgba(184, 137, 58, 0.06));
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.18), rgba(139, 92, 246, 0.06));
   border-color: var(--gold);
   color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(184, 137, 58, 0.20), 0 6px 18px rgba(184, 137, 58, 0.15);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.20), 0 6px 18px rgba(139, 92, 246, 0.15);
 }
 .booking-app .service-card-name { color: #ffffff; }
 .booking-app .service-card-meta { color: #a8a8b0; }
@@ -5183,7 +5189,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   border-color: var(--gold);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(184, 137, 58, 0.40);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.40);
 }
 .booking-app .wizard-step.is-done .wizard-step-num {
   background: linear-gradient(180deg, #22c55e, #16a34a);
@@ -5203,18 +5209,18 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   color: #e8e8eb;
 }
 .booking-app .calendar-cell:hover:not(:disabled):not(.active) {
-  border-color: rgba(184, 137, 58, 0.45);
-  background: rgba(184, 137, 58, 0.06);
+  border-color: rgba(139, 92, 246, 0.45);
+  background: rgba(139, 92, 246, 0.06);
 }
 .booking-app .calendar-cell.today {
-  border-color: rgba(184, 137, 58, 0.55);
+  border-color: rgba(139, 92, 246, 0.55);
   color: var(--gold-2);
 }
 .booking-app .calendar-cell.active {
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   border-color: var(--gold);
   color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(184, 137, 58, 0.20), 0 4px 12px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.20), 0 4px 12px rgba(139, 92, 246, 0.30);
 }
 .booking-app .calendar-cell.closed {
   background: transparent;
@@ -5222,7 +5228,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   opacity: 0.55;
 }
 .booking-app .calendar-badge {
-  background: rgba(184, 137, 58, 0.20);
+  background: rgba(139, 92, 246, 0.20);
   color: var(--gold-2);
 }
 
@@ -5241,14 +5247,14 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 }
 .booking-app .slot:hover:not(:disabled):not(.selected) {
   border-color: var(--gold);
-  background: rgba(184, 137, 58, 0.10);
+  background: rgba(139, 92, 246, 0.10);
   color: #ffffff;
 }
 .booking-app .slot.selected {
   background: linear-gradient(180deg, var(--gold-2), var(--gold-deep));
   border-color: var(--gold);
   color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(184, 137, 58, 0.25), 0 6px 16px rgba(184, 137, 58, 0.30);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25), 0 6px 16px rgba(139, 92, 246, 0.30);
 }
 .booking-app .empty {
   color: #a8a8b0;
@@ -5266,7 +5272,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   color: #e8e8eb;
 }
 .booking-app .wizard-summary-link:hover {
-  background: rgba(184, 137, 58, 0.10);
+  background: rgba(139, 92, 246, 0.10);
   border-color: var(--gold);
   color: #ffffff;
 }
@@ -5282,8 +5288,8 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   border: 1px solid #2a2a30;
 }
 .booking-app .extra-people {
-  background: rgba(184, 137, 58, 0.04);
-  border: 1px solid rgba(184, 137, 58, 0.15);
+  background: rgba(139, 92, 246, 0.04);
+  border: 1px solid rgba(139, 92, 246, 0.15);
   border-radius: var(--radius);
   padding: 14px;
   margin-top: 12px;
@@ -5300,11 +5306,11 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .booking-app .extra-person-time { color: #ffffff; }
 .booking-app .extra-person-add {
   background: transparent;
-  border: 1px dashed rgba(184, 137, 58, 0.45);
+  border: 1px dashed rgba(139, 92, 246, 0.45);
   color: var(--gold-2);
 }
 .booking-app .extra-person-add:hover {
-  background: rgba(184, 137, 58, 0.10);
+  background: rgba(139, 92, 246, 0.10);
   border-color: var(--gold);
 }
 .booking-app .extra-person-remove {
@@ -5327,14 +5333,14 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: #16161a;
   color: #e8e8eb;
 }
-.booking-app .addons-toggle:hover { background: rgba(184, 137, 58, 0.10); }
+.booking-app .addons-toggle:hover { background: rgba(139, 92, 246, 0.10); }
 .booking-app .addons-card .addon-list { border-top-color: #26262c; }
 .booking-app .addon-row {
   background: #1a1a1d;
   border-color: #2a2a30;
 }
 .booking-app .addon-row.active {
-  background: rgba(184, 137, 58, 0.08);
+  background: rgba(139, 92, 246, 0.08);
   border-color: var(--gold);
 }
 .booking-app .addon-name { color: #ffffff; }
@@ -5355,19 +5361,19 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 
 /* Manage-link box gets a gold-on-dark treatment */
 .booking-app .manage-link-box {
-  background: rgba(184, 137, 58, 0.06);
-  border: 1px solid rgba(184, 137, 58, 0.30);
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.30);
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 14px;
 }
 .booking-app .copy-link {
   background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(184, 137, 58, 0.55);
+  border-color: rgba(139, 92, 246, 0.55);
   color: #ffffff;
 }
 .booking-app .copy-link:hover {
-  background: rgba(184, 137, 58, 0.12);
+  background: rgba(139, 92, 246, 0.12);
   border-color: var(--gold-2);
   color: #ffffff;
 }
@@ -5402,7 +5408,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   color: #ffffff;
   backdrop-filter: blur(14px) saturate(180%);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
-  border-bottom: 1px solid rgba(184, 137, 58, 0.30);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.30);
 }
 .promo-bar .brand-link { color: #ffffff; }
 .promo-bar .brand-name { color: #ffffff; }
@@ -5436,7 +5442,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   inset: 0;
   background:
     linear-gradient(180deg, rgba(12, 12, 14, 0.55) 0%, rgba(12, 12, 14, 0.40) 30%, rgba(12, 12, 14, 0.85) 75%, rgba(12, 12, 14, 0.96) 100%),
-    radial-gradient(ellipse 70% 50% at 50% 35%, rgba(184, 137, 58, 0.22), transparent 70%);
+    radial-gradient(ellipse 70% 50% at 50% 35%, rgba(139, 92, 246, 0.22), transparent 70%);
   pointer-events: none;
 }
 .promo-hero-inner {
@@ -5450,8 +5456,8 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(180deg, rgba(184, 137, 58, 0.20), rgba(184, 137, 58, 0.10));
-  border: 1px solid rgba(184, 137, 58, 0.55);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.20), rgba(139, 92, 246, 0.10));
+  border: 1px solid rgba(139, 92, 246, 0.55);
   color: var(--gold-2);
   padding: 8px 18px;
   border-radius: 999px;
@@ -5536,7 +5542,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   border-radius: 18px;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12) inset,
-    0 18px 40px rgba(184, 137, 58, 0.45);
+    0 18px 40px rgba(139, 92, 246, 0.45);
   flex-wrap: wrap;
 }
 .promo-callout-icon {
@@ -5618,7 +5624,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .promo-who-card:hover {
   transform: translateY(-3px);
   border-color: var(--gold);
-  box-shadow: 0 6px 22px rgba(184, 137, 58, 0.20);
+  box-shadow: 0 6px 22px rgba(139, 92, 246, 0.20);
 }
 .promo-who-icon { color: var(--gold); margin-bottom: 8px; }
 .promo-who-card h3 { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 6px; font-weight: 700; }
@@ -5651,15 +5657,15 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .promo-feature-card:hover {
   transform: translateY(-2px);
   border-color: var(--gold);
-  box-shadow: 0 6px 22px rgba(184, 137, 58, 0.16);
+  box-shadow: 0 6px 22px rgba(139, 92, 246, 0.16);
 }
 .promo-feature-card:hover::before { opacity: 1; }
 .promo-feature-ico {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(180deg, var(--gold-soft), rgba(184, 137, 58, 0.04));
-  border: 1px solid rgba(184, 137, 58, 0.30);
+  background: linear-gradient(180deg, var(--gold-soft), rgba(139, 92, 246, 0.04));
+  border: 1px solid rgba(139, 92, 246, 0.30);
   color: var(--gold-deep);
   display: inline-flex;
   align-items: center;
@@ -5794,14 +5800,14 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 /* Final CTA — dark + dramatic */
 .promo-final {
   background:
-    radial-gradient(ellipse 60% 70% at 50% 0%, rgba(184, 137, 58, 0.25), transparent 60%),
+    radial-gradient(ellipse 60% 70% at 50% 0%, rgba(139, 92, 246, 0.25), transparent 60%),
     #0c0c0e;
   color: #ffffff;
   text-align: center;
   padding: 72px 24px;
 }
 .promo-final-inner { max-width: 580px; margin: 0 auto; }
-.promo-final-star { color: var(--gold-2); margin-bottom: 8px; filter: drop-shadow(0 0 22px rgba(184, 137, 58, 0.55)); }
+.promo-final-star { color: var(--gold-2); margin-bottom: 8px; filter: drop-shadow(0 0 22px rgba(139, 92, 246, 0.55)); }
 .promo-final h2 {
   font-family: var(--font-display);
   font-weight: 800;
@@ -5855,44 +5861,27 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   z-index: 1;
 }
 
-/* Fixed full-bleed photo — sits behind the entire viewport. We can't put
-   it on `body` directly because other pages (booking, promo, legal)
-   manage their own backgrounds; scoping to `.app.dashboard::before`
-   keeps it isolated to this page. */
+/* Clean violet wash background. No profession photos — the previous
+   per-profession Unsplash backdrop fought the cards for attention and
+   added too many competing colors. A flat radial gradient gives depth
+   without noise, and a soft top halo carries the brand purple. */
 .app.dashboard::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -2;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(124, 58, 237, 0.10), transparent 60%),
+    linear-gradient(180deg, #FAF8FF 0%, #F3EEFF 100%);
 }
-.app.dashboard[data-profession="barber"]::before {
-  background-image: url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600&q=70&auto=format&fit=crop');
-}
-.app.dashboard[data-profession="manicurist"]::before {
-  background-image: url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1600&q=70&auto=format&fit=crop');
-}
-.app.dashboard[data-profession="pedicurist"]::before {
-  background-image: url('https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1600&q=70&auto=format&fit=crop');
-}
-.app.dashboard[data-profession="cosmetician"]::before {
-  background-image: url('https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=1600&q=70&auto=format&fit=crop');
-}
-
-/* Overlay — softens the photo to a near-paper tone so cards stay
-   readable. The gold radial halo at top adds warmth and depth without
-   touching the photo itself. */
 .app.dashboard::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(184, 137, 58, 0.10), transparent 60%),
-    linear-gradient(180deg, rgba(250, 248, 243, 0.94) 0%, rgba(250, 248, 243, 0.97) 50%, rgba(250, 248, 243, 0.99) 100%);
+    radial-gradient(circle at 15% 85%, rgba(167, 139, 250, 0.12), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(139, 92, 246, 0.08), transparent 40%);
   pointer-events: none;
 }
 
@@ -5912,12 +5901,12 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 /* The sticky black header gets a gold-thin top accent so it reads as
    premium, not "admin panel". */
 .app.dashboard .dashboard-header {
-  border-top: 1px solid rgba(184, 137, 58, 0.45);
+  border-top: 1px solid rgba(139, 92, 246, 0.45);
 }
 
 /* Bottom nav — already dark; subtle gold glow so it reads premium */
 .app.dashboard .bottom-nav {
-  box-shadow: 0 -8px 24px rgba(24, 24, 27, 0.10), 0 -1px 0 rgba(184, 137, 58, 0.20);
+  box-shadow: 0 -8px 24px rgba(24, 24, 27, 0.10), 0 -1px 0 rgba(139, 92, 246, 0.20);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5948,7 +5937,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   position: absolute;
   width: 90%;
   height: 90%;
-  background: radial-gradient(ellipse at center, rgba(184, 137, 58, 0.30), transparent 65%);
+  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.30), transparent 65%);
   filter: blur(40px);
   pointer-events: none;
   z-index: -1;
@@ -5965,7 +5954,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   box-shadow:
     inset 0 0 0 4px #0a0a0c,
     0 30px 60px rgba(0, 0, 0, 0.35),
-    0 12px 30px rgba(184, 137, 58, 0.20);
+    0 12px 30px rgba(139, 92, 246, 0.20);
 }
 @media (max-width: 540px) {
   .iphone-frame { width: 250px; height: 520px; }
@@ -5992,7 +5981,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .iphone-screen {
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, #faf8f3 0%, #f4f1e9 100%);
+  background: linear-gradient(180deg, #FAF8FF 0%, #F3EEFF 100%);
   border-radius: 32px;
   padding: 32px 14px 14px;
   overflow: hidden;
@@ -6028,7 +6017,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 
 .iphone-card {
   background: #ffffff;
-  border: 1px solid #e8e2d2;
+  border: 1px solid #E6DCFF;
   border-radius: 10px;
   padding: 8px;
   box-shadow: 0 2px 6px rgba(24, 24, 27, 0.04);
@@ -6039,7 +6028,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   gap: 6px;
   padding: 5px 4px;
   font-size: 0.72rem;
-  border-bottom: 1px dashed #e8e2d2;
+  border-bottom: 1px dashed #E6DCFF;
 }
 .iphone-row:last-child { border-bottom: none; }
 .iphone-row-empty .iphone-name { color: #8a8a92; font-style: italic; }
@@ -6070,8 +6059,8 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, rgba(184, 137, 58, 0.10), rgba(184, 137, 58, 0.04));
-  border-color: rgba(184, 137, 58, 0.30);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.10), rgba(139, 92, 246, 0.04));
+  border-color: rgba(139, 92, 246, 0.30);
   padding: 8px 12px;
   font-size: 0.72rem;
   color: var(--text-dim);
@@ -6083,12 +6072,12 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 }
 
 .iphone-ai-card {
-  background: linear-gradient(180deg, rgba(184, 137, 58, 0.12), #ffffff);
-  border: 1px solid rgba(184, 137, 58, 0.40);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.12), #ffffff);
+  border: 1px solid rgba(139, 92, 246, 0.40);
   border-radius: 10px;
   padding: 9px 11px;
   margin-top: auto;
-  box-shadow: 0 4px 12px rgba(184, 137, 58, 0.15);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
 }
 .iphone-ai-head {
   display: flex;
@@ -6153,7 +6142,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .dt-chair-column {
   position: relative;
   background: rgba(255,255,255,0.40);
-  border: 1px dashed rgba(184, 137, 58, 0.20);
+  border: 1px dashed rgba(139, 92, 246, 0.20);
   border-radius: 8px;
 }
 
@@ -6700,28 +6689,28 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
    dashboard (purple) and booking (dark cinematic) surfaces.
    ═════════════════════════════════════════════════════════════════════ */
 .living-landing {
-  /* Backgrounds */
-  --bg: #FAF6EE;           /* warm cream */
-  --bg-deep: #F1E9D6;      /* deeper sand */
-  --bg-warm: #FAF1E1;      /* hero wash */
+  /* Backgrounds — vibrant violet on white, one cohesive scene */
+  --bg: #FAF8FF;           /* lavender-tinted paper */
+  --bg-deep: #EFE7FF;      /* deeper violet wash */
+  --bg-warm: #F5EFFF;      /* hero wash */
   --paper: #FFFFFF;        /* card surface */
-  --rule: #E8DFC9;         /* dividers / borders */
+  --rule: #E6DCFF;         /* dividers / borders */
 
   /* Ink (text) */
-  --ink: #2A1F12;          /* espresso */
-  --ink-soft: #5C4A36;     /* secondary text */
-  --ink-mute: #8C7A5F;     /* tertiary / muted */
+  --ink: #1A1530;          /* near-black with violet undertone */
+  --ink-soft: #4A4170;     /* secondary text */
+  --ink-mute: #7B72A3;     /* tertiary / muted */
 
-  /* Accent palette — kept tonal so the page reads as one warm scene */
-  --gold: #B8893A;
-  --gold-deep: #8A6628;
-  --gold-glow: rgba(184, 137, 58, 0.30);
-  --gold-soft: rgba(184, 137, 58, 0.10);
-  --shadow-gold: 0 14px 40px rgba(184, 137, 58, 0.22);
-  --peach: #E89F71;
-  --blush: #D97A82;
-  --sage: #8AA88A;
-  --sand: #D9C7A4;
+  /* Accent palette — vibrant royal violet drives the page */
+  --gold: #7C3AED;
+  --gold-deep: #5B21B6;
+  --gold-glow: rgba(124, 58, 237, 0.30);
+  --gold-soft: rgba(124, 58, 237, 0.10);
+  --shadow-gold: 0 14px 40px rgba(91, 33, 182, 0.22);
+  --peach: #8B5CF6;        /* secondary vibrant violet (was warm peach) */
+  --blush: #C084FC;        /* lighter purple highlight (was blush pink) */
+  --sage: #A78BFA;         /* soft lavender for status / chips */
+  --sand: #DDD6FE;         /* cool violet wash (was sand beige) */
 
   /* Effects */
   --shadow-1: 0 2px 6px rgba(42, 31, 18, 0.05), 0 12px 30px rgba(42, 31, 18, 0.08);
