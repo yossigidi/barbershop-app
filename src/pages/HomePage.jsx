@@ -398,7 +398,7 @@ function Hero() {
 
       <div style={{
         maxWidth: 1320, margin: '0 auto',
-        display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: 56, alignItems: 'center',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 56, alignItems: 'center',
         paddingTop: 24,
       }}>
         <HeroCopy />
@@ -426,7 +426,7 @@ function HeroCopy() {
       </span>
       <h1 style={{
         fontFamily: 'var(--font-serif)', fontWeight: 700,
-        fontSize: 'clamp(48px, 5.6vw, 86px)', lineHeight: 0.96,
+        fontSize: 'clamp(24px, 5.6vw, 86px)', lineHeight: 0.96,
         letterSpacing: '-0.025em', margin: '0 0 26px', color: 'var(--ink)',
       }}>
         לוח התורים שלך,<br />
@@ -541,7 +541,7 @@ function LivePhone({ phrases }) {
   const timeStr = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return (
-    <div className="reveal is-in" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 720 }}>
+    <div className="reveal is-in" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'min(60vh, 720px)' }}>
       {/* glow halo behind phone */}
       <div aria-hidden="true" style={{
         position: 'absolute', inset: 0, margin: 'auto', width: 380, height: 600,
@@ -763,7 +763,7 @@ function ProofStrip() {
     }}>
       <div style={{
         background: 'var(--paper)', border: '1px solid var(--rule)', borderRadius: 22,
-        padding: '20px 28px', display: 'grid', gridTemplateColumns: '1.4fr repeat(4, 1fr)', gap: 32,
+        padding: '20px 28px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 32,
         alignItems: 'center', boxShadow: 'var(--shadow-1)',
       }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -830,7 +830,7 @@ function HowItWorks() {
           איך זה עובד
         </div>
         <h2 style={{
-          fontFamily: 'var(--font-serif)', fontSize: 'clamp(40px, 4.6vw, 64px)',
+          fontFamily: 'var(--font-serif)', fontSize: 'clamp(22px, 4.6vw, 64px)',
           fontWeight: 700, lineHeight: 1.02, letterSpacing: '-0.02em', margin: '0 0 14px',
         }}>
           שלושה שלבים. <em style={{ color: 'var(--gold-deep)' }}>חצי שעה.</em>
@@ -853,7 +853,7 @@ function StepRow({ step, index, flip }) {
   return (
     <div className="reveal" style={{
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
       gap: 80, alignItems: 'center',
       direction: flip ? 'ltr' : 'rtl',
     }}>
@@ -1152,14 +1152,14 @@ function FeatureShowcase() {
           מה במוצר
         </div>
         <h2 style={{
-          fontFamily: 'var(--font-serif)', fontSize: 'clamp(40px, 4.6vw, 64px)',
+          fontFamily: 'var(--font-serif)', fontSize: 'clamp(22px, 4.6vw, 64px)',
           fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.02em', margin: 0,
         }}>
           שש יכולות. <em style={{ color: 'var(--gold-deep)' }}>ערימה אחת.</em>
         </h2>
       </div>
       <div className="reveal" style={{
-        display: 'grid', gridTemplateColumns: '380px 1fr', gap: 48,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 48,
         background: 'var(--paper)', borderRadius: 28, padding: 32,
         boxShadow: 'var(--shadow-2)', border: '1px solid var(--rule)',
         alignItems: 'stretch',
@@ -1346,7 +1346,7 @@ function FeatureMiniDemo({ idx }) {
     return (
       <div style={{
         background: 'white', borderRadius: 14, padding: 16, border: '1px solid var(--rule)',
-        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12,
       }}>
         {[
           ['השעה הכי עמוסה', '17:00', '23% מהתורים'],
@@ -1402,7 +1402,7 @@ function BeforeAfter() {
             לפני, ואחרי <em style={{ color: 'var(--gold-deep)' }}>Toron.</em>
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 40 }}>
           <BAColumn before />
           <BAColumn />
         </div>
@@ -1547,7 +1547,7 @@ function PricingSection() {
           פשוט. <em style={{ color: 'var(--gold-deep)' }}>שקוף.</em>
         </h2>
       </div>
-      <div className="reveal" data-d="1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="reveal" data-d="1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         <PriceCard
           tag="גמיש · ללא התחייבות"
           title="Pro חודשי"
