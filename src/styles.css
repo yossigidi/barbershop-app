@@ -5861,41 +5861,180 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   z-index: 1;
 }
 
-/* Clean violet wash background. No profession photos — the previous
-   per-profession Unsplash backdrop fought the cards for attention and
-   added too many competing colors. A flat radial gradient gives depth
-   without noise, and a soft top halo carries the brand purple. */
+/* Living mesh-gradient background. Four violet blobs that drift across
+   the viewport on a 28s loop, giving the dashboard a sense of breathing
+   without a single byte of media. Each blob is a radial-gradient layer
+   on a fixed div behind the cards; we animate its background-position so
+   the GPU compositor can keep it smooth (no layout, no paint). The blobs
+   are loose enough that the page never feels like it's actively moving
+   — it reads as ambient depth, not animation. */
 .app.dashboard::before {
   content: '';
   position: fixed;
-  inset: 0;
+  inset: -10%;            /* oversize so blob centers can drift offscreen */
   z-index: -2;
-  background:
-    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(124, 58, 237, 0.10), transparent 60%),
-    linear-gradient(180deg, #FAF8FF 0%, #F3EEFF 100%);
+  background-color: #FAF8FF;
+  background-image:
+    radial-gradient(ellipse 38% 34% at 20% 25%, rgba(167, 139, 250, 0.40), transparent 60%),
+    radial-gradient(ellipse 32% 30% at 80% 30%, rgba(124, 58, 237, 0.28), transparent 62%),
+    radial-gradient(ellipse 36% 32% at 70% 80%, rgba(192, 132, 252, 0.32), transparent 60%),
+    radial-gradient(ellipse 30% 28% at 25% 75%, rgba(139, 92, 246, 0.26), transparent 60%);
+  background-size: 140% 140%, 140% 140%, 140% 140%, 140% 140%;
+  animation: dashMeshDrift 28s ease-in-out infinite;
+  filter: saturate(1.05);
 }
+
+/* Top halo + soft floor wash — sits above the mesh to soften the edges
+   where a blob touches the viewport border, and to carry the brand
+   violet at the very top of the page. */
 .app.dashboard::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(circle at 15% 85%, rgba(167, 139, 250, 0.12), transparent 45%),
-    radial-gradient(circle at 85% 90%, rgba(139, 92, 246, 0.08), transparent 40%);
+    radial-gradient(ellipse 110% 30% at 50% 0%, rgba(124, 58, 237, 0.12), transparent 70%),
+    radial-gradient(ellipse 110% 25% at 50% 100%, rgba(255, 255, 255, 0.40), transparent 70%);
   pointer-events: none;
 }
 
-/* Cards lift slightly off the textured background — stronger shadows
-   and a hairline of warmth at the top edge make them feel like floating
-   tiles instead of flat boxes. */
+@keyframes dashMeshDrift {
+  0%   { background-position:   0%   0%,  100%   0%, 100% 100%,   0% 100%; }
+  25%  { background-position:  10%  20%,   85%  15%,  90%  85%,  15%  90%; }
+  50%  { background-position:  20%   5%,   95%  25%,  80%  95%,   5%  80%; }
+  75%  { background-position:   5%  15%,   90%  10%,  85%  90%,  10%  85%; }
+  100% { background-position:   0%   0%,  100%   0%, 100% 100%,   0% 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Honor system pref: hold the mesh still. Background stays — only
+     the drift loop is suppressed. */
+  .app.dashboard::before { animation: none; }
+}
+
+/* Glass cards — translucent white over the living mesh, blurred so the
+   violet behind shows through as a soft tint instead of leaking color.
+   The inner top hairline catches "light", the outer shadow lifts the
+   card off the page. Hover raises it 2px with a violet glow so cards
+   feel tactile without being noisy. */
 .app.dashboard .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.85) inset,
-    0 1px 3px rgba(24, 24, 27, 0.04),
-    0 8px 24px rgba(24, 24, 27, 0.06);
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 1px 3px rgba(91, 33, 182, 0.04),
+    0 10px 28px rgba(91, 33, 182, 0.08),
+    0 24px 48px rgba(91, 33, 182, 0.05);
   position: relative;
+  transition: transform 0.28s var(--ease), box-shadow 0.28s var(--ease);
+}
+.app.dashboard .card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 4px 8px rgba(91, 33, 182, 0.06),
+    0 18px 36px rgba(91, 33, 182, 0.14),
+    0 32px 60px rgba(91, 33, 182, 0.08);
+}
+
+/* iOS Safari sometimes drops backdrop-filter when the element has no
+   stacking context — `transform: translateZ(0)` forces a layer. */
+.app.dashboard .card { transform: translateZ(0); }
+.app.dashboard .card:hover { transform: translateY(-2px) translateZ(0); }
+
+/* Fallback for browsers without backdrop-filter (older Firefox,
+   Android WebView 4.4): solid surface so cards remain readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app.dashboard .card {
+    background: rgba(255, 255, 255, 0.96);
+  }
+}
+
+/* Stagger entrance — each direct child of .tab-content fades and lifts
+   into place when the tab mounts. Uses :nth-child so it works with any
+   tab's content without touching JSX. Capped at 8 children to avoid a
+   late-arriving card looking laggy. */
+.app.dashboard .tab-content > * {
+  animation: dashCardIn 0.5s var(--ease) both;
+}
+.app.dashboard .tab-content > *:nth-child(1) { animation-delay: 0.04s; }
+.app.dashboard .tab-content > *:nth-child(2) { animation-delay: 0.10s; }
+.app.dashboard .tab-content > *:nth-child(3) { animation-delay: 0.16s; }
+.app.dashboard .tab-content > *:nth-child(4) { animation-delay: 0.22s; }
+.app.dashboard .tab-content > *:nth-child(5) { animation-delay: 0.28s; }
+.app.dashboard .tab-content > *:nth-child(6) { animation-delay: 0.34s; }
+.app.dashboard .tab-content > *:nth-child(7) { animation-delay: 0.40s; }
+.app.dashboard .tab-content > *:nth-child(n+8) { animation-delay: 0.46s; }
+
+@keyframes dashCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app.dashboard .tab-content > * { animation: none; }
+}
+
+/* Ambient pulse on the MSC hero — a single slow heartbeat (4s loop) on
+   the violet glow. Reads as "alive, today's stats are fresh" without
+   ever being distracting. Only animates the box-shadow, which the GPU
+   compositor handles for free. */
+.app.dashboard .msc-hero {
+  animation: dashMscPulse 4s ease-in-out infinite;
+}
+@keyframes dashMscPulse {
+  0%, 100% {
+    box-shadow:
+      0 12px 30px rgba(91, 33, 182, 0.22),
+      0 4px 10px rgba(91, 33, 182, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 12px 30px rgba(91, 33, 182, 0.34),
+      0 4px 10px rgba(91, 33, 182, 0.18),
+      0 0 0 6px rgba(167, 139, 250, 0.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app.dashboard .msc-hero { animation: none; }
+}
+
+/* Gradient text fill for primary stat numbers — feels editorial and
+   premium without needing a new font. Applied at the class level so
+   any existing `.stat-num`, `.morning-stat-num`, `.msc-stat-num` get
+   the same treatment. */
+.app.dashboard .stat-num,
+.app.dashboard .morning-stat-num,
+.app.dashboard .msc-stat-num {
+  background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 60%, #A78BFA 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Skeleton loader — uses the existing `.skel` convention if anyone
+   adds it later; class is a no-op when not present. */
+.skel {
+  background: linear-gradient(90deg, rgba(167, 139, 250, 0.08) 0%, rgba(167, 139, 250, 0.20) 50%, rgba(167, 139, 250, 0.08) 100%);
+  background-size: 200% 100%;
+  animation: skelShimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+@keyframes skelShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; background: rgba(167, 139, 250, 0.14); }
 }
 
 /* The sticky black header gets a gold-thin top accent so it reads as
