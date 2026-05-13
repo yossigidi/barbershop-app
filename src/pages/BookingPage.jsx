@@ -773,7 +773,7 @@ export default function BookingPage() {
         </div>
         <div className="card success-card">
           <div className="success-check">
-            <CheckCircle2 size={56} color="var(--success)" strokeWidth={1.75} />
+            <CheckCircle2 size={56} color="#ffffff" strokeWidth={2} />
           </div>
           <h2 className="success-headline">{success.createdCount > 1 ? `${success.createdCount} תורים נקבעו!` : 'התור נקבע!'}</h2>
           <p className="muted">
@@ -1508,7 +1508,7 @@ export default function BookingPage() {
               </button>
               <button
                 type="button"
-                className="btn-gold booking-cta-primary"
+                className="btn-mint booking-cta-primary booking-cta-confirm"
                 onClick={confirmFromSummary}
                 disabled={busy}
               >
