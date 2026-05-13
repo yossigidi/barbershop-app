@@ -6909,3 +6909,125 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
     min-height: 44px !important;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   LIVING LANDING — Aggressive responsive enforcement
+   The previous [style*="..."] selectors didn't match because React
+   renders inline styles in a normalized form. Use broader descendant
+   selectors that match any container regardless of its inline shape.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* All sections in .living-landing — never exceed viewport width */
+.living-landing,
+.living-landing section,
+.living-landing > div {
+  max-width: 100vw !important;
+  overflow-x: clip;
+}
+
+/* ─── Phone (≤ 700px) ─── */
+@media (max-width: 700px) {
+  /* Every direct child of section becomes a block (no side-by-side) */
+  .living-landing section > div[style*="grid"],
+  .living-landing section > div > div[style*="grid"],
+  .living-landing section > div > div > div[style*="grid"] {
+    display: block !important;
+  }
+  /* Any element with explicit pixel width over 360 — shrink */
+  .living-landing [style*="width: 720"],
+  .living-landing [style*="width: 800"],
+  .living-landing [style*="width: 600"],
+  .living-landing [style*="width: 420"],
+  .living-landing [style*="width: 380"],
+  .living-landing [style*="width: 360"] {
+    width: auto !important;
+    max-width: 100% !important;
+  }
+  /* iPhone mockups (tall narrow boxes) — center + scale */
+  .living-landing [style*="width: 360"][style*="height: 720"],
+  .living-landing [style*="width: 320"][style*="height: 660"] {
+    width: 220px !important;
+    height: 440px !important;
+    margin: 0 auto !important;
+  }
+  /* Tall hero containers — let them grow with content */
+  .living-landing [style*="min-height: 720"],
+  .living-landing [style*="minHeight: 720"],
+  .living-landing [style*="min-height: 600"] {
+    min-height: auto !important;
+  }
+  /* Hero title — never bigger than 2.2rem on small screens */
+  .living-landing h1,
+  .living-landing h1 span {
+    font-size: clamp(1.6rem, 7vw, 2.2rem) !important;
+    line-height: 1.15 !important;
+  }
+  .living-landing h2 {
+    font-size: clamp(1.3rem, 5.5vw, 1.8rem) !important;
+    line-height: 1.2 !important;
+  }
+  .living-landing h3 {
+    font-size: clamp(1rem, 4vw, 1.25rem) !important;
+  }
+  .living-landing p {
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+  }
+  /* Section padding — tight */
+  .living-landing section {
+    padding: 36px 16px !important;
+  }
+  /* Decorative absolute blobs — drop entirely (they overflow) */
+  .living-landing [style*="position: absolute"][style*="top: -10%"],
+  .living-landing [style*="position: absolute"][style*="bottom: -20%"],
+  .living-landing [style*="position: absolute"][style*="top: 80"] {
+    display: none !important;
+  }
+  /* Floating cards over the iPhone mockup — restack */
+  .living-landing [style*="position: absolute"][style*="width: 420"] {
+    position: static !important;
+    width: 100% !important;
+    margin: 8px 0 !important;
+  }
+  /* Nav bar - allow wrap, smaller text */
+  .living-landing nav,
+  .living-landing nav > div {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    font-size: 0.86rem !important;
+  }
+  .living-landing nav a {
+    padding: 6px 10px !important;
+    font-size: 0.84rem !important;
+  }
+  /* Proof strip / stats — stack */
+  .living-landing [style*="grid-template-columns: 1.4fr"],
+  .living-landing [style*="grid-template-columns: repeat(4"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  /* Generic flex rows — wrap by default */
+  .living-landing section [style*="display: flex"]:not(button):not(a) {
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ─── Tablet (701-1024px) ─── */
+@media (min-width: 701px) and (max-width: 1024px) {
+  /* Two-column hero/step grids stay 2-col but with tighter gaps */
+  .living-landing [style*="grid-template-columns: 1.15fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  /* Reduce decorative blobs to viewport size */
+  .living-landing [style*="width: 720"],
+  .living-landing [style*="width: 800"] {
+    width: 80vw !important;
+    max-width: 700px !important;
+  }
+  /* Hero title moderate */
+  .living-landing h1 {
+    font-size: clamp(2rem, 5vw, 2.8rem) !important;
+  }
+}
