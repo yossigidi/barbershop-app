@@ -53,15 +53,25 @@ async function fetchBarberFromSlug(env, slug) {
   };
 }
 
-// Default per-profession hero photo, mirrors src/pages/BookingPage.jsx
-// `PROFESSION_HERO_BG`. Used as og:image fallback when the barber
-// doesn't have their own logo uploaded yet.
-const PROFESSION_OG_FALLBACK = {
-  barber: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&h=630&q=80&auto=format&fit=crop',
-  manicurist: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1200&h=630&q=80&auto=format&fit=crop',
-  pedicurist: 'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1200&h=630&q=80&auto=format&fit=crop',
-  cosmetician: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=1200&h=630&q=80&auto=format&fit=crop',
+// Photo IDs for the per-profession hero. Single source of truth — both
+// OG (1200×630, q=80) and the in-page hero (responsive w=720/1080/1440,
+// q=65) are derived from this map. Mirrors the same map in
+// src/pages/BookingPage.jsx; if you change one, change the other.
+const PROFESSION_PHOTO_ID = {
+  barber: '1503951914875-452162b0f3f1',
+  manicurist: '1604654894610-df63bc536371',
+  pedicurist: '1519415510236-718bdfcd89c8',
+  cosmetician: '1616394584738-fc6e612e71b9',
 };
+const unsplashOg = (id) =>
+  `https://images.unsplash.com/photo-${id}?w=1200&h=630&q=80&auto=format&fit=crop`;
+const unsplashHero = (id, w) =>
+  `https://images.unsplash.com/photo-${id}?w=${w}&q=65&auto=format&fit=crop`;
+
+// Back-compat alias — some call-sites still reference this name.
+const PROFESSION_OG_FALLBACK = Object.fromEntries(
+  Object.entries(PROFESSION_PHOTO_ID).map(([k, id]) => [k, unsplashOg(id)]),
+);
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
@@ -69,23 +79,41 @@ function escapeHtml(s) {
   }[c]));
 }
 
-// Rewrites the relevant <meta> tags in index.html with per-barber values.
-// Uses simple regex replace because the input is a tiny static file we
-// control, not arbitrary HTML — no need for an HTML parser here.
+// Rewrites the relevant <meta> tags in index.html with per-barber values
+// AND injects a high-priority preload link for the hero image. The
+// preload kicks the right Unsplash photo into the browser's image cache
+// before React even parses the JS bundle — so by the time BookingPage
+// mounts its <img>, the bytes are already there and paint is instant.
 function injectOgTags(html, barber, fullUrl) {
   const title = `${barber.businessName} — קביעת תור`;
   const desc = `קבעו תור ב-${barber.businessName} בקלות וביעילות. תורים זמינים עכשיו.`;
-  const image = barber.logoUrl || PROFESSION_OG_FALLBACK[barber.profession] || PROFESSION_OG_FALLBACK.barber;
+  const ogImage = barber.logoUrl || PROFESSION_OG_FALLBACK[barber.profession] || PROFESSION_OG_FALLBACK.barber;
+  const photoId = PROFESSION_PHOTO_ID[barber.profession] || PROFESSION_PHOTO_ID.barber;
+  // Responsive preload via imagesrcset/imagesizes — modern browsers
+  // (Chrome 116+, Safari 17+, Firefox 124+) pick the closest width to
+  // 100vw at the current DPR. Older browsers fall back to `href` (1080w
+  // covers most phones and laptops without bloating the request).
+  const preloadHref = unsplashHero(photoId, 1080);
+  const preloadSrcset = [
+    `${unsplashHero(photoId, 720)} 720w`,
+    `${unsplashHero(photoId, 1080)} 1080w`,
+    `${unsplashHero(photoId, 1440)} 1440w`,
+  ].join(', ');
   const tags = `
     <meta property="og:type" content="website" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(desc)}" />
-    <meta property="og:image" content="${escapeHtml(image)}" />
+    <meta property="og:image" content="${escapeHtml(ogImage)}" />
     <meta property="og:url" content="${escapeHtml(fullUrl)}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(desc)}" />
-    <meta name="twitter:image" content="${escapeHtml(image)}" />`;
+    <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
+    <link rel="preload" as="image"
+      href="${escapeHtml(preloadHref)}"
+      imagesrcset="${escapeHtml(preloadSrcset)}"
+      imagesizes="100vw"
+      fetchpriority="high" />`;
   return html
     .replace(
       /<title>[^<]*<\/title>/,

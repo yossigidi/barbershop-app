@@ -4624,9 +4624,6 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   position: relative;
   min-height: 84vh;
   background-color: #1A1530;
-  background-size: cover;
-  background-position: center 20%;
-  background-repeat: no-repeat;
   display: flex;
   flex-direction: column;
   padding: 16px 18px 28px;
@@ -4636,11 +4633,38 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 @media (min-width: 768px) {
   .booking-hero { min-height: 70vh; padding: 22px 32px 36px; }
 }
+
+/* Hero image — real <img>, not CSS background. Lets the browser pick
+   the right srcset rung, hit the worker-preloaded cache instantly, and
+   apply a slow Ken Burns zoom that animates THIS element alone (GPU
+   layer, no layout). */
+.booking-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  z-index: 0;
+  /* Slow drift: zoom 1.0 → 1.06 and pan 0 → -1.5% over 32s, then back.
+     Reads as cinematic depth, not motion. */
+  animation: bookingKenBurns 32s ease-in-out infinite alternate;
+  transform-origin: center 30%;
+  will-change: transform;
+}
+@keyframes bookingKenBurns {
+  from { transform: scale(1.0) translate3d(0, 0, 0); }
+  to   { transform: scale(1.06) translate3d(0, -1.5%, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-hero-img { animation: none; transform: scale(1.02); }
+}
+
 .booking-hero-overlay {
   position: absolute; inset: 0;
   background:
-    linear-gradient(180deg, rgba(26,21,48,0.55) 0%, rgba(26,21,48,0.30) 30%, rgba(26,21,48,0.80) 75%, rgba(26,21,48,0.96) 100%),
-    radial-gradient(ellipse 60% 40% at 50% 30%, rgba(167, 139, 250, 0.30), transparent 70%);
+    linear-gradient(180deg, rgba(26,21,48,0.45) 0%, rgba(26,21,48,0.22) 30%, rgba(26,21,48,0.78) 75%, rgba(26,21,48,0.96) 100%),
+    radial-gradient(ellipse 60% 40% at 50% 30%, rgba(167, 139, 250, 0.32), transparent 70%);
   pointer-events: none;
   z-index: 1;
 }

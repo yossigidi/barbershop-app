@@ -32,14 +32,31 @@ const PHONE_KEY = 'bs_phone';
 //
 // Photo IDs were verified live against images.unsplash.com — replace only
 // with verified IDs to avoid 404s in production.
-const PROFESSION_HERO_BG = {
-  barber: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&q=70&auto=format&fit=crop',
-  manicurist: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=1200&q=70&auto=format&fit=crop',
-  pedicurist: 'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=1200&q=70&auto=format&fit=crop',
+// Photo IDs per profession — single source of truth. The worker
+// (worker/og.js) mirrors this map and pre-injects a `<link rel="preload"
+// imagesrcset=...>` for the matching photo before React even mounts, so
+// when the <img> below renders its bytes are already cached.
+const PROFESSION_PHOTO_ID = {
+  barber: '1503951914875-452162b0f3f1',
+  manicurist: '1604654894610-df63bc536371',
+  pedicurist: '1519415510236-718bdfcd89c8',
   // Real facial-treatment shot (mask + brush) reads as actual cosmetician
   // work, not "makeup artist". Verified live on images.unsplash.com.
-  cosmetician: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=1200&q=70&auto=format&fit=crop',
+  cosmetician: '1616394584738-fc6e612e71b9',
 };
+const unsplashHero = (id, w) =>
+  `https://images.unsplash.com/photo-${id}?w=${w}&q=65&auto=format&fit=crop`;
+// Build the srcset string for a profession. Browser picks the right
+// rung based on viewport × DPR; the same three URLs appear in the
+// edge-injected `<link rel="preload" imagesrcset=...>` so the chosen
+// rung is already in cache when the <img> mounts.
+const heroSrcSet = (id) =>
+  `${unsplashHero(id, 720)} 720w, ${unsplashHero(id, 1080)} 1080w, ${unsplashHero(id, 1440)} 1440w`;
+// Back-compat — older code paths read PROFESSION_HERO_BG[profession]
+// expecting a single URL. Give them the 1080w default.
+const PROFESSION_HERO_BG = Object.fromEntries(
+  Object.entries(PROFESSION_PHOTO_ID).map(([k, id]) => [k, unsplashHero(id, 1080)]),
+);
 // Short business-type label for the hero eyebrow. Kept neutral and factual —
 // the actual service names appear in the sub-headline (`servicesPreview`).
 const PROFESSION_TAGLINE = {
@@ -297,7 +314,13 @@ export default function BookingPage() {
   // Same curated image for every barber in the same field. A barber can
   // override with `heroImageUrl` on their doc (future settings UI).
   const heroProfession = barber?.profession || barber?.professions?.[0] || 'barber';
-  const heroBg = barber?.heroImageUrl || PROFESSION_HERO_BG[heroProfession] || PROFESSION_HERO_BG.barber;
+  const heroPhotoId = PROFESSION_PHOTO_ID[heroProfession] || PROFESSION_PHOTO_ID.barber;
+  // If the barber set a custom heroImageUrl we use it as a single src;
+  // otherwise we use the Unsplash photo with responsive srcset matching
+  // the preload injected at the edge.
+  const heroCustom = barber?.heroImageUrl || '';
+  const heroBg = heroCustom || unsplashHero(heroPhotoId, 1080);
+  const heroSrcset = heroCustom ? '' : heroSrcSet(heroPhotoId);
   const heroTagline = PROFESSION_TAGLINE[heroProfession] || PROFESSION_TAGLINE.barber;
   // Compact service preview line — shows up to the first 3 service names so the
   // hero communicates concretely what this business does.
@@ -918,10 +941,21 @@ export default function BookingPage() {
 
   return (
     <div className="app booking-app" data-theme={getThemeKey(barber)}>
-      <header
-        className="booking-hero"
-        style={{ backgroundImage: `url(${heroBg})` }}
-      >
+      <header className="booking-hero">
+        {/* Real <img> instead of CSS background so the browser can use
+            fetchpriority=high, srcset matches the worker-injected preload
+            (already in cache), and Ken Burns zoom animates the image
+            element alone — not the whole hero. */}
+        <img
+          className="booking-hero-img"
+          src={heroBg}
+          srcSet={heroSrcset || undefined}
+          sizes="100vw"
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          fetchpriority="high"
+        />
         <div className="booking-hero-overlay" aria-hidden="true" />
 
         <div className="booking-hero-top">
