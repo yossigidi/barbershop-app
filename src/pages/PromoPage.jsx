@@ -123,8 +123,7 @@ export default function PromoPage() {
 
       <header className="promo-bar">
         <Link to="/" className="brand-link" aria-label="Toron — חזרה לדף הבית">
-          <img src="/logo-mark.png" alt="" aria-hidden="true" className="brand-mark-img" />
-          <span className="brand-name">Toron</span>
+          <img src="/toron-wordmark.png" alt="Toron" style={{ height: 28, width: 'auto', display: 'block' }} />
         </Link>
         <Link to="/auth?mode=signup" className="btn-gold promo-bar-cta">
           <Sparkles size={14} className="icon-inline" />התחל חינם

@@ -182,8 +182,7 @@ export default function AuthPage() {
 
       <div className="auth-card">
         <div className="auth-brand">
-          <img src="/logo-mark.png" alt="" aria-hidden="true" className="brand-mark-img brand-mark-lg" />
-          <span className="brand-name">Toron</span>
+          <img src="/toron-wordmark.png" alt="Toron" style={{ height: 36, width: 'auto', display: 'block' }} />
         </div>
 
         <h1 className="auth-title">{heading}</h1>
