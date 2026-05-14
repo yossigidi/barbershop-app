@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
-  onAuthStateChanged, signInWithPopup, signOut,
+  onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   sendPasswordResetEmail, updateProfile,
 } from 'firebase/auth';
@@ -8,11 +8,24 @@ import { auth, googleProvider } from '../firebase';
 
 const AuthContext = createContext(null);
 
+// Inside an installed PWA (iOS standalone especially) signInWithPopup is
+// unreliable — the popup opens in a detached context and the signed-in
+// session never makes it back to the app. A full-page redirect does.
+function isStandalonePWA() {
+  return (
+    window.matchMedia?.('(display-mode: standalone)').matches === true
+    || window.navigator.standalone === true
+  );
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Complete a pending redirect sign-in (the PWA Google flow). Resolves
+    // to null when there's nothing pending — harmless.
+    getRedirectResult(auth).catch((e) => console.warn('auth redirect result:', e?.message));
     return onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
@@ -32,7 +45,9 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
-    loginGoogle: () => signInWithPopup(auth, googleProvider),
+    loginGoogle: () => (isStandalonePWA()
+      ? signInWithRedirect(auth, googleProvider)
+      : signInWithPopup(auth, googleProvider)),
     loginEmail: (email, password) => signInWithEmailAndPassword(auth, email, password),
     signupEmail,
     resetPassword: (email) => sendPasswordResetEmail(auth, email),
