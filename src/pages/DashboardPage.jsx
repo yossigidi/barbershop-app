@@ -367,6 +367,20 @@ export default function DashboardPage() {
     try { await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'inProgress', startedAt: serverTimestamp() }); }
     catch (e) { alert('שגיאה: ' + e.message); }
   }
+  // Swipe-left on a booking → mark it done AND open a pre-filled
+  // thank-you WhatsApp to the client (wa.me — barber taps send). If the
+  // booking has no phone we just complete it.
+  function completeAndThank(b) {
+    completeBooking(b);
+    const phone = b.clientPhone;
+    if (phone) {
+      const first = (b.clientName || '').trim().split(/\s+/)[0] || '';
+      const text =
+        `תודה ${first} שהגעת ל${barber.businessName || 'תספורת'}! 🙏\n` +
+        `נשמח לראותך שוב — לתיאום תור: ${shortLink}`;
+      window.open(whatsappUrl(text, phone), '_blank');
+    }
+  }
   async function completeBooking(b) {
     try {
       await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'completed', completedAt: serverTimestamp() });
@@ -607,6 +621,8 @@ export default function DashboardPage() {
             chairsCount={barber.chairsCount || 1}
             offsetMin={isToday ? runningOffset : 0}
             onBookingTap={(b) => setActionFor(b)}
+            onStartBooking={(b) => startBooking(b)}
+            onCompleteBooking={(b) => completeAndThank(b)}
             onFreeSlotTap={(time) => setQuickBook({ time, date: selectedISO })}
             onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
           />

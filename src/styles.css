@@ -7702,10 +7702,41 @@ button.cs-lost.is-active {
 .sl-empty span { font-size: 0.84rem; }
 
 /* Booking row — time column + card */
+.sl-hint {
+  font-size: 0.74rem; color: var(--text-soft); text-align: center;
+  margin: 0 2px 4px;
+}
+/* Swipe wrapper — holds the two action backgrounds + the sliding row */
+.sl-swipe {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.sl-swipe-bg {
+  position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+  display: flex; align-items: center; gap: 7px;
+  font-weight: 800; font-size: 0.95rem; color: #fff;
+  pointer-events: none;
+  transition: filter 0.12s var(--ease);
+}
+.sl-swipe-start {
+  background: linear-gradient(90deg, #14B8FE, #0891B2);
+  justify-content: flex-start; padding-inline-start: 22px;
+}
+.sl-swipe-done {
+  background: linear-gradient(90deg, #6541C1, #D43396);
+  justify-content: flex-end; padding-inline-end: 22px;
+}
+.sl-swipe-bg.armed { filter: brightness(1.14) saturate(1.1); }
 .sl-row {
   display: flex; align-items: stretch; gap: 10px;
-  background: none; border: none; padding: 0; cursor: pointer;
+  background: var(--bg); border: none; padding: 0;
   font-family: inherit; text-align: start; width: 100%;
+  position: relative; z-index: 1;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  touch-action: pan-y;
 }
 .sl-time {
   width: 56px; flex: none;
