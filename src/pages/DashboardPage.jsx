@@ -45,7 +45,8 @@ export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [tab, setTab] = useState('calendar');
+  const [tab, setTab] = useState('schedule');
+  const [showMonthCal, setShowMonthCal] = useState(false);
   const [barber, setBarber] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [blocks, setBlocks] = useState([]);
@@ -144,9 +145,8 @@ export default function DashboardPage() {
     const b = bookings.find((x) => x.id === id);
     if (b) {
       setActionFor(b);
-      // Jump to today tab so the booking is contextually visible
-      const todayISO = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10); })();
-      if (b.date === todayISO) setTab('today');
+      // Jump to the schedule tab so the booking is contextually visible
+      setTab('schedule');
       // Remove the param so reload doesn't re-open the sheet
       const next = new URLSearchParams(searchParams);
       next.delete('booking');
@@ -490,267 +490,153 @@ export default function DashboardPage() {
   const showPushCard = !tokenInstalled && pushStatus !== 'enabled' && !pushDismissed;
 
   // --- Tab content ---
-  const todayHeading = `${DAY_LABELS_HE[dayKeyFromDate(today)]}, ${formatDateHe(today)}`;
-
-  // Quick-actions row — sits at the top of every main tab so the most
-  // common "blast to all clients" CTA is reachable in one tap (used to
-  // live only in the "עוד" tab where operators couldn't find it).
-  function QuickActionsRow() {
+  // Responsive nav — renders as a side rail on tablet/desktop (≥900px)
+  // and a bottom bar on phone. Same `tab` state drives both; "לקוחות"
+  // and (none yet) navigate away instead of switching tabs.
+  function DashNav() {
+    const items = [
+      { key: 'schedule', label: 'יומן', Icon: CalendarIcon, badge: todayBookings.length },
+      { key: 'clients', label: 'לקוחות', Icon: Users, goto: '/clients' },
+      { key: 'messages', label: 'הודעות', Icon: MessageCircle },
+      { key: 'reports', label: 'דוחות', Icon: BarChart3 },
+      { key: 'expenses', label: 'הוצאות', Icon: Wallet },
+      { key: 'more', label: 'עוד', Icon: MoreHorizontal },
+    ];
     return (
-      <div className="quick-actions-row">
-        <button
-          type="button"
-          className="quick-action-btn quick-action-clients"
-          onClick={() => navigate('/clients')}
-          aria-label="כרטיסיית לקוחות"
-        >
-          <Users size={18} aria-hidden="true" />
-          <span>לקוחות</span>
-        </button>
-        <button
-          type="button"
-          className="quick-action-btn quick-action-broadcast"
-          onClick={() => setShowBroadcast(true)}
-          aria-label="שלח הודעה לכל הלקוחות"
-        >
-          <Megaphone size={18} aria-hidden="true" />
-          <span>הודעה לכולם</span>
-        </button>
-        {tomorrowBookingsCount > 0 && (
+      <nav className="dash-nav">
+        <div className="dash-nav-brand">
+          <img src="/toron-wordmark.png" alt="Toron" />
+        </div>
+        {items.map(({ key, label, Icon, badge, goto }) => (
           <button
+            key={key}
             type="button"
-            className="quick-action-btn quick-action-reminders"
-            onClick={() => setShowTomorrow(true)}
-            aria-label="שלח תזכורת לכל לקוחות מחר"
+            className={`dash-nav-item ${!goto && tab === key ? 'active' : ''}`}
+            onClick={() => (goto ? navigate(goto) : setTab(key))}
           >
-            <Send size={18} aria-hidden="true" />
-            <span>תזכורת מחר ({tomorrowBookingsCount})</span>
+            <span className="dash-nav-icon">
+              <Icon size={22} strokeWidth={1.75} />
+              {badge > 0 && <span className="dash-nav-badge">{badge}</span>}
+            </span>
+            <span className="dash-nav-label">{label}</span>
           </button>
-        )}
-        <button
-          type="button"
-          className="quick-action-btn quick-action-vacation"
-          onClick={() => setShowVacation(true)}
-          aria-label="הוסף חופש"
-        >
-          <Palmtree size={18} aria-hidden="true" />
-          <span>חופש</span>
-        </button>
-      </div>
+        ))}
+      </nav>
     );
   }
 
-  function TodayTab() {
+  // The hero — a clean day view. Day-nav + stats + the timeline, with an
+  // optional summary side column on wide screens. Merges the old
+  // separate "today" and "calendar" tabs into one navigable day.
+  function ScheduleTab() {
+    const isToday = selectedISO === todayISO;
+    const dayKey = dayKeyFromDate(selectedDate);
+    const dayCfg = barber.workingHours?.[dayKey];
+    const dayRevenue = dayBookings.reduce((s, b) => s + (Number(b.price) || 0), 0);
+    const inProgressCount = dayBookings.filter((b) => b.status === 'inProgress').length;
+    const goDay = (delta) => {
+      const d = new Date(selectedDate);
+      d.setDate(d.getDate() + delta);
+      setSelectedDate(d);
+    };
     return (
-      <>
-        <QuickActionsRow />
-
-        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
-
-        <AIBriefingCard businessName={barber.businessName} />
-
-        <MorningSummaryCard
-          displayName={barber.displayName}
-          businessName={barber.businessName}
-          todayBookings={todayBookings}
-          onTapBooking={setActionFor}
-        />
-
-        {todayBookings.length > 0 && (
-          <button
-            className="btn-gold"
-            onClick={() => setShowToday(true)}
-            style={{ width: '100%', marginBottom: 8 }}
-          >
-            <Send size={18} className="icon-inline" />
-            תזכורת לכל לקוחות היום ({todayBookings.length}) — לחיצה אחת
-          </button>
-        )}
-
-        <BreakSuggestions
-          todayBookings={todayBookings}
-          todayBlocks={todayBlocks.filter((b) => !b.wholeDay)}
-          onBlock={(time, length) => {
-            if (confirm(`לחסום ${length} דקות מ-${time} כהפסקה?`)) {
-              addDoc(collection(db, 'barbers', user.uid, 'blocks'), {
-                date: todayISO,
-                time,
-                duration: length,
-                reason: 'הפסקה',
-                createdAt: serverTimestamp(),
-              });
-            }
-          }}
-        />
-
-        {nextHoliday && (
-          <button className="chip" onClick={shareHolidayPromo} style={{ width: '100%', marginBottom: 12 }}>
-            {nextHoliday.emoji} {nextHoliday.name} מתקרב — שלח הודעה ב-WhatsApp
-          </button>
-        )}
-
-        {showPushCard && (
-          <div className="card push-card">
-            <div className="row" style={{ alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <strong><Bell size={16} className="icon-inline" />הפעל התראות</strong>
-                <p className="muted" style={{ marginTop: 4, marginBottom: 8, fontSize: '0.85rem' }}>
-                  באייפון: הוסף קודם ל-Home Screen.
-                </p>
-                <button className="btn-primary" onClick={enablePush} disabled={pushStatus === 'requesting'} style={{ width: '100%' }}>
-                  {pushStatus === 'requesting' ? 'מבקש…' : 'הפעל'}
+      <div className="dash-schedule">
+        <div className="dash-schedule-main">
+          <div className="sched-topbar">
+            <div className="sched-daynav">
+              <button type="button" onClick={() => goDay(1)} aria-label="יום הבא">‹</button>
+              <button
+                type="button"
+                className="sched-date"
+                onClick={() => setShowMonthCal((v) => !v)}
+              >
+                <strong>{isToday ? 'היום' : DAY_LABELS_HE[dayKey]}</strong>
+                <span>{formatDateHe(selectedDate)}</span>
+              </button>
+              <button type="button" onClick={() => goDay(-1)} aria-label="יום קודם">›</button>
+            </div>
+            <div className="sched-stats">
+              <div className="sched-stat"><span className="n">{dayBookings.length}</span><span className="l">תורים</span></div>
+              <div className="sched-stat"><span className="n rev">₪{dayRevenue.toLocaleString('he-IL')}</span><span className="l">צפוי</span></div>
+              {inProgressCount > 0 && (
+                <div className="sched-stat"><span className="n">{inProgressCount}</span><span className="l">עכשיו</span></div>
+              )}
+            </div>
+            <div className="sched-actions">
+              {!isToday && (
+                <button type="button" className="sched-today-btn" onClick={() => setSelectedDate(today)}>
+                  חזרה להיום
                 </button>
-                {pushStatus === 'denied' && <p className="text-danger" style={{ fontSize: '0.8rem', marginTop: 6 }}>הרשאה נדחתה.</p>}
-                {pushStatus === 'error' && <p className="text-danger" style={{ fontSize: '0.8rem', marginTop: 6 }}>הוסף ל-Home Screen קודם.</p>}
-              </div>
-              <button className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => setPushDismissed(true)} aria-label="סגור">
-                <X size={14} />
+              )}
+              <button
+                type="button"
+                className="sched-new-btn"
+                onClick={() => setQuickBook({ date: selectedISO, time: dayCfg?.start || '09:00' })}
+              >
+                + תור חדש
               </button>
             </div>
           </div>
-        )}
 
-        {/* Bulk-reminder shortcut — keeps the operator one tap away
-            from blasting tomorrow's clients without digging into the
-            "More" tab. Only renders when there's anyone to remind. */}
-        {tomorrowBookingsCount > 0 && (
-          <button
-            className="btn-gold"
-            onClick={() => setShowTomorrow(true)}
-            style={{ width: '100%', marginBottom: 12 }}
-          >
-            <Send size={18} className="icon-inline" />
-            שלח תזכורת לכל לקוחות מחר ({tomorrowBookingsCount}) — בקליק אחד
-          </button>
-        )}
-
-        <RunningStatusBanner offsetMin={runningOffset} onReset={resetRunning} />
-
-        <DayTimeline
-          date={today}
-          workingHours={barber.workingHours}
-          bookings={todayBookings}
-          blocks={todayBlocks}
-          chairsCount={barber.chairsCount || 1}
-          offsetMin={runningOffset}
-          onBookingTap={(b) => setActionFor(b)}
-          onFreeSlotTap={(time) => setQuickBook({ time, date: todayISO })}
-          onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
-        />
-      </>
-    );
-  }
-
-  function CalendarTab() {
-    return (
-      <>
-        <QuickActionsRow />
-
-        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
-
-        <AIBriefingCard businessName={barber.businessName} />
-
-        <MorningSummaryCard
-          displayName={barber.displayName}
-          businessName={barber.businessName}
-          todayBookings={todayBookings}
-          onTapBooking={setActionFor}
-        />
-
-        <div className="card">
-          <div className="muted text-center" style={{ marginBottom: 8, fontSize: '0.85rem' }}>{upcomingTotal} תורים מתוכננים מהיום והלאה</div>
-          <MonthCalendar
-            selectedDate={selectedDate}
-            onSelect={setSelectedDate}
-            workingHours={barber.workingHours}
-            bookingsByDate={bookingsByDate}
-            maxMonthsAhead={12}
-            compact
-          />
-          <div className="muted text-center" style={{ marginBottom: 8, marginTop: 8 }}>
-            <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
-            {' • '}{dayBookings.length} תורים
-          </div>
-          {selectedISO === todayISO && (
-            <RunningStatusBanner offsetMin={runningOffset} onReset={resetRunning} />
+          {showMonthCal && (
+            <div className="card sched-monthcal">
+              <div className="muted text-center" style={{ marginBottom: 8, fontSize: '0.85rem' }}>
+                {upcomingTotal} תורים מתוכננים מהיום והלאה
+              </div>
+              <MonthCalendar
+                selectedDate={selectedDate}
+                onSelect={(d) => { setSelectedDate(d); setShowMonthCal(false); }}
+                workingHours={barber.workingHours}
+                bookingsByDate={bookingsByDate}
+                maxMonthsAhead={12}
+                compact
+              />
+            </div>
           )}
+
+          {isToday && <RunningStatusBanner offsetMin={runningOffset} onReset={resetRunning} />}
+
           <DayTimeline
             date={selectedDate}
             workingHours={barber.workingHours}
             bookings={dayBookings}
             blocks={dayBlocks}
             chairsCount={barber.chairsCount || 1}
-            offsetMin={selectedISO === todayISO ? runningOffset : 0}
+            offsetMin={isToday ? runningOffset : 0}
             onBookingTap={(b) => setActionFor(b)}
             onFreeSlotTap={(time) => setQuickBook({ time, date: selectedISO })}
             onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
           />
         </div>
 
-        <button className="btn-secondary" onClick={() => setShowVacation(true)} style={{ width: '100%', marginBottom: 8 }}>
-          <Palmtree size={18} className="icon-inline" />הוסף חופש
-        </button>
-        {(barber.vacations || []).length > 0 && (
-          <div className="card">
-            <h3 style={{ marginTop: 0 }}><Palmtree size={18} className="icon-inline" />חופשים מתוכננים</h3>
-            {barber.vacations.map((v) => (
-              <div key={v.id} className="timeline-row">
-                <span style={{ flex: 1 }}>
-                  {formatDateHe(new Date(v.from))} → {formatDateHe(new Date(v.to))}
-                  {v.reason ? ` • ${v.reason}` : ''}
-                </span>
-                <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.85rem' }} onClick={() => removeVacation(v)}>
-                  הסר
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </>
+        {/* Summary side column — CSS shows it only on wide screens */}
+        <aside className="dash-summary">
+          <MorningSummaryCard
+            displayName={barber.displayName}
+            businessName={barber.businessName}
+            todayBookings={todayBookings}
+            onTapBooking={setActionFor}
+          />
+          <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
+          {tomorrowBookingsCount > 0 && (
+            <button className="btn-gold" onClick={() => setShowTomorrow(true)} style={{ width: '100%' }}>
+              <Send size={18} className="icon-inline" />
+              תזכורת לכל לקוחות מחר ({tomorrowBookingsCount})
+            </button>
+          )}
+          {nextHoliday && (
+            <button className="chip" onClick={shareHolidayPromo} style={{ width: '100%' }}>
+              {nextHoliday.emoji} {nextHoliday.name} מתקרב — שלח הודעה
+            </button>
+          )}
+        </aside>
+      </div>
     );
   }
 
-  function ReportsTab() {
-    return (
-      <>
-        <StatsCard bookings={bookings} />
-        <SmartTipsCard workingHours={barber.workingHours} bookings={bookings} blocks={blocks} />
-        <button className="btn-gold" onClick={() => setShowToday(true)} style={{ width: '100%', marginBottom: 8 }}>
-          <Send size={18} className="icon-inline" />
-          תזכורת להיום ({todayBookings.length}) — שלח לכולם בלחיצה
-        </button>
-        {tomorrowBookingsCount > 0 ? (
-          <button
-            className="btn-gold"
-            onClick={() => setShowTomorrow(true)}
-            style={{ width: '100%', marginBottom: 8 }}
-          >
-            <Send size={18} className="icon-inline" />
-            תזכורת WhatsApp לכל לקוחות מחר ({tomorrowBookingsCount}) — בקליק אחד
-          </button>
-        ) : (
-          <button
-            className="btn-secondary"
-            onClick={() => setShowTomorrow(true)}
-            style={{ width: '100%', marginBottom: 8 }}
-            disabled
-            title="אין תורים מחר"
-          >
-            <Send size={18} className="icon-inline" />
-            תזכורות מחר — אין תורים
-          </button>
-        )}
-        <button className="btn-secondary" onClick={() => setShowYesterday(true)} style={{ width: '100%', marginBottom: 8 }}>
-          <MessageCircle size={18} className="icon-inline" />הודעות תודה ללקוחות מאתמול
-        </button>
-        <Link to="/reports">
-          <button className="btn-primary" style={{ width: '100%' }}><BarChart3 size={18} className="icon-inline" />דוחות מלאים + השוואות + חגים</button>
-        </Link>
-      </>
-    );
-  }
-
-  function MoreTab() {
+  // Messages tab — everything client-outreach: the share link, broadcasts,
+  // reminders, thank-yous, vacation, holiday promo, WA templates.
+  function MessagesTab() {
     return (
       <>
         <div className="card">
@@ -791,29 +677,106 @@ export default function DashboardPage() {
           )}
         </div>
 
+        <button className="btn-gold" onClick={() => setShowBroadcast(true)} style={{ width: '100%', marginBottom: 8 }}>
+          <Megaphone size={18} className="icon-inline" />הודעה לכל הלקוחות (חג / חופשה / מחירים)
+        </button>
+        {todayBookings.length > 0 && (
+          <button className="btn-gold" onClick={() => setShowToday(true)} style={{ width: '100%', marginBottom: 8 }}>
+            <Send size={18} className="icon-inline" />תזכורת לכל לקוחות היום ({todayBookings.length})
+          </button>
+        )}
+        {tomorrowBookingsCount > 0 ? (
+          <button className="btn-gold" onClick={() => setShowTomorrow(true)} style={{ width: '100%', marginBottom: 8 }}>
+            <Send size={18} className="icon-inline" />תזכורת לכל לקוחות מחר ({tomorrowBookingsCount})
+          </button>
+        ) : (
+          <button className="btn-secondary" disabled style={{ width: '100%', marginBottom: 8 }} title="אין תורים מחר">
+            <Send size={18} className="icon-inline" />תזכורות מחר — אין תורים
+          </button>
+        )}
+        <button className="btn-secondary" onClick={() => setShowYesterday(true)} style={{ width: '100%', marginBottom: 8 }}>
+          <MessageCircle size={18} className="icon-inline" />הודעות תודה ללקוחות מאתמול
+        </button>
+        <button className="btn-secondary" onClick={() => setShowVacation(true)} style={{ width: '100%', marginBottom: 8 }}>
+          <Palmtree size={18} className="icon-inline" />הוסף חופש
+        </button>
+        {nextHoliday && (
+          <button className="chip" onClick={shareHolidayPromo} style={{ width: '100%', marginBottom: 8 }}>
+            {nextHoliday.emoji} {nextHoliday.name} מתקרב — שלח הודעה ב-WhatsApp
+          </button>
+        )}
+        <Link to="/whatsapp-templates">
+          <button className="btn-secondary" style={{ width: '100%' }}><MessageCircle size={18} className="icon-inline" />תגובות מהירות ל-WhatsApp Business</button>
+        </Link>
+
+        {(barber.vacations || []).length > 0 && (
+          <div className="card" style={{ marginTop: 8 }}>
+            <h3 style={{ marginTop: 0 }}><Palmtree size={18} className="icon-inline" />חופשים מתוכננים</h3>
+            {barber.vacations.map((v) => (
+              <div key={v.id} className="timeline-row">
+                <span style={{ flex: 1 }}>
+                  {formatDateHe(new Date(v.from))} → {formatDateHe(new Date(v.to))}
+                  {v.reason ? ` • ${v.reason}` : ''}
+                </span>
+                <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.85rem' }} onClick={() => removeVacation(v)}>
+                  הסר
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Reports tab — the analytics + insight cards that used to clutter the
+  // main day view. The day screen is now just the timeline.
+  function ReportsTab() {
+    return (
+      <>
+        <StatsCard bookings={bookings} />
+        <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
+        <AIBriefingCard businessName={barber.businessName} />
+        <MorningSummaryCard
+          displayName={barber.displayName}
+          businessName={barber.businessName}
+          todayBookings={todayBookings}
+          onTapBooking={setActionFor}
+        />
+        <SmartTipsCard workingHours={barber.workingHours} bookings={bookings} blocks={blocks} />
+        <BreakSuggestions
+          todayBookings={todayBookings}
+          todayBlocks={todayBlocks.filter((b) => !b.wholeDay)}
+          onBlock={(time, length) => {
+            if (confirm(`לחסום ${length} דקות מ-${time} כהפסקה?`)) {
+              addDoc(collection(db, 'barbers', user.uid, 'blocks'), {
+                date: todayISO, time, duration: length, reason: 'הפסקה', createdAt: serverTimestamp(),
+              });
+            }
+          }}
+        />
+        <Link to="/reports">
+          <button className="btn-primary" style={{ width: '100%' }}><BarChart3 size={18} className="icon-inline" />דוחות מלאים + השוואות + חגים</button>
+        </Link>
+      </>
+    );
+  }
+
+  // "More" tab — account + setup links, plus device options.
+  function MoreTab() {
+    return (
+      <>
         <Link to="/onboarding">
           <button className="btn-primary" style={{ width: '100%', marginBottom: 8 }}><Scissors size={18} className="icon-inline" />קטלוג מהיר — שירותים, מחירים, ימים</button>
+        </Link>
+        <Link to="/settings">
+          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><Settings size={18} className="icon-inline" />הגדרות מתקדמות</button>
         </Link>
         <Link to="/pricing">
           <button className="btn-gold" style={{ width: '100%', marginBottom: 8 }}><Sparkles size={18} className="icon-inline" />
             {access.reason === 'trial' ? `מסלול Pro — נותרו ${access.daysLeft} ימי טריאל` : 'מסלול וחיוב'}
           </button>
         </Link>
-        <Link to="/settings">
-          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><Settings size={18} className="icon-inline" />הגדרות מתקדמות</button>
-        </Link>
-        <Link to="/reports">
-          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><BarChart3 size={18} className="icon-inline" />דוחות מלאים</button>
-        </Link>
-        <Link to="/whatsapp-templates">
-          <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }}><MessageCircle size={18} className="icon-inline" />תגובות מהירות ל-WhatsApp Business</button>
-        </Link>
-        <button className="btn-gold" onClick={() => setShowBroadcast(true)} style={{ width: '100%', marginBottom: 8 }}>
-          <Megaphone size={18} className="icon-inline" />הודעה לכל הלקוחות (חג / חופשה / עליית מחירים)
-        </button>
-        <button className="btn-secondary" onClick={() => setShowVacation(true)} style={{ width: '100%', marginBottom: 8 }}>
-          <Palmtree size={18} className="icon-inline" />הוסף חופש
-        </button>
 
         {!tokenInstalled && pushStatus !== 'enabled' && (
           <button className="btn-secondary" onClick={enablePush} disabled={pushStatus === 'requesting'} style={{ width: '100%', marginBottom: 8 }}>
@@ -836,51 +799,37 @@ export default function DashboardPage() {
     );
   }
 
+  const TAB_TITLES = {
+    schedule: '', messages: 'הודעות ושיתוף', reports: 'דוחות ותובנות',
+    expenses: 'הוצאות', more: 'עוד',
+  };
+
   return (
     <div
-      className="app dashboard"
+      className="app dashboard dash-shell"
       data-profession={barber?.profession || barber?.professions?.[0] || 'barber'}
     >
-      <div className="header dashboard-header">
-        {barber.logoUrl && (
-          <img src={barber.logoUrl} alt="logo" className="dashboard-logo" />
-        )}
-        <h1>{barber.businessName || 'העסק שלי'}</h1>
+      <DashNav />
+
+      <div className="dash-main">
+        <div className="dash-topbar">
+          {barber.logoUrl && (
+            <img src={barber.logoUrl} alt="" className="dash-topbar-logo" />
+          )}
+          <h1 className="dash-topbar-name">{barber.businessName || 'העסק שלי'}</h1>
+          {TAB_TITLES[tab] && <span className="dash-topbar-sub">{TAB_TITLES[tab]}</span>}
+        </div>
+
+        <TrialExpiryBanner access={access} />
+
+        <div className="dash-content">
+          {tab === 'schedule' && <ScheduleTab />}
+          {tab === 'messages' && <MessagesTab />}
+          {tab === 'reports' && <ReportsTab />}
+          {tab === 'expenses' && <ExpensesTab />}
+          {tab === 'more' && <MoreTab />}
+        </div>
       </div>
-
-      <TrialExpiryBanner access={access} />
-
-      <div className="tab-content">
-        {tab === 'today' && <TodayTab />}
-        {tab === 'calendar' && <CalendarTab />}
-        {tab === 'reports' && <ReportsTab />}
-        {tab === 'expenses' && <ExpensesTab />}
-        {tab === 'more' && <MoreTab />}
-      </div>
-
-      <nav className="bottom-nav nav-5">
-        <button className={`nav-tab ${tab === 'calendar' ? 'active' : ''}`} onClick={() => setTab('calendar')}>
-          <span className="nav-icon"><CalendarIcon size={22} strokeWidth={1.75} /></span>
-          <span className="nav-label">יומן</span>
-        </button>
-        <button className={`nav-tab ${tab === 'today' ? 'active' : ''}`} onClick={() => setTab('today')}>
-          <span className="nav-icon"><Home size={22} strokeWidth={1.75} /></span>
-          <span className="nav-label">היום</span>
-          {todayBookings.length > 0 && <span className="nav-badge">{todayBookings.length}</span>}
-        </button>
-        <button className={`nav-tab ${tab === 'reports' ? 'active' : ''}`} onClick={() => setTab('reports')}>
-          <span className="nav-icon"><BarChart3 size={22} strokeWidth={1.75} /></span>
-          <span className="nav-label">דוחות</span>
-        </button>
-        <button className={`nav-tab ${tab === 'expenses' ? 'active' : ''}`} onClick={() => setTab('expenses')}>
-          <span className="nav-icon"><Wallet size={22} strokeWidth={1.75} /></span>
-          <span className="nav-label">הוצאות</span>
-        </button>
-        <button className={`nav-tab ${tab === 'more' ? 'active' : ''}`} onClick={() => setTab('more')}>
-          <span className="nav-icon"><MoreHorizontal size={22} strokeWidth={1.75} /></span>
-          <span className="nav-label">עוד</span>
-        </button>
-      </nav>
 
       {/* Modals (live across all tabs) */}
       {dueBooking && (

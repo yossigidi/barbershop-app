@@ -7521,3 +7521,163 @@ button.cs-lost.is-active {
   background: var(--surface-2); border: none; color: var(--text-soft);
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   NEW DASHBOARD SHELL — appointments-first, responsive
+   Phone: bottom nav · Tablet ≥900: icon rail · Desktop ≥1200: labelled
+   rail + summary side column. The day timeline is always the hero.
+   ═══════════════════════════════════════════════════════════════════════ */
+.app.dashboard.dash-shell {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+}
+.dash-shell { display: block; }
+
+/* ── Nav — a fixed bottom bar on phone ── */
+.dash-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 40;
+  display: flex;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  box-shadow: 0 -2px 12px rgba(14, 31, 61, 0.07);
+}
+.dash-nav-brand { display: none; }
+.dash-nav-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: none; border: none; padding: 7px 2px; cursor: pointer;
+  color: var(--text-soft); font-family: inherit;
+  transition: color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.dash-nav-icon { position: relative; display: inline-flex; }
+.dash-nav-badge {
+  position: absolute; top: -5px; inset-inline-end: -8px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px; background: var(--gold); color: #fff;
+  font-size: 0.62rem; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.dash-nav-label { font-size: 0.66rem; font-weight: 600; }
+.dash-nav-item.active { color: var(--gold); }
+.dash-nav-item:active { transform: scale(0.94); }
+
+/* ── Main column ── */
+.dash-main {
+  padding: 0 14px calc(82px + env(safe-area-inset-bottom));
+  min-height: 100vh;
+}
+.dash-topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0 10px;
+  background: var(--bg);
+}
+.dash-topbar-logo {
+  width: 34px; height: 34px; border-radius: 9px; object-fit: cover;
+  border: 1px solid var(--border); flex: none;
+}
+.dash-topbar-name {
+  font-size: 1.15rem; font-weight: 800; margin: 0;
+  letter-spacing: -0.02em; color: var(--text);
+}
+.dash-topbar-sub {
+  font-size: 0.82rem; color: var(--text-dim);
+  margin-inline-start: auto; font-weight: 600;
+}
+.dash-content { padding-top: 2px; }
+
+/* ── Schedule tab — day-nav + stats + timeline ── */
+.dash-schedule { display: block; }
+.sched-topbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+  margin-bottom: 12px;
+}
+.sched-daynav { display: flex; align-items: center; gap: 4px; }
+.sched-daynav > button {
+  width: 34px; height: 34px; flex: none;
+  border-radius: 9px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-dim);
+  font-size: 1.15rem; cursor: pointer; line-height: 1;
+}
+.sched-daynav > button:active { transform: scale(0.92); }
+.sched-date {
+  display: flex; flex-direction: column; align-items: center;
+  background: none; border: none; cursor: pointer; padding: 2px 8px;
+  font-family: inherit; min-width: 88px;
+}
+.sched-date strong { font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+.sched-date span { font-size: 0.74rem; color: var(--text-dim); }
+.sched-stats { display: flex; gap: 16px; }
+.sched-stat { text-align: center; }
+.sched-stat .n { display: block; font-size: 1.05rem; font-weight: 900; letter-spacing: -0.02em; color: var(--text); }
+.sched-stat .n.rev {
+  background: var(--rainbow);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.sched-stat .l { font-size: 0.66rem; color: var(--text-dim); }
+.sched-actions { display: flex; gap: 8px; margin-inline-start: auto; }
+.sched-today-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-dim); border-radius: 9px; padding: 8px 12px;
+  font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.sched-new-btn {
+  background: var(--rainbow); color: #fff; border: none;
+  border-radius: 9px; padding: 9px 16px;
+  font-family: inherit; font-size: 0.85rem; font-weight: 800; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(212, 51, 150, 0.30);
+}
+.sched-new-btn:active { transform: scale(0.97); }
+.sched-monthcal { margin-bottom: 10px; }
+.dash-summary { display: none; }
+
+/* ── Tablet ≥900px — compact icon rail ── */
+@media (min-width: 900px) {
+  .dash-shell { display: flex; }
+  .dash-nav {
+    position: sticky; top: 0;
+    flex-direction: column;
+    width: 78px; flex: none;
+    height: 100vh;
+    bottom: auto; left: auto; right: auto;
+    border-top: none; border-inline-start: 1px solid var(--border);
+    padding: 14px 8px;
+    box-shadow: none; gap: 4px;
+  }
+  .dash-nav-brand { display: flex; justify-content: center; padding: 4px 0 14px; }
+  .dash-nav-brand img { width: 44px; height: auto; }
+  .dash-nav-item {
+    flex: none; width: 100%;
+    padding: 11px 4px; border-radius: 13px;
+  }
+  .dash-nav-item:hover { background: var(--surface-2); }
+  .dash-nav-item.active { background: var(--rainbow); color: #fff; }
+  .dash-nav-item.active:hover { background: var(--rainbow); }
+  .dash-nav-label { font-size: 0.62rem; }
+  .dash-main { flex: 1; min-width: 0; padding: 0 24px 32px; }
+  .dash-topbar { padding: 18px 0 14px; }
+}
+
+/* ── Desktop ≥1200px — labelled rail + summary side column ── */
+@media (min-width: 1200px) {
+  .dash-nav { width: 172px; padding: 16px 12px; }
+  .dash-nav-item {
+    flex-direction: row; justify-content: flex-start; gap: 11px;
+    padding: 12px 14px;
+  }
+  .dash-nav-label { font-size: 0.92rem; }
+  .dash-main { padding: 0 32px 32px; }
+  .dash-content { max-width: 1280px; }
+  .dash-schedule { display: flex; gap: 22px; align-items: flex-start; }
+  .dash-schedule-main { flex: 1; min-width: 0; }
+  .dash-summary {
+    display: flex; flex-direction: column; gap: 14px;
+    width: 286px; flex: none;
+    position: sticky; top: 86px;
+  }
+}
