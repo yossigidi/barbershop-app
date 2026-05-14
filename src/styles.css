@@ -7597,24 +7597,26 @@ button.cs-lost.is-active {
   display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
   margin-bottom: 12px;
 }
-.sched-daynav { display: flex; align-items: center; gap: 4px; }
+.sched-daynav { display: flex; align-items: stretch; gap: 6px; }
 .sched-daynav > button {
-  width: 34px; height: 34px; flex: none;
-  border-radius: 9px; border: 1px solid var(--border);
+  width: 48px; flex: none; align-self: stretch;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
   background: var(--surface); color: var(--text-dim);
-  font-size: 1.15rem; cursor: pointer; line-height: 1;
+  font-size: 1.35rem; cursor: pointer; line-height: 1;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
 }
-.sched-daynav > button:active { transform: scale(0.92); }
+.sched-daynav > button:hover { border-color: var(--gold); }
+.sched-daynav > button:active { transform: scale(0.93); }
 .sched-date {
-  display: flex; flex-direction: column; align-items: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); cursor: pointer; padding: 8px 22px;
-  font-family: inherit; min-width: 136px;
+  border-radius: var(--radius-sm); cursor: pointer; padding: 12px 30px;
+  font-family: inherit; min-width: 158px;
   transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
 .sched-date:hover { border-color: var(--gold); box-shadow: var(--shadow-1); }
-.sched-date strong { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
-.sched-date span { font-size: 0.82rem; color: var(--text-dim); }
+.sched-date strong { font-size: 1.28rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+.sched-date span { font-size: 0.88rem; color: var(--text-dim); margin-top: 1px; }
 .sched-stats { display: flex; gap: 16px; }
 .sched-stat { text-align: center; }
 .sched-stat .n { display: block; font-size: 1.05rem; font-weight: 900; letter-spacing: -0.02em; color: var(--text); }
