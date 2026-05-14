@@ -78,6 +78,9 @@ export default function SettingsPage() {
   // to manage recurring booking creation themselves rather than letting
   // a one-time client lock 12 future slots.
   const [allowRecurring, setAllowRecurring] = useState(false);
+  const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
+  const [loyaltyEveryN, setLoyaltyEveryN] = useState(10);
+  const [loyaltyReward, setLoyaltyReward] = useState('תספורת חינם');
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -117,6 +120,11 @@ export default function SettingsPage() {
         setAiGender(data.aiGender || 'neutral');
         setCustomSlug(data.customSlug || '');
         setAllowRecurring(data.allowRecurring === true);
+        if (data.loyalty) {
+          setLoyaltyEnabled(data.loyalty.enabled === true);
+          setLoyaltyEveryN(Number(data.loyalty.everyN) || 10);
+          setLoyaltyReward(data.loyalty.reward || 'תספורת חינם');
+        }
         setTheme(getThemeKey(data));
       }
       setLoaded(true);
@@ -290,6 +298,11 @@ export default function SettingsPage() {
         aiGender,
         customSlug: slugToSave,
         allowRecurring: !!allowRecurring,
+        loyalty: {
+          enabled: !!loyaltyEnabled,
+          everyN: Math.max(2, Math.min(50, Number(loyaltyEveryN) || 10)),
+          reward: (loyaltyReward || 'תספורת חינם').trim().slice(0, 60),
+        },
         theme,
       });
 
@@ -910,6 +923,59 @@ export default function SettingsPage() {
             </div>
           </div>
         </label>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Star size={18} className="icon-inline" />כרטיסיית נאמנות</h3>
+        <p className="muted" style={{ marginTop: -6 }}>
+          כל לקוח צובר ביקורים, ואחרי מספר שתבחר/י — מגיע לו פרס. ההתקדמות מופיעה
+          אוטומטית בכרטיס הלקוח.
+        </p>
+        <label className="row" style={{ alignItems: 'center', cursor: 'pointer', gap: 12, marginBottom: loyaltyEnabled ? 16 : 0 }}>
+          <div
+            className={`toggle ${loyaltyEnabled ? 'on' : ''}`}
+            onClick={() => setLoyaltyEnabled((v) => !v)}
+            role="switch"
+            aria-checked={loyaltyEnabled}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setLoyaltyEnabled((v) => !v); }
+            }}
+            style={{ flex: 'none' }}
+          />
+          <div style={{ flex: 1 }}>
+            <strong>הפעל כרטיסיית נאמנות</strong>
+            <div className="muted" style={{ fontSize: '0.84rem', marginTop: 2, lineHeight: 1.5 }}>
+              מנוע retention — לקוחות חוזרים כדי לצבור את הפרס.
+            </div>
+          </div>
+        </label>
+        {loyaltyEnabled && (
+          <div className="card-inset" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="field" style={{ margin: 0 }}>
+              <label>אחרי כמה ביקורים מגיע פרס?</label>
+              <select value={loyaltyEveryN} onChange={(e) => setLoyaltyEveryN(Number(e.target.value))}>
+                {[5, 6, 7, 8, 9, 10, 12, 15, 20].map((n) => (
+                  <option key={n} value={n}>כל {n} ביקורים</option>
+                ))}
+              </select>
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>מה הפרס?</label>
+              <input
+                value={loyaltyReward}
+                onChange={(e) => setLoyaltyReward(e.target.value)}
+                placeholder="לדוגמה: תספורת חינם / 50% הנחה / מוצר במתנה"
+                maxLength={60}
+              />
+            </div>
+            <p className="muted" style={{ fontSize: '0.8rem', margin: 0 }}>
+              <Sparkles size={12} className="icon-inline" />
+              דוגמה: "כל {loyaltyEveryN} ביקורים → {loyaltyReward || 'פרס'}". בכרטיס הלקוח תראה/י
+              התקדמות וכפתור "מימש פרס".
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="card">
