@@ -1756,6 +1756,37 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   transform: none;
 }
 .copy-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.copy-link.is-copied {
+  background: rgba(20, 184, 254, 0.10);
+  border-color: var(--mint);
+  border-style: solid;
+  color: var(--mint-deep);
+  font-weight: 700;
+}
+/* Manual-copy fallback — shown only when both clipboard paths fail
+   (some locked-down mobile / PWA contexts). A selectable input the
+   user can long-press → Copy. */
+.copy-link-manual {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.copy-link-manual span {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+.copy-link-manual input {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.9rem;
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  color: var(--accent);
+  width: 100%;
+}
 
 /* Logo-upload nudge — shown beneath the share-link card when the barber
    hasn't uploaded a logo yet. Reminds them that WhatsApp previews fall

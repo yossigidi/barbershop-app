@@ -202,13 +202,43 @@ export default function DashboardPage() {
   const access = useSubscription(barber);
 
   // --- Actions ---
+  // Robust copy: modern Clipboard API → legacy execCommand (iOS-safe
+  // selection) → manual-select fallback UI. The old code fell back to
+  // prompt(), which iOS Safari blocks (especially in installed-PWA mode)
+  // so a failed copy silently did nothing.
+  const [linkCopyState, setLinkCopyState] = useState('idle'); // idle | copied | manual
   async function copyLink() {
     if (!shortLink) return;
+    let ok = false;
     try {
-      await navigator.clipboard.writeText(shortLink);
-      alert('הלינק הועתק!');
-    } catch {
-      prompt('העתק את הלינק:', shortLink);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(shortLink);
+        ok = true;
+      }
+    } catch { /* fall through */ }
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = shortLink;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length); // iOS needs the explicit range
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch { /* fall through */ }
+    }
+    if (ok) {
+      setLinkCopyState('copied');
+      setTimeout(() => setLinkCopyState('idle'), 2000);
+    } else {
+      // Last resort — reveal the link in a selectable box so the user
+      // can long-press → copy manually. Never use prompt() (iOS blocks it).
+      setLinkCopyState('manual');
     }
   }
   function shareWhatsApp() {
@@ -648,7 +678,25 @@ export default function DashboardPage() {
       <>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>שיתוף הלינק שלך</h3>
-          <div className="copy-link" onClick={copyLink}>{shortLink || '—'}</div>
+          <div
+            className={`copy-link ${linkCopyState === 'copied' ? 'is-copied' : ''}`}
+            onClick={copyLink}
+          >
+            {linkCopyState === 'copied' ? '✓ הלינק הועתק' : (shortLink || '—')}
+          </div>
+          {linkCopyState === 'manual' && (
+            <div className="copy-link-manual">
+              <span>סמן/י את הלינק והעתק/י ידנית:</span>
+              <input
+                type="text"
+                readOnly
+                value={shortLink}
+                dir="ltr"
+                onFocus={(e) => e.target.select()}
+                onClick={(e) => e.target.select()}
+              />
+            </div>
+          )}
           <div className="row" style={{ marginTop: 12 }}>
             <button className="btn-primary" onClick={shareWhatsApp} style={{ flex: 1 }}><Share2 size={18} className="icon-inline" />WhatsApp</button>
             <button className="btn-secondary" onClick={() => setShowQr(true)} style={{ flex: 'none' }} aria-label="QR"><QrCode size={18} /></button>
