@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
   MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X, Sparkles,
-  Wallet, Megaphone, Trash2, ImagePlus,
+  Wallet, Megaphone, Trash2, ImagePlus, Users,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useSubscription } from '../hooks/useSubscription';
@@ -42,6 +42,7 @@ import ExpensesTab from '../components/ExpensesTab.jsx';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState('calendar');
   const [barber, setBarber] = useState(null);
@@ -397,6 +398,15 @@ export default function DashboardPage() {
   function QuickActionsRow() {
     return (
       <div className="quick-actions-row">
+        <button
+          type="button"
+          className="quick-action-btn quick-action-clients"
+          onClick={() => navigate('/clients')}
+          aria-label="כרטיסיית לקוחות"
+        >
+          <Users size={18} aria-hidden="true" />
+          <span>לקוחות</span>
+        </button>
         <button
           type="button"
           className="quick-action-btn quick-action-broadcast"

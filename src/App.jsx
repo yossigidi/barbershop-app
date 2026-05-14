@@ -47,6 +47,7 @@ function lazyRetry(loader) {
 // use. Dropped ~50-60% off the booking-page initial JS.
 const AuthPage = lazyRetry(() => import('./pages/AuthPage.jsx'));
 const DashboardPage = lazyRetry(() => import('./pages/DashboardPage.jsx'));
+const ClientsPage = lazyRetry(() => import('./pages/ClientsPage.jsx'));
 const SettingsPage = lazyRetry(() => import('./pages/SettingsPage.jsx'));
 const OnboardingPage = lazyRetry(() => import('./pages/OnboardingPage.jsx'));
 const ReportsPage = lazyRetry(() => import('./pages/ReportsPage.jsx'));
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/onboarding" element={<Protected><OnboardingPage /></Protected>} />
           <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
+          <Route path="/clients" element={<Protected><ClientsPage /></Protected>} />
           <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
           <Route path="/reports" element={<Protected><ReportsPage /></Protected>} />
           <Route path="/pricing" element={<Protected><PricingPage /></Protected>} />
