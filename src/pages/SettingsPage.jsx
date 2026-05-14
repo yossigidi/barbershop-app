@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle, Repeat, Loader2 } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, Lightbulb, ChevronUp, Scissors, Sparkles, Trash2, Clock, Briefcase, Check, Star, XCircle, Repeat, Loader2, Bell, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, getDoc, onSnapshot, updateDoc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -78,6 +78,11 @@ export default function SettingsPage() {
   // to manage recurring booking creation themselves rather than letting
   // a one-time client lock 12 future slots.
   const [allowRecurring, setAllowRecurring] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderMode, setReminderMode] = useState('batchDayBefore');
+  const [reminderHoursBefore, setReminderHoursBefore] = useState(2);
+  const [thankYouEnabled, setThankYouEnabled] = useState(false);
+  const [waGroupLink, setWaGroupLink] = useState('');
   const [loyaltyEnabled, setLoyaltyEnabled] = useState(false);
   const [loyaltyEveryN, setLoyaltyEveryN] = useState(10);
   const [loyaltyReward, setLoyaltyReward] = useState('תספורת חינם');
@@ -120,6 +125,14 @@ export default function SettingsPage() {
         setAiGender(data.aiGender || 'neutral');
         setCustomSlug(data.customSlug || '');
         setAllowRecurring(data.allowRecurring === true);
+        if (data.reminderSettings) {
+          setReminderEnabled(data.reminderSettings.enabled === true);
+          const m = data.reminderSettings.mode;
+          setReminderMode(['batchDayBefore', 'batchSameDay', 'perClient'].includes(m) ? m : 'batchDayBefore');
+          setReminderHoursBefore([1, 2, 3].includes(data.reminderSettings.hoursBefore) ? data.reminderSettings.hoursBefore : 2);
+        }
+        setThankYouEnabled(data.thankYouEnabled === true);
+        setWaGroupLink(data.waGroupLink || '');
         if (data.loyalty) {
           setLoyaltyEnabled(data.loyalty.enabled === true);
           setLoyaltyEveryN(Number(data.loyalty.everyN) || 10);
@@ -298,6 +311,13 @@ export default function SettingsPage() {
         aiGender,
         customSlug: slugToSave,
         allowRecurring: !!allowRecurring,
+        reminderSettings: {
+          enabled: !!reminderEnabled,
+          mode: ['batchDayBefore', 'batchSameDay', 'perClient'].includes(reminderMode) ? reminderMode : 'batchDayBefore',
+          hoursBefore: [1, 2, 3].includes(Number(reminderHoursBefore)) ? Number(reminderHoursBefore) : 2,
+        },
+        thankYouEnabled: !!thankYouEnabled,
+        waGroupLink: (waGroupLink || '').trim(),
         loyalty: {
           enabled: !!loyaltyEnabled,
           everyN: Math.max(2, Math.min(50, Number(loyaltyEveryN) || 10)),
@@ -586,6 +606,97 @@ export default function SettingsPage() {
           />
           <p className="muted" style={{ fontSize: '0.75rem', marginTop: 6 }}>
             איך משיגים? Google Business Profile → "Get more reviews" → "Share review form" → העתק את הקישור.
+          </p>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><MessageCircle size={18} className="icon-inline" />הודעות WhatsApp ללקוחות</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+          תזכורות והודעות תודה נשלחות אוטומטית — מגדירים פעם אחת וזהו, בלי כפתורים.
+        </p>
+
+        <label className="row" style={{ alignItems: 'center', cursor: 'pointer', gap: 12, marginBottom: reminderEnabled ? 14 : 0 }}>
+          <div
+            className={`toggle ${reminderEnabled ? 'on' : ''}`}
+            onClick={() => setReminderEnabled((v) => !v)}
+            role="switch"
+            aria-checked={reminderEnabled}
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setReminderEnabled((v) => !v); } }}
+            style={{ flex: 'none' }}
+          />
+          <div style={{ flex: 1 }}>
+            <strong><Bell size={14} className="icon-inline" />תזכורת אוטומטית לפני התור</strong>
+            <div className="muted" style={{ fontSize: '0.84rem', marginTop: 2, lineHeight: 1.5 }}>
+              הלקוח מקבל תזכורת ב-WhatsApp עם שם העסק, התאריך, השעה והקישור שלך.
+            </div>
+          </div>
+        </label>
+        {reminderEnabled && (
+          <div className="card-inset" style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 16 }}>
+            <div className="field" style={{ margin: 0 }}>
+              <label>מתי לשלוח?</label>
+              <select value={reminderMode} onChange={(e) => setReminderMode(e.target.value)}>
+                <option value="batchDayBefore">יום לפני — לכל לקוחות המחר ביחד (בערב)</option>
+                <option value="batchSameDay">באותו יום — לכל לקוחות היום ביחד (בבוקר)</option>
+                <option value="perClient">לכל לקוח בנפרד — כמה שעות לפני התור שלו</option>
+              </select>
+            </div>
+            {reminderMode === 'perClient' && (
+              <div className="field" style={{ margin: 0 }}>
+                <label>כמה זמן לפני התור?</label>
+                <select value={reminderHoursBefore} onChange={(e) => setReminderHoursBefore(Number(e.target.value))}>
+                  <option value={1}>שעה לפני</option>
+                  <option value={2}>שעתיים לפני</option>
+                  <option value={3}>שלוש שעות לפני</option>
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
+        <label className="row" style={{ alignItems: 'center', cursor: 'pointer', gap: 12 }}>
+          <div
+            className={`toggle ${thankYouEnabled ? 'on' : ''}`}
+            onClick={() => setThankYouEnabled((v) => !v)}
+            role="switch"
+            aria-checked={thankYouEnabled}
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setThankYouEnabled((v) => !v); } }}
+            style={{ flex: 'none' }}
+          />
+          <div style={{ flex: 1 }}>
+            <strong><Star size={14} className="icon-inline" />הודעת תודה + בקשת דירוג בגוגל</strong>
+            <div className="muted" style={{ fontSize: '0.84rem', marginTop: 2, lineHeight: 1.5 }}>
+              חצי שעה אחרי שהתור נגמר (לפי היומן), הלקוח מקבל הודעת תודה עם הקישור לדירוג בגוגל.
+            </div>
+          </div>
+        </label>
+        {thankYouEnabled && !googleReviewUrl && (
+          <p className="muted" style={{ fontSize: '0.8rem', margin: '8px 0 0', color: '#b91c1c' }}>
+            ⚠️ עדיין לא הגדרת לינק לביקורת בגוגל למעלה — בלעדיו הודעת התודה לא תישלח.
+          </p>
+        )}
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><MessageCircle size={18} className="icon-inline" />קבוצת לקוחות בוואטסאפ</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+          הדבק קישור לקבוצת הלקוחות שלך בוואטסאפ. בדשבורד, "הודעה לכל הלקוחות" יפתח את הקבוצה עם תבנית הודעה מוכנה.
+        </p>
+        <div className="field">
+          <label>קישור לקבוצה</label>
+          <input
+            type="url"
+            value={waGroupLink}
+            onChange={(e) => setWaGroupLink(e.target.value)}
+            placeholder="https://chat.whatsapp.com/..."
+            dir="ltr"
+            style={{ direction: 'ltr', textAlign: 'left' }}
+          />
+          <p className="muted" style={{ fontSize: '0.75rem', marginTop: 6 }}>
+            בוואטסאפ: פתח את הקבוצה → הקש על שם הקבוצה → "קישור הזמנה לקבוצה" → העתק.
           </p>
         </div>
       </div>

@@ -15,9 +15,11 @@
     // "0 8 * * 0" with error 10100). To dodge the parser entirely we
     // register a single daily 08:00 UTC trigger and let the worker
     // gate Sun/Tue/Thu inside handleCronFacebookPost itself.
+    //   "0 * * * *"  → handleCronReminders (automatic WhatsApp reminders)
     //   "0 6 * * *"  → handleCronBilling (Tranzila daily renewal)
     //   "0 8 * * *"  → daily fan-out; FB post only fires Sun/Tue/Thu
     "crons": [
+      "0 * * * *",
       "0 6 * * *",
       "0 8 * * *"
     ]

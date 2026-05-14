@@ -68,8 +68,11 @@ export async function firestorePatch(svc, accessToken, path, fields, updateMask)
 // Run a structured query against Firestore REST. Pass a `structuredQuery`
 // object (per Firestore docs) and we'll POST it. Returns the array of raw
 // document objects (with .document.fields) — caller decodes with fieldVal.
-export async function firestoreQuery(svc, accessToken, structuredQuery) {
-  const url = `https://firestore.googleapis.com/v1/projects/${svc.project_id}/databases/(default)/documents:runQuery`;
+// `parentPath` scopes the query to a sub-collection's parent document
+// (e.g. `barbers/<uid>`); omit it to query from the database root.
+export async function firestoreQuery(svc, accessToken, structuredQuery, parentPath = '') {
+  const parent = parentPath ? `/${parentPath}` : '';
+  const url = `https://firestore.googleapis.com/v1/projects/${svc.project_id}/databases/(default)/documents${parent}:runQuery`;
   const r = await fetch(url, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },

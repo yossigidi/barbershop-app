@@ -11,6 +11,7 @@ import {
   handleCreatePaymentLink, handleTranzilaWebhook, handleCancelSubscription,
   handleCancelStudio, handleTranzilaSuccess, handleTranzilaFail,
 } from './payment.js';
+import { handleCronWhatsApp } from './whatsapp.js';
 import { handleRedeemPromo } from './promo.js';
 import { handleAiCompose } from './ai.js';
 import { handleAiBriefing } from './briefing.js';
@@ -87,6 +88,15 @@ export default {
   // cron pattern so we can dispatch to the right handler.
   async scheduled(event, env, ctx) {
     console.log('CRON_TRIGGER', event.cron, new Date().toISOString());
+    // Hourly — automatic WhatsApp reminders + post-appointment thank-yous.
+    // The handler reads each barber's reminderSettings / thankYouEnabled and
+    // decides what (if anything) to send this hour.
+    if (event.cron === '0 * * * *') {
+      ctx.waitUntil(
+        handleCronWhatsApp(env).catch((e) => console.error('CRON_WHATSAPP_FATAL', e?.message, e?.stack)),
+      );
+      return;
+    }
     // Daily billing + trial-expiry reminder emails — runs at 06:00 UTC.
     if (event.cron === '0 6 * * *') {
       ctx.waitUntil(

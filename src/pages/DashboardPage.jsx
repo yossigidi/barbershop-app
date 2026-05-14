@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
-  MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, X, Sparkles,
+  Calendar as CalendarIcon, BarChart3, MoreHorizontal, Palmtree,
+  MessageCircle, Scissors, Settings, Bell, QrCode, Copy, Share2, Sparkles,
   Wallet, Megaphone, Trash2, ImagePlus, Users,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -28,18 +28,15 @@ import SmartTipsCard from '../components/SmartTipsCard.jsx';
 import RescheduleModal from '../components/RescheduleModal.jsx';
 import VacationModal from '../components/VacationModal.jsx';
 import QrModal from '../components/QrModal.jsx';
-import DayTimeline from '../components/DayTimeline.jsx';
 import ScheduleList from '../components/ScheduleList.jsx';
 import BookingActionSheet from '../components/BookingActionSheet.jsx';
-import TomorrowReminders from '../components/TomorrowReminders.jsx';
-import BroadcastModal from '../components/BroadcastModal.jsx';
+import WhatsAppBroadcastModal from '../components/WhatsAppBroadcastModal.jsx';
 import QuickBookModal from '../components/QuickBookModal.jsx';
 import TrialExpiryBanner from '../components/TrialExpiryBanner.jsx';
 import MorningSummaryCard from '../components/MorningSummaryCard.jsx';
 import AIBriefingCard from '../components/AIBriefingCard.jsx';
 import BreakSuggestions from '../components/BreakSuggestions.jsx';
 import WeeklyReportCard from '../components/WeeklyReportCard.jsx';
-import YesterdayFollowUp from '../components/YesterdayFollowUp.jsx';
 import ExpensesTab from '../components/ExpensesTab.jsx';
 
 export default function DashboardPage() {
@@ -62,9 +59,6 @@ export default function DashboardPage() {
   const [showVacation, setShowVacation] = useState(false);
   const [vacationSaved, setVacationSaved] = useState(null);
   const [showQr, setShowQr] = useState(false);
-  const [showTomorrow, setShowTomorrow] = useState(false);
-  const [showToday, setShowToday] = useState(false);
-  const [showYesterday, setShowYesterday] = useState(false);
   const [showBroadcast, setShowBroadcast] = useState(false);
   const [actionFor, setActionFor] = useState(null);
 
@@ -219,16 +213,6 @@ export default function DashboardPage() {
     if (dueBooking) startBooking(dueBooking);
     setDueBookingId(null);
   }
-  // Tomorrow's bookings (used by the bulk-reminders CTA so the button
-  // label can carry the count and decide whether to render at all).
-  const tomorrowISO = useMemo(() => {
-    const d = new Date(today);
-    d.setDate(d.getDate() + 1);
-    return dateToISO(d);
-  }, [today]);
-  const tomorrowBookingsCount = bookings.filter(
-    (b) => b.date === tomorrowISO && b.status === 'booked',
-  ).length;
   const dayBookings = bookings.filter((b) => b.date === selectedISO);
   const dayBlocks = blocks.filter((b) => b.date === selectedISO);
 
@@ -367,20 +351,9 @@ export default function DashboardPage() {
     try { await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'inProgress', startedAt: serverTimestamp() }); }
     catch (e) { alert('שגיאה: ' + e.message); }
   }
-  // Swipe-left on a booking → mark it done AND open a pre-filled
-  // thank-you WhatsApp to the client (wa.me — barber taps send). If the
-  // booking has no phone we just complete it.
-  function completeAndThank(b) {
-    completeBooking(b);
-    const phone = b.clientPhone;
-    if (phone) {
-      const first = (b.clientName || '').trim().split(/\s+/)[0] || '';
-      const text =
-        `תודה ${first} שהגעת ל${barber.businessName || 'תספורת'}! 🙏\n` +
-        `נשמח לראותך שוב — לתיאום תור: ${shortLink}`;
-      window.open(whatsappUrl(text, phone), '_blank');
-    }
-  }
+  // Swipe-left on a booking just marks it done. The thank-you WhatsApp is
+  // NOT tied to this — it's sent automatically by the worker cron, 30
+  // minutes after the appointment's scheduled end (see worker/whatsapp.js).
   async function completeBooking(b) {
     try {
       await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'completed', completedAt: serverTimestamp() });
@@ -622,7 +595,7 @@ export default function DashboardPage() {
             offsetMin={isToday ? runningOffset : 0}
             onBookingTap={(b) => setActionFor(b)}
             onStartBooking={(b) => startBooking(b)}
-            onCompleteBooking={(b) => completeAndThank(b)}
+            onCompleteBooking={(b) => completeBooking(b)}
             onFreeSlotTap={(time) => setQuickBook({ time, date: selectedISO })}
             onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
           />
@@ -637,12 +610,6 @@ export default function DashboardPage() {
             onTapBooking={setActionFor}
           />
           <WeeklyReportCard uid={user.uid} businessName={barber.businessName || 'העסק שלי'} />
-          {tomorrowBookingsCount > 0 && (
-            <button className="btn-gold" onClick={() => setShowTomorrow(true)} style={{ width: '100%' }}>
-              <Send size={18} className="icon-inline" />
-              תזכורת לכל לקוחות מחר ({tomorrowBookingsCount})
-            </button>
-          )}
           {nextHoliday && (
             <button className="chip" onClick={shareHolidayPromo} style={{ width: '100%' }}>
               {nextHoliday.emoji} {nextHoliday.name} מתקרב — שלח הודעה
@@ -697,25 +664,13 @@ export default function DashboardPage() {
         </div>
 
         <button className="btn-gold" onClick={() => setShowBroadcast(true)} style={{ width: '100%', marginBottom: 8 }}>
-          <Megaphone size={18} className="icon-inline" />הודעה לכל הלקוחות (חג / חופשה / מחירים)
+          <Megaphone size={18} className="icon-inline" />הודעה לכל הלקוחות (קבוצת WhatsApp)
         </button>
-        {todayBookings.length > 0 && (
-          <button className="btn-gold" onClick={() => setShowToday(true)} style={{ width: '100%', marginBottom: 8 }}>
-            <Send size={18} className="icon-inline" />תזכורת לכל לקוחות היום ({todayBookings.length})
-          </button>
-        )}
-        {tomorrowBookingsCount > 0 ? (
-          <button className="btn-gold" onClick={() => setShowTomorrow(true)} style={{ width: '100%', marginBottom: 8 }}>
-            <Send size={18} className="icon-inline" />תזכורת לכל לקוחות מחר ({tomorrowBookingsCount})
-          </button>
-        ) : (
-          <button className="btn-secondary" disabled style={{ width: '100%', marginBottom: 8 }} title="אין תורים מחר">
-            <Send size={18} className="icon-inline" />תזכורות מחר — אין תורים
-          </button>
-        )}
-        <button className="btn-secondary" onClick={() => setShowYesterday(true)} style={{ width: '100%', marginBottom: 8 }}>
-          <MessageCircle size={18} className="icon-inline" />הודעות תודה ללקוחות מאתמול
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.84rem', marginBottom: 8 }}>
+          <Bell size={15} style={{ flex: 'none' }} />
+          <span style={{ flex: 1 }}>תזכורות לתורים והודעות תודה נשלחות <strong>אוטומטית</strong>.</span>
+          <Link to="/settings" style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>הגדרות ←</Link>
+        </div>
         <button className="btn-secondary" onClick={() => setShowVacation(true)} style={{ width: '100%', marginBottom: 8 }}>
           <Palmtree size={18} className="icon-inline" />הוסף חופש
         </button>
@@ -876,34 +831,13 @@ export default function DashboardPage() {
       {showQr && (
         <QrModal link={shortLink} businessName={barber.businessName || 'העסק שלי'} onClose={() => setShowQr(false)} />
       )}
-      {showTomorrow && (
-        <TomorrowReminders bookings={bookings} businessName={barber.businessName || 'העסק שלי'} onClose={() => setShowTomorrow(false)} />
-      )}
-      {showToday && (
-        <TomorrowReminders
-          bookings={bookings}
-          businessName={barber.businessName || 'העסק שלי'}
-          targetDay="today"
-          onClose={() => setShowToday(false)}
-        />
-      )}
       {showBroadcast && (
-        <BroadcastModal
-          open
-          barberId={user.uid}
+        <WhatsAppBroadcastModal
           businessName={barber.businessName || 'העסק שלי'}
           shortLink={shortLink}
-          initialBody={broadcastBody || undefined}
-          initialTemplateKey={broadcastBody ? 'custom' : undefined}
+          waGroupLink={barber.waGroupLink || ''}
+          initialBody={broadcastBody || ''}
           onClose={() => { setShowBroadcast(false); setBroadcastBody(null); }}
-        />
-      )}
-      {showYesterday && (
-        <YesterdayFollowUp
-          uid={user.uid}
-          businessName={barber.businessName || 'העסק שלי'}
-          googleReviewUrl={barber.googleReviewUrl || ''}
-          onClose={() => setShowYesterday(false)}
         />
       )}
       {waitlistNotify && waitlistNotify.clients.length > 0 && (
