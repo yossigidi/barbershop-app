@@ -12,12 +12,20 @@ const PX_PER_MIN = 1.8;
 // 1 (the default), we render the previous single-column layout.
 
 export default function DayTimeline({
-  date, workingHours, bookings, blocks, chairsCount = 1,
+  date, workingHours, bookings, blocks, chairsCount = 1, offsetMin = 0,
   onBookingTap, onFreeSlotTap, onBlockTap,
 }) {
   const dayKey = dayKeyFromDate(date);
   const cfg = workingHours?.[dayKey];
   const chairs = Math.max(1, Math.min(10, Number(chairsCount) || 1));
+
+  // Live running-schedule: a not-yet-started booking is shown with its
+  // offset-adjusted "actual" time when the day is running behind. The
+  // booking's confirmed time is untouched — this is display-only.
+  const shiftLabel = (b) => {
+    if (!offsetMin || b.status !== 'booked') return null;
+    return `≈${addMinToTime(b.time, offsetMin)}`;
+  };
 
   const layout = useMemo(() => {
     if (!cfg?.active) return null;
@@ -164,6 +172,7 @@ export default function DayTimeline({
                   <span className="dt-name-compact">{b.clientName || 'תור'}</span>
                   <span className="dt-time-compact">
                     {b.time}
+                    {shiftLabel(b) && <span className="dt-shift">{shiftLabel(b)}</span>}
                     {inProgress && <span className="dt-badge" style={{ color: '#4ade80', marginInlineStart: 4 }}><Circle size={8} fill="currentColor" /></span>}
                     {completed && <span className="dt-badge" style={{ marginInlineStart: 4 }}><Check size={9} /></span>}
                     {b.recurringId && <span className="dt-badge" style={{ marginInlineStart: 4 }}><Repeat size={9} /></span>}
@@ -177,7 +186,10 @@ export default function DayTimeline({
                     {completed && <span className="dt-badge" style={{ marginInlineStart: 6 }}><Check size={11} /></span>}
                     {b.recurringId && <span className="dt-badge" style={{ marginInlineStart: 6 }}><Repeat size={11} /></span>}
                   </div>
-                  <div className="dt-time">{b.time}–{addMinToTime(b.time, b.duration || 20)}</div>
+                  <div className="dt-time">
+                    {b.time}–{addMinToTime(b.time, b.duration || 20)}
+                    {shiftLabel(b) && <span className="dt-shift">{shiftLabel(b)}</span>}
+                  </div>
                   {b.serviceName && height > 56 && (
                     <div className="dt-svc">
                       {b.serviceName}
@@ -308,6 +320,7 @@ export default function DayTimeline({
                         <span className="dt-name-compact">{b.clientName || 'תור'}</span>
                         <span className="dt-time-compact">
                           {b.time}
+                          {shiftLabel(b) && <span className="dt-shift">{shiftLabel(b)}</span>}
                           {inProgress && (
                             <span className="dt-badge" style={{ color: '#4ade80', marginInlineStart: 4 }}>
                               <Circle size={8} fill="currentColor" />
@@ -345,7 +358,10 @@ export default function DayTimeline({
                             </span>
                           )}
                         </div>
-                        <div className="dt-time">{b.time}–{addMinToTime(b.time, b.duration || 20)}</div>
+                        <div className="dt-time">
+                          {b.time}–{addMinToTime(b.time, b.duration || 20)}
+                          {shiftLabel(b) && <span className="dt-shift">{shiftLabel(b)}</span>}
+                        </div>
                         {b.serviceName && (
                           <div className="dt-svc">
                             {b.serviceName}

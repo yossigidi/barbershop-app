@@ -7444,3 +7444,80 @@ button.cs-lost.is-active {
   accent-color: var(--gold);
 }
 .studio-agree-row a { color: var(--gold-deep); font-weight: 600; }
+
+/* ─── Live running-schedule ──────────────────────────────────────────────
+   Banner + due-appointment modal + the timeline shift annotation. */
+.run-banner {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, rgba(245, 177, 0, 0.12), rgba(212, 51, 150, 0.10));
+  border: 1px solid rgba(245, 177, 0, 0.40);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px; margin-bottom: 10px;
+}
+.run-banner-icon {
+  width: 28px; height: 28px; flex: none; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #F5B100; color: #fff;
+}
+.run-banner-text { flex: 1; font-size: 0.84rem; color: #7a5a00; line-height: 1.4; }
+.run-banner-text strong { color: #5a4200; }
+.run-banner-reset {
+  flex: none; display: inline-flex; align-items: center; gap: 4px;
+  background: #fff; border: 1px solid rgba(245, 177, 0, 0.5);
+  color: #946B00; font-family: inherit; font-size: 0.76rem; font-weight: 700;
+  padding: 6px 10px; border-radius: 999px; cursor: pointer;
+}
+
+/* Shift annotation on a booking row in the timeline */
+.dt-shift {
+  margin-inline-start: 5px;
+  font-size: 0.82em; font-weight: 700;
+  color: #F5B100;
+}
+
+/* Appointment-due modal */
+.appt-due { text-align: center; position: relative; padding-top: 6px; }
+.appt-due-pulse {
+  width: 62px; height: 62px; margin: 0 auto 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #D43396, #6541C1 50%, #14B8FE);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 0 rgba(212, 51, 150, 0.45);
+  animation: appt-pulse 1.8s var(--ease) infinite;
+}
+@keyframes appt-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(212, 51, 150, 0.40); }
+  70% { box-shadow: 0 0 0 16px rgba(212, 51, 150, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 51, 150, 0); }
+}
+.appt-due-title { margin: 0 0 14px; font-size: 1.25rem; font-weight: 800; }
+.appt-due-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;
+}
+.appt-due-time { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+.appt-due-name { font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
+.appt-due-svc { font-size: 0.85rem; color: var(--text-dim); margin-top: 2px; }
+.appt-due-start { width: 100%; padding: 14px; font-size: 1rem; }
+.appt-due-delay-label {
+  font-size: 0.82rem; color: var(--text-dim); margin: 16px 0 8px;
+}
+.appt-due-delays { display: flex; gap: 8px; }
+.appt-due-delay {
+  flex: 1; padding: 12px 6px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1.5px solid var(--gold);
+  color: var(--gold-deep); font-family: inherit; font-weight: 800; font-size: 0.92rem;
+  cursor: pointer; transition: background 0.15s var(--ease);
+}
+.appt-due-delay:active { background: var(--gold-soft); }
+.appt-due-snooze {
+  display: block; width: 100%; margin-top: 12px;
+  background: none; border: none; color: var(--text-dim);
+  font-family: inherit; font-size: 0.86rem; cursor: pointer; padding: 8px;
+}
+.appt-due-close {
+  position: absolute; top: -2px; inset-inline-start: -2px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--surface-2); border: none; color: var(--text-soft);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}

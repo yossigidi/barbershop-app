@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Calendar as CalendarIcon, Home, BarChart3, MoreHorizontal, Palmtree, Send,
@@ -15,8 +15,9 @@ import {
   addDoc, deleteDoc, getDoc, getDocs, setDoc, arrayUnion, arrayRemove, serverTimestamp,
 } from 'firebase/firestore';
 import {
-  dateToISO, formatDateHe, DAY_LABELS_HE, dayKeyFromDate,
+  dateToISO, formatDateHe, DAY_LABELS_HE, dayKeyFromDate, timeToMin,
 } from '../utils/slots';
+import { RunningStatusBanner, AppointmentDueModal } from '../components/RunningSchedule.jsx';
 import { nameToSlug, validateSlug } from '../utils/slugs';
 import { registerFcmToken, requestPushPermission } from '../utils/push';
 import { whatsappUrl, shareLinkText } from '../utils/whatsapp';
@@ -161,6 +162,62 @@ export default function DashboardPage() {
 
   const todayBookings = bookings.filter((b) => b.date === todayISO);
   const todayBlocks = blocks.filter((b) => b.date === todayISO);
+
+  // ── Live running-schedule ──────────────────────────────────────────────
+  // barber.dayRunning = { date, offsetMin }. The offset only counts for
+  // *today* — a stale date means a new day, so it reads as 0. This is a
+  // display-only offset: the client's confirmed booking time never moves.
+  const runningOffset = (barber?.dayRunning?.date === todayISO)
+    ? Math.max(0, Number(barber.dayRunning.offsetMin) || 0)
+    : 0;
+  const [dueBookingId, setDueBookingId] = useState(null);
+  const snoozedRef = useRef(new Map()); // bookingId → snoozed-until ms
+  const dueBooking = dueBookingId
+    ? bookings.find((b) => b.id === dueBookingId && b.status === 'booked') || null
+    : null;
+
+  // Poll every 30s: which of today's not-yet-started bookings has its
+  // offset-adjusted start time arrived? Show the soonest one.
+  useEffect(() => {
+    function check() {
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      const due = bookings
+        .filter((b) => b.date === todayISO && b.status === 'booked')
+        .filter((b) => timeToMin(b.time) + runningOffset <= nowMin)
+        .filter((b) => {
+          const until = snoozedRef.current.get(b.id);
+          return !until || until < Date.now();
+        })
+        .sort((a, b) => timeToMin(a.time) - timeToMin(b.time))[0];
+      setDueBookingId((prev) => (due ? due.id : (prev ? null : prev)));
+    }
+    check();
+    const iv = setInterval(check, 30_000);
+    return () => clearInterval(iv);
+  }, [bookings, todayISO, runningOffset]);
+
+  async function writeDayRunning(offsetMin) {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'barbers', user.uid), {
+        dayRunning: { date: todayISO, offsetMin: Math.max(0, Math.round(offsetMin)) },
+      });
+    } catch (e) { alert('שגיאה: ' + e.message); }
+  }
+  function applyDelay(minutes) {
+    writeDayRunning(runningOffset + minutes);
+    setDueBookingId(null);
+  }
+  function resetRunning() { writeDayRunning(0); }
+  function snoozeDue() {
+    if (dueBookingId) snoozedRef.current.set(dueBookingId, Date.now() + 5 * 60_000);
+    setDueBookingId(null);
+  }
+  function startDueBooking() {
+    if (dueBooking) startBooking(dueBooking);
+    setDueBookingId(null);
+  }
   // Tomorrow's bookings (used by the bulk-reminders CTA so the button
   // label can carry the count and decide whether to render at all).
   const tomorrowISO = useMemo(() => {
@@ -310,8 +367,21 @@ export default function DashboardPage() {
     catch (e) { alert('שגיאה: ' + e.message); }
   }
   async function completeBooking(b) {
-    try { await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'completed', completedAt: serverTimestamp() }); }
-    catch (e) { alert('שגיאה: ' + e.message); }
+    try {
+      await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'completed', completedAt: serverTimestamp() });
+      // Auto-recover the running offset: if the barber finished today's
+      // appointment before its offset-adjusted slot would have ended,
+      // shrink the day's offset by the time they saved (never below 0).
+      if (b.date === todayISO && runningOffset > 0) {
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const expectedEnd = timeToMin(b.time) + runningOffset + (b.duration || 20);
+        if (nowMin < expectedEnd) {
+          const recovered = Math.max(0, runningOffset - (expectedEnd - nowMin));
+          if (recovered !== runningOffset) writeDayRunning(recovered);
+        }
+      }
+    } catch (e) { alert('שגיאה: ' + e.message); }
   }
   async function blockSlot(time, dateISO) {
     try {
@@ -554,12 +624,15 @@ export default function DashboardPage() {
           </button>
         )}
 
+        <RunningStatusBanner offsetMin={runningOffset} onReset={resetRunning} />
+
         <DayTimeline
           date={today}
           workingHours={barber.workingHours}
           bookings={todayBookings}
           blocks={todayBlocks}
           chairsCount={barber.chairsCount || 1}
+          offsetMin={runningOffset}
           onBookingTap={(b) => setActionFor(b)}
           onFreeSlotTap={(time) => setQuickBook({ time, date: todayISO })}
           onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
@@ -598,12 +671,16 @@ export default function DashboardPage() {
             <strong>{DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}, {formatDateHe(selectedDate)}</strong>
             {' • '}{dayBookings.length} תורים
           </div>
+          {selectedISO === todayISO && (
+            <RunningStatusBanner offsetMin={runningOffset} onReset={resetRunning} />
+          )}
           <DayTimeline
             date={selectedDate}
             workingHours={barber.workingHours}
             bookings={dayBookings}
             blocks={dayBlocks}
             chairsCount={barber.chairsCount || 1}
+            offsetMin={selectedISO === todayISO ? runningOffset : 0}
             onBookingTap={(b) => setActionFor(b)}
             onFreeSlotTap={(time) => setQuickBook({ time, date: selectedISO })}
             onBlockTap={(b) => { if (confirm(`לבטל חסימה ב-${b.time}?`)) unblockSlot(b.id); }}
@@ -806,6 +883,16 @@ export default function DashboardPage() {
       </nav>
 
       {/* Modals (live across all tabs) */}
+      {dueBooking && (
+        <AppointmentDueModal
+          booking={dueBooking}
+          offsetMin={runningOffset}
+          onStart={startDueBooking}
+          onDelay={applyDelay}
+          onSnooze={snoozeDue}
+          onClose={snoozeDue}
+        />
+      )}
       {rescheduling && (
         <RescheduleModal
           booking={rescheduling}
