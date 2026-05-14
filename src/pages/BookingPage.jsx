@@ -584,13 +584,14 @@ export default function BookingPage() {
           createdAt: serverTimestamp(),
         });
         created.push({ id: ref.id, date: d, manageToken });
-        try {
-          await setDoc(doc(db, 'manageTokens', manageToken), {
-            uid: barberId,
-            bookingId: ref.id,
-            createdAt: serverTimestamp(),
-          });
-        } catch (e) { console.warn('manageTokens write failed', e?.message); }
+        // Non-blocking — the success screen doesn't need this write to
+        // finish. Keeping it off the critical path shaves a full
+        // Firestore round-trip per booking off the perceived wait.
+        setDoc(doc(db, 'manageTokens', manageToken), {
+          uid: barberId,
+          bookingId: ref.id,
+          createdAt: serverTimestamp(),
+        }).catch((e) => console.warn('manageTokens write failed', e?.message));
 
         // ── Extra people (consecutive slots, same date, same phone) ────
         for (const p of extraSchedule) {
@@ -614,13 +615,11 @@ export default function BookingPage() {
             createdAt: serverTimestamp(),
           });
           created.push({ id: exRef.id, date: d, manageToken: exManage });
-          try {
-            await setDoc(doc(db, 'manageTokens', exManage), {
-              uid: barberId,
-              bookingId: exRef.id,
-              createdAt: serverTimestamp(),
-            });
-          } catch (e) { console.warn('manageTokens write failed', e?.message); }
+          setDoc(doc(db, 'manageTokens', exManage), {
+            uid: barberId,
+            bookingId: exRef.id,
+            createdAt: serverTimestamp(),
+          }).catch((e) => console.warn('manageTokens write failed', e?.message));
         }
       }
 

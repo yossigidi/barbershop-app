@@ -3756,35 +3756,34 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 /* Side-rail accessibility trigger — Israeli convention. Attached to the
    inline-end edge (LEFT in RTL), vertically centered, glued to the screen.
    Never overlaps with bottom action buttons or top headers. */
+/* Compact icon-only circle, tucked in the inline-end bottom corner and
+   lifted above any fixed bottom CTA bar (e.g. the booking page's "אשר
+   וקבע תור"). Previously a wide "נגישות" pill pinned to the vertical
+   centre of the edge — it floated over page content. */
 .a11y-fab {
   position: fixed;
-  top: 50%;
-  inset-inline-end: 0;
-  transform: translateY(-50%);
-  height: 42px;
-  padding: 0 14px 0 14px;
-  border-start-start-radius: 14px;
-  border-end-start-radius: 14px;
-  border-start-end-radius: 0;
-  border-end-end-radius: 0;
+  top: auto;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+  inset-inline-end: 14px;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
   background: linear-gradient(180deg, #2563eb 0%, #1d4fd6 100%);
   color: white;
   border: 2px solid rgba(255,255,255,0.85);
-  border-inline-end: none;
-  box-shadow: -4px 4px 16px rgba(37, 99, 235, 0.40), -2px 2px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.42), 0 2px 6px rgba(0,0,0,0.18);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   cursor: pointer;
   z-index: 9000;
   font-family: inherit;
-  font-weight: 700;
-  font-size: 0.88rem;
   transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
 .a11y-fab:hover {
-  transform: translateY(-50%) translateX(-2px);
-  box-shadow: -6px 4px 22px rgba(37, 99, 235, 0.55), -2px 2px 6px rgba(0,0,0,0.22);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.55), 0 2px 6px rgba(0,0,0,0.22);
 }
 .a11y-fab:focus-visible {
   outline: 3px solid var(--gold);
@@ -3794,11 +3793,19 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(180deg, var(--gold-2) 0%, var(--gold-deep) 100%);
 }
 .a11y-fab-icon { flex: none; }
-.a11y-fab-text { white-space: nowrap; }
+/* Icon-only — the label is kept in the DOM for screen readers via
+   aria-label, but visually hidden so the button stays a tidy circle. */
+.a11y-fab-text {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
 .a11y-fab-dot {
   position: absolute;
-  top: -4px;
-  inset-inline-start: -4px;
+  top: -3px;
+  inset-inline-start: -3px;
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -3807,12 +3814,12 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 }
 @media (max-width: 540px) {
   .a11y-fab {
-    height: 38px;
-    padding: 0 11px;
-    font-size: 0.8rem;
-    gap: 5px;
+    width: 44px;
+    height: 44px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 78px);
+    inset-inline-end: 12px;
   }
-  .a11y-fab .a11y-fab-icon svg { width: 18px; height: 18px; }
+  .a11y-fab .a11y-fab-icon svg { width: 20px; height: 20px; }
 }
 
 /* Modal overlay + panel */
