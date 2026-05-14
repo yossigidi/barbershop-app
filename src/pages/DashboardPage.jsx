@@ -31,6 +31,7 @@ import QrModal from '../components/QrModal.jsx';
 import ScheduleList from '../components/ScheduleList.jsx';
 import BookingActionSheet from '../components/BookingActionSheet.jsx';
 import WhatsAppBroadcastModal from '../components/WhatsAppBroadcastModal.jsx';
+import OnboardingGuide from '../components/OnboardingGuide.jsx';
 import QuickBookModal from '../components/QuickBookModal.jsx';
 import TrialExpiryBanner from '../components/TrialExpiryBanner.jsx';
 import MorningSummaryCard from '../components/MorningSummaryCard.jsx';
@@ -60,6 +61,8 @@ export default function DashboardPage() {
   const [vacationSaved, setVacationSaved] = useState(null);
   const [showQr, setShowQr] = useState(false);
   const [showBroadcast, setShowBroadcast] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const guideCheckedRef = useRef(false);
   const [actionFor, setActionFor] = useState(null);
 
   // Keep the action-sheet's booking in sync with Firestore changes — when
@@ -92,6 +95,30 @@ export default function DashboardPage() {
     });
     return () => { unsubBarber(); unsubBookings(); unsubBlocks(); };
   }, [user]);
+
+  // First-run walkthrough — show once per barber (tracked by
+  // barber.onboardingSeen), or on demand via ?guide=1 from Settings.
+  // The ref guards against the barber snapshot re-firing the check.
+  useEffect(() => {
+    if (!barber || guideCheckedRef.current) return;
+    guideCheckedRef.current = true;
+    if (searchParams.get('guide') === '1' || barber.onboardingSeen !== true) {
+      setShowGuide(true);
+    }
+  }, [barber, searchParams]);
+
+  async function closeGuide() {
+    setShowGuide(false);
+    if (searchParams.get('guide') === '1') {
+      searchParams.delete('guide');
+      setSearchParams(searchParams, { replace: true });
+    }
+    if (user && barber && barber.onboardingSeen !== true) {
+      try {
+        await updateDoc(doc(db, 'barbers', user.uid), { onboardingSeen: true });
+      } catch (e) { console.warn('onboardingSeen write failed:', e?.message); }
+    }
+  }
 
   // One-time backfill: if an existing barber has no customSlug but their
   // displayName/businessName produces a valid slug, claim it for them
@@ -838,6 +865,12 @@ export default function DashboardPage() {
           waGroupLink={barber.waGroupLink || ''}
           initialBody={broadcastBody || ''}
           onClose={() => { setShowBroadcast(false); setBroadcastBody(null); }}
+        />
+      )}
+      {showGuide && (
+        <OnboardingGuide
+          onClose={closeGuide}
+          onGoToSettings={() => { closeGuide(); navigate('/settings'); }}
         />
       )}
       {waitlistNotify && waitlistNotify.clients.length > 0 && (

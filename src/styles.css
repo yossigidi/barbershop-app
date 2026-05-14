@@ -7833,3 +7833,58 @@ button.cs-lost.is-active {
   border-radius: var(--radius-sm); padding: 9px 12px;
   font-size: 0.86rem; margin-top: 10px;
 }
+
+/* ─── Onboarding guide (first-run walkthrough) ─────────────────────────── */
+/* Full-screen on the app's own background — not a dark modal overlay. */
+.og-backdrop {
+  z-index: 1000;
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  align-items: center;
+  padding: 20px;
+}
+.og-card {
+  position: relative;
+  width: min(440px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 34px 26px 22px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(21, 10, 51, 0.28);
+}
+.og-skip {
+  position: absolute; top: 14px; inset-inline-start: 16px;
+  background: none; border: none; color: var(--text-dim);
+  font-family: inherit; font-size: 0.85rem; cursor: pointer; padding: 4px 6px;
+}
+.og-skip:hover { color: var(--text); }
+.og-icon {
+  width: 86px; height: 86px; margin: 4px auto 18px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; color: #fff;
+  background: var(--rainbow, linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%));
+  box-shadow: 0 8px 22px rgba(101, 65, 193, 0.30);
+}
+.og-title { margin: 0 0 10px; font-size: 1.32rem; font-weight: 800; color: var(--text); }
+.og-body {
+  margin: 0 0 22px; font-size: 0.96rem; line-height: 1.7; color: var(--text-dim);
+  min-height: 4.8em;
+}
+.og-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 22px; }
+.og-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border); transition: all 0.22s var(--ease-back, ease);
+}
+.og-dot.done { background: var(--gold); opacity: 0.45; }
+.og-dot.active { background: var(--gold); width: 22px; border-radius: 4px; }
+.og-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.og-nav > button { min-width: 116px; justify-content: center; }
+.og-nav-spacer { min-width: 116px; }
+.og-later {
+  margin-top: 12px; background: none; border: none;
+  color: var(--text-dim); font-family: inherit; font-size: 0.84rem;
+  cursor: pointer; padding: 6px; width: 100%;
+}
+.og-later:hover { color: var(--text); }

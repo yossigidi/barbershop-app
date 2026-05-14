@@ -392,6 +392,21 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
+        <h3 style={{ marginTop: 0 }}><Lightbulb size={18} className="icon-inline" />הדרכה למערכת</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
+          סיור קצר שמסביר איך כל חלק במערכת עובד — היומן, קביעת תורים, הלקוחות וההודעות האוטומטיות.
+        </p>
+        <button
+          type="button"
+          className="btn-secondary"
+          style={{ width: '100%' }}
+          onClick={() => navigate('/dashboard?guide=1')}
+        >
+          <Lightbulb size={14} className="icon-inline" />צפה שוב בהדרכה
+        </button>
+      </div>
+
+      <div className="card">
         <div className="field">
           <label>שם העסק</label>
           <input
