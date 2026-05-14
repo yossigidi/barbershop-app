@@ -605,7 +605,9 @@ export default function SettingsPage() {
             style={{ direction: 'ltr', textAlign: 'left' }}
           />
           <p className="muted" style={{ fontSize: '0.75rem', marginTop: 6 }}>
-            איך משיגים? Google Business Profile → "Get more reviews" → "Share review form" → העתק את הקישור.
+            איך משיגים? כנס/י ל-
+            <a href="https://business.google.com" target="_blank" rel="noopener noreferrer">Google Business Profile</a>
+            {' '}→ "Get more reviews" → "Share review form" → העתק את הקישור.
           </p>
         </div>
       </div>
@@ -674,9 +676,22 @@ export default function SettingsPage() {
           </div>
         </label>
         {thankYouEnabled && !googleReviewUrl && (
-          <p className="muted" style={{ fontSize: '0.8rem', margin: '8px 0 0', color: '#b91c1c' }}>
-            ⚠️ עדיין לא הגדרת לינק לביקורת בגוגל למעלה — בלעדיו הודעת התודה לא תישלח.
-          </p>
+          <div className="card-inset" style={{ marginTop: 8, fontSize: '0.84rem', lineHeight: 1.6 }}>
+            <strong style={{ color: '#b91c1c' }}>
+              ⚠️ חסר לינק לביקורת בגוגל — בלעדיו הודעת התודה לא תישלח.
+            </strong>
+            <p style={{ margin: '6px 0 0' }}>
+              ממש כדאי להוסיף — כל לקוח מרוצה שמשאיר ביקורת בגוגל מביא אליך לקוחות
+              חדשים שמחפשים בעל מקצוע באזור.
+            </p>
+            <p style={{ margin: '8px 0 0' }}>
+              <strong>איך משיגים (2 דקות):</strong><br />
+              1. כנס/י ל-
+              <a href="https://business.google.com" target="_blank" rel="noopener noreferrer">Google Business Profile</a><br />
+              2. "קבל/י עוד ביקורות" ← "שתף/י טופס ביקורת"<br />
+              3. העתק/י את הקישור והדבק/י בכרטיס <strong>"ביקורות בגוגל"</strong> למעלה ↑
+            </p>
+          </div>
         )}
       </div>
 
