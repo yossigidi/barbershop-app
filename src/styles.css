@@ -7681,3 +7681,100 @@ button.cs-lost.is-active {
     position: sticky; top: 86px;
   }
 }
+
+/* ─── ScheduleList — the appointments-first day list (dashboard hero) ─── */
+.sl { display: flex; flex-direction: column; gap: 8px; }
+.sl-closed,
+.sl-empty {
+  text-align: center; padding: 40px 24px; border-radius: var(--radius);
+  background: var(--surface-2); border: 1px dashed var(--border);
+  color: var(--text-soft); font-size: 0.92rem;
+}
+.sl-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  cursor: pointer; font-family: inherit; width: 100%;
+}
+.sl-empty svg { color: var(--gold); margin-bottom: 4px; }
+.sl-empty strong { font-size: 1rem; color: var(--text); font-weight: 800; }
+.sl-empty span { font-size: 0.84rem; }
+
+/* Booking row — time column + card */
+.sl-row {
+  display: flex; align-items: stretch; gap: 10px;
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: inherit; text-align: start; width: 100%;
+}
+.sl-time {
+  width: 56px; flex: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px;
+}
+.sl-time-hh { font-size: 0.95rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+.sl-time-dur { font-size: 0.66rem; color: var(--text-soft); }
+.sl-time-shift { font-size: 0.72rem; font-weight: 800; color: #F5B100; }
+.sl-card {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 11px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--mint);
+  border-radius: var(--radius-sm); padding: 11px 13px;
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease), transform 0.12s var(--ease);
+}
+.sl-row:hover .sl-card { box-shadow: var(--shadow-1); }
+.sl-row:active .sl-card { transform: scale(0.99); }
+.sl-row.is-now .sl-card {
+  border-inline-start-color: var(--gold);
+  box-shadow: 0 4px 16px rgba(212, 51, 150, 0.16);
+}
+.sl-row.is-done .sl-card { opacity: 0.6; border-inline-start-color: var(--text-soft); }
+.sl-avatar {
+  width: 38px; height: 38px; flex: none; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--rainbow); color: #fff; font-weight: 800; font-size: 1rem;
+}
+.sl-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.sl-name {
+  font-size: 0.95rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sl-svc {
+  font-size: 0.78rem; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sl-side {
+  flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+}
+.sl-price { font-size: 0.88rem; font-weight: 800; color: var(--gold-deep); }
+.sl-status {
+  font-size: 0.66rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  white-space: nowrap;
+}
+.sl-status-booked { background: var(--mint-soft); color: var(--mint-deep); }
+.sl-status-inProgress { background: var(--rainbow); color: #fff; }
+.sl-status-completed { background: var(--surface-2); color: var(--text-soft); }
+
+/* Free gap — one subtle tappable row per gap */
+.sl-free {
+  display: flex; align-items: center; gap: 7px;
+  margin-inline-start: 66px;
+  background: none; border: 1px dashed var(--border);
+  border-radius: var(--radius-sm); padding: 9px 12px; cursor: pointer;
+  font-family: inherit; font-size: 0.8rem; color: var(--text-soft);
+  transition: border-color 0.15s var(--ease), color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.sl-free:hover { border-color: var(--gold); color: var(--gold-deep); background: var(--gold-soft); }
+.sl-free svg { flex: none; }
+
+/* Break / block divider */
+.sl-divider {
+  display: flex; align-items: center; gap: 7px;
+  margin-inline-start: 66px;
+  border-radius: var(--radius-sm); padding: 9px 12px;
+  font-size: 0.8rem; font-weight: 600;
+  border: none; font-family: inherit; width: calc(100% - 66px);
+}
+.sl-break { background: var(--surface-2); color: var(--text-dim); }
+.sl-block {
+  background: rgba(220, 38, 38, 0.06); color: #b91c1c; cursor: pointer;
+}
+.sl-divider svg { flex: none; }

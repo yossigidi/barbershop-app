@@ -29,6 +29,7 @@ import RescheduleModal from '../components/RescheduleModal.jsx';
 import VacationModal from '../components/VacationModal.jsx';
 import QrModal from '../components/QrModal.jsx';
 import DayTimeline from '../components/DayTimeline.jsx';
+import ScheduleList from '../components/ScheduleList.jsx';
 import BookingActionSheet from '../components/BookingActionSheet.jsx';
 import TomorrowReminders from '../components/TomorrowReminders.jsx';
 import BroadcastModal from '../components/BroadcastModal.jsx';
@@ -596,7 +597,7 @@ export default function DashboardPage() {
 
           {isToday && <RunningStatusBanner offsetMin={runningOffset} onReset={resetRunning} />}
 
-          <DayTimeline
+          <ScheduleList
             date={selectedDate}
             workingHours={barber.workingHours}
             bookings={dayBookings}
