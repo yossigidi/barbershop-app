@@ -3,13 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext.jsx';
 import AccessibilityWidget from './components/AccessibilityWidget.jsx';
 
-// Eager-load the two most common public landing surfaces — these are the
-// pages a fresh visitor is most likely to hit (homepage + a booking link
-// shared by a barber). Loading them eagerly avoids the lazy-chunk delay
-// on first paint.
-import HomePage from './pages/HomePage.jsx';
-import BookingPage from './pages/BookingPage.jsx';
-
 // Stale-chunk recovery. When we deploy a new version, the old index.html
 // in a user's cache still references the previous JS chunk filenames.
 // Our Cloudflare SPA fallback (`not_found_handling: single-page-application`)
@@ -45,6 +38,12 @@ function lazyRetry(loader) {
 // Everything behind auth is lazy so a client opening /b/<code> doesn't
 // download the full dashboard / settings / reports bundle they will never
 // use. Dropped ~50-60% off the booking-page initial JS.
+// Everything is lazy-loaded — including HomePage and BookingPage, which
+// used to be eager. Eager-loading them bloated the shared index bundle
+// with ~1600 lines of BookingPage slot logic on every route. Now each
+// route only ships its own code.
+const HomePage = lazyRetry(() => import('./pages/HomePage.jsx'));
+const BookingPage = lazyRetry(() => import('./pages/BookingPage.jsx'));
 const AuthPage = lazyRetry(() => import('./pages/AuthPage.jsx'));
 const DashboardPage = lazyRetry(() => import('./pages/DashboardPage.jsx'));
 const ClientsPage = lazyRetry(() => import('./pages/ClientsPage.jsx'));

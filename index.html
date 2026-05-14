@@ -17,15 +17,11 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Noto Sans Hebrew — primary typeface (chosen 2026-05-13 over Heebo).
-         Heebo kept as a fallback for any leftover refs. -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;600;700;800;900&family=Heebo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-    <!-- Frank Ruhl Libre — editorial serif used by the Living Landing
-         (Claude Design redesign). Hebrew + Latin support. -->
-    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&display=swap" rel="stylesheet" />
-    <!-- JetBrains Mono — used for stat numbers / countdowns / inline
-         code on the Living Landing. -->
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+    <!-- Noto Sans Hebrew — the single app typeface. Four weights only
+         (regular / bold / extrabold / black) — covers body, headings and
+         the heavy display numerals. Heebo, Frank Ruhl Libre and JetBrains
+         Mono were dropped: 15 font files down to 4, a big mobile win. -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700;800;900&display=swap" rel="stylesheet" />
     <!-- Preconnect to Unsplash so the booking-page hero image starts its
          TLS handshake in parallel with the JS download instead of waiting
          for hydration. -->
