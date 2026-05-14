@@ -7,6 +7,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { useSubscription } from '../hooks/useSubscription';
 import { PRICE_NIS, TRIAL_DAYS } from '../utils/subscription';
 import AccessibleModal from '../components/AccessibleModal.jsx';
+import StudioAgreementModal from '../components/StudioAgreementModal.jsx';
 
 export default function PricingPage() {
   const { user } = useAuth();
@@ -28,6 +29,18 @@ export default function PricingPage() {
   const [showCommitmentTerms, setShowCommitmentTerms] = useState(false);
   const [showCancelStudio, setShowCancelStudio] = useState(false);
   const [showCancelMonthly, setShowCancelMonthly] = useState(false);
+  const [showStudioAgreement, setShowStudioAgreement] = useState(false);
+
+  // Studio checkout is gated by a signed commitment agreement. If the
+  // barber has already signed (studioAgreement on their doc) go straight
+  // to Tranzila; otherwise open the signing modal first.
+  function beginStudioCheckout() {
+    if (barber?.studioAgreement?.signatureDataUrl) {
+      startCheckout('studio');
+    } else {
+      setShowStudioAgreement(true);
+    }
+  }
 
   // Live exit-fee calculation for committed (Studio) plans
   const sub = barber?.subscription || {};
@@ -280,7 +293,7 @@ export default function PricingPage() {
           <button
             className="btn-gold"
             style={{ width: '100%', fontSize: '1.02rem', padding: '14px' }}
-            onClick={() => startCheckout('studio')}
+            onClick={beginStudioCheckout}
             disabled={busy || (access.granted && access.reason === 'active')}
           >
             <Sparkles size={18} className="icon-inline" />
@@ -350,6 +363,13 @@ export default function PricingPage() {
         <span aria-hidden="true">·</span>
         <Link to="/accessibility">נגישות</Link>
       </div>
+
+      <StudioAgreementModal
+        open={showStudioAgreement}
+        onClose={() => setShowStudioAgreement(false)}
+        user={user}
+        onSigned={() => { setShowStudioAgreement(false); startCheckout('studio'); }}
+      />
 
       <AccessibleModal
         open={showCancelStudio && !!studioExit}

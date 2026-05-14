@@ -66,6 +66,13 @@ export function getAccessState(barber) {
     if (end > now) return { granted: true, reason: 'trial', daysLeft: days, periodEnd: end, status: sub.status };
   }
 
+  // Studio signups get NO free trial — the plan includes a subsidised
+  // tablet, so access is withheld until the commitment is signed and the
+  // first payment clears (the Tranzila webhook flips status to 'active').
+  if (sub.status === 'pending') {
+    return { granted: false, reason: 'needs-payment', daysLeft: 0, status: sub.status };
+  }
+
   if (sub.status === 'cancelled') {
     // Grace until end of paid period
     const end = msFromTimestamp(sub.currentPeriodEnd);
@@ -87,8 +94,19 @@ function msFromTimestamp(t) {
 }
 
 // Build the initial subscription object set on a new barber doc.
-// Trial starts at signup; Stage 2 will replace this on first payment.
-export function initialSubscription() {
+//   • Studio plan → status 'pending', NO trial. The plan ships a
+//     subsidised tablet, so access is granted only after the agreement
+//     is signed and the first payment clears (webhook → 'active').
+//   • Everything else (Pro) → the standard 30-day trial.
+// Stage 2 (the Tranzila webhook) replaces this on first payment.
+export function initialSubscription(plan) {
+  if (plan === 'studio') {
+    return {
+      status: 'pending',
+      plan: 'studio-24-pending',
+      startedAt: new Date(),
+    };
+  }
   return {
     status: 'trialing',
     trialEndsAt: new Date(Date.now() + TRIAL_DAYS * 86_400_000),

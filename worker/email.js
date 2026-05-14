@@ -99,6 +99,93 @@ export async function handleSendConfirmationEmail(request, env) {
   return ok({ sent: true });
 }
 
+// ─── POST /api/notify-new-signup ─────────────────────────────────────────
+// Fires when a brand-new business creates its barber doc. Emails the
+// Toron owner (yossi) so they can follow up on coordination — especially
+// for Studio signups, where a tablet has to be shipped. Public endpoint:
+// the worst case is a spurious email, no data is exposed.
+const DEFAULT_OWNER_EMAIL = 'support@toron.co.il';
+
+export async function handleNotifyNewSignup(request, env) {
+  if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+  if (request.method !== 'POST') return err('Method not allowed', 405);
+  if (!env.BREVO_API_KEY) return err('Email not configured', 500);
+
+  let body;
+  try { body = await request.json(); } catch { return err('Bad JSON', 400); }
+  const businessName = String(body?.businessName || '').slice(0, 120) || '(ללא שם)';
+  const email = String(body?.email || '').slice(0, 160);
+  const displayName = String(body?.displayName || '').slice(0, 120);
+  const phone = String(body?.phone || '').slice(0, 40);
+  const plan = body?.plan === 'studio' ? 'studio' : 'pro';
+  const uid = String(body?.uid || '').slice(0, 80);
+
+  const planLabel = plan === 'studio'
+    ? '🖥️ Studio + טאבלט (התחייבות 24 חודש — צריך לתאם משלוח טאבלט)'
+    : '📅 Pro חודשי';
+  const subject = plan === 'studio'
+    ? `🆕 הרשמת Studio חדשה — ${businessName}`
+    : `🆕 הרשמה חדשה — ${businessName}`;
+
+  const rows = [
+    ['שם העסק', businessName],
+    ['שם בעל/ת העסק', displayName || '—'],
+    ['אימייל', email || '—'],
+    ['טלפון', phone || '— (לא נמסר בהרשמה)'],
+    ['מסלול שנבחר', planLabel],
+    ['מזהה משתמש', uid || '—'],
+    ['זמן הרשמה', new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })],
+  ];
+  const html = `<!doctype html><html lang="he" dir="rtl"><body style="margin:0;background:#f4f4f7;font-family:Arial,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;padding:24px;">
+    <div style="background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e6e6ec;">
+      <div style="background:linear-gradient(135deg,#D43396,#6541C1 55%,#14B8FE);padding:22px;text-align:center;">
+        <div style="color:#fff;font-size:1.25rem;font-weight:800;">הרשמה חדשה ל-Toron</div>
+      </div>
+      <div style="padding:22px;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.92rem;">
+          ${rows.map(([k, v]) => `<tr>
+            <td style="padding:9px 0;color:#6b6b73;border-bottom:1px solid #eee;white-space:nowrap;">${escape(k)}</td>
+            <td style="padding:9px 0;color:#18181b;font-weight:600;border-bottom:1px solid #eee;text-align:left;">${escape(v)}</td>
+          </tr>`).join('')}
+        </table>
+        ${plan === 'studio' ? `<div style="background:#fdf0f8;border:1px dashed #D43396;border-radius:10px;padding:12px 14px;margin-top:18px;font-size:0.85rem;color:#9D2570;line-height:1.6;">
+          ⚠️ זו הרשמת <strong>Studio</strong> — צריך לתאם משלוח טאבלט 10″ ולוודא שההסכם נחתם.
+        </div>` : ''}
+      </div>
+    </div>
+    <p style="text-align:center;color:#a0a0a8;font-size:0.72rem;margin:14px 0 0;">התראה אוטומטית ממערכת Toron</p>
+  </div>
+</body></html>`;
+
+  try {
+    const senderEmail = env.SENDER_EMAIL || 'noreply@toron.co.il';
+    const ownerEmail = env.OWNER_EMAIL || DEFAULT_OWNER_EMAIL;
+    const r = await fetch(BREVO_URL, {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { name: 'Toron — התראות', email: senderEmail },
+        to: [{ email: ownerEmail }],
+        subject,
+        htmlContent: html,
+        replyTo: email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+          ? { email, name: businessName }
+          : { email: senderEmail, name: 'Toron' },
+      }),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      console.error('NOTIFY_SIGNUP brevo error', r.status, t);
+      return err('Email send failed', 502);
+    }
+  } catch (e) {
+    console.error('NOTIFY_SIGNUP fetch error', e?.message);
+    return err('Email service unavailable: ' + e.message, 502);
+  }
+  return ok({ sent: true });
+}
+
 // Public Firestore document GET (no auth — relies on the Firestore rules
 // already allowing read on these specific paths)
 async function fsPublicGet(path) {

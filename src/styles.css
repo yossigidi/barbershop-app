@@ -7092,3 +7092,65 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
   box-shadow: 0 6px 14px rgba(59, 130, 246, 0.32);
 }
+
+/* ─── Studio commitment agreement modal ──────────────────────────────────
+   Shown in the Studio checkout flow (PricingPage) before the Tranzila
+   redirect — full name, ID number, drawn signature, agreement checkbox. */
+.studio-commit-box {
+  background: linear-gradient(135deg, rgba(212,51,150,0.06), rgba(20,184,254,0.06));
+  border: 1px solid rgba(212,51,150,0.18);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin: 14px 0 18px;
+}
+.studio-commit-box strong {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.92rem; margin-bottom: 8px;
+}
+.studio-commit-box ul {
+  margin: 0; padding-inline-start: 18px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.studio-commit-box li {
+  font-size: 0.84rem; line-height: 1.5; color: var(--text-dim);
+}
+.sig-pad-wrap {
+  position: relative;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+.sig-pad {
+  display: block;
+  width: 100%;
+  height: 160px;
+  touch-action: none;
+  cursor: crosshair;
+}
+.sig-pad-hint {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-soft); font-size: 0.92rem;
+  pointer-events: none;
+}
+.sig-pad-clear {
+  position: absolute; top: 8px; inset-inline-start: 8px;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 10px; border-radius: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-dim); font-size: 0.78rem; font-weight: 600;
+  cursor: pointer;
+}
+.sig-pad-clear:active { transform: scale(0.95); }
+.studio-agree-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 14px 0;
+  font-size: 0.86rem; line-height: 1.5; color: var(--text-dim);
+  cursor: pointer;
+}
+.studio-agree-row input {
+  width: 18px; height: 18px; flex: none; margin-top: 2px;
+  accent-color: var(--gold);
+}
+.studio-agree-row a { color: var(--gold-deep); font-weight: 600; }

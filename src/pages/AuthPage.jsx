@@ -69,6 +69,9 @@ export default function AuthPage() {
           // Settings.
           const businessNameInit = user.displayName ? user.displayName : 'העסק שלי';
           const customSlug = await pickUniqueCustomSlug(businessNameInit);
+          // `?plan=studio` from the landing CTA → Studio plan gets NO free
+          // trial (initialSubscription returns a 'pending' state).
+          const signupPlan = params.get('plan') === 'studio' ? 'studio' : 'pro';
           await setDoc(ref, {
             displayName: user.displayName || '',
             email: user.email || '',
@@ -83,7 +86,8 @@ export default function AuthPage() {
             defaultDuration: 20,
             defaultPrice: 0,
             onboarded: false,
-            subscription: initialSubscription(),
+            intendedPlan: signupPlan,
+            subscription: initialSubscription(signupPlan),
             createdAt: serverTimestamp(),
           });
           await setDoc(doc(db, 'shortCodes', code), { uid: user.uid });
@@ -91,6 +95,20 @@ export default function AuthPage() {
             await setDoc(doc(db, 'shortCodes', customSlug), { uid: user.uid });
           }
           onboarded = false;
+          // Notify the Toron owner of the new signup — non-blocking, a
+          // failure here must never break the signup flow. `plan` comes
+          // from the landing-page CTA (?plan=studio) when present.
+          fetch('/api/notify-new-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              uid: user.uid,
+              businessName: businessNameInit,
+              displayName: user.displayName || '',
+              email: user.email || '',
+              plan: signupPlan,
+            }),
+          }).catch((e) => console.warn('new-signup notify failed', e?.message));
         } else {
           onboarded = snap.data().onboarded !== false;
         }

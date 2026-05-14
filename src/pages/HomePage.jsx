@@ -113,18 +113,37 @@ const FAQ = [
 
 const PLANS = [
   {
+    id: 'pro',
     tag: 'גמיש · ללא התחייבות', title: 'Pro חודשי', price: '50',
     line: 'ביטול בלחיצה. אין הפתעות.',
     items: ['כל הפיצ׳רים', '30 ימי ניסיון', 'ללא הגבלת לקוחות', 'AI כלול', 'תמיכה בעברית'],
     cta: 'התחל ניסיון 30 יום',
   },
   {
+    id: 'studio',
     featured: true, tag: 'הכי משתלם · 24 חודשים', title: 'Studio + טאבלט', price: '50',
     extra: '+ טאבלט 10″ במתנה', line: 'טאבלט מסובסד דרך התשלום החודשי.',
     items: ['כל הפיצ׳רים של Pro', 'טאבלט 10″ איכותי', 'מסך גדול קבוע בעסק', 'סטטיסטיקות בזמן אמת', 'עדיפות בתמיכה'],
-    cta: 'ראה פרטים',
+    cta: 'ראה פרטים מלאים',
   },
 ];
+
+// Full Studio plan terms — shown in the details modal so a prospect sees
+// the commitment + exit fee BEFORE they sign up, not buried in checkout.
+const STUDIO_DETAILS = {
+  whatYouGet: [
+    ['טאבלט 10″ איכותי', 'מגיע אליך הביתה. מסך גדול קבוע בעסק — היומן תמיד בעין.'],
+    ['כל הפיצ׳רים של Pro', 'יומן חכם, AI בעברית, מעקב הכנסות, זיהוי לקוחות שנעלמו — הכל כלול.'],
+    ['סטטיסטיקות בזמן אמת', 'על המסך הגדול: מי הגיע, מה ההכנסה היום, מי התור הבא.'],
+    ['עדיפות בתמיכה', 'פנייה שלך עולה לראש התור. מענה מהיר יותר.'],
+  ],
+  commitment: [
+    'המסלול הוא בהתחייבות ל-24 חודשים — ₪50 לחודש, סה״כ 24 תשלומים דרך Tranzila.',
+    'הטאבלט מסובסד דרך התשלום החודשי — לכן יש התחייבות.',
+    'יציאה מוקדמת: דמי יציאה של ₪30 לכל חודש שנותר עד תום ההתחייבות.',
+    'אחרי 24 חודשים — המנוי ממשיך חודשי רגיל, ואפשר לבטל בלחיצה בלי דמי יציאה.',
+  ],
+};
 
 // ── Nav — responsive: full links ≥820px, hamburger below ────────────────
 function NavBar() {
@@ -290,6 +309,7 @@ function Features() {
 
 // ── Pricing ─────────────────────────────────────────────────────────────
 function Pricing() {
+  const [studioOpen, setStudioOpen] = useState(false);
   return (
     <section id="pricing" className="lp-section lp-pricing">
       <div className="lp-head reveal">
@@ -311,16 +331,88 @@ function Pricing() {
             <ul className="lp-price-feats">
               {p.items.map((it) => <li key={it}><ICheck size={12} stroke={3} /> {it}</li>)}
             </ul>
-            <Link to="/auth?mode=signup" className="lp-price-cta">
-              {p.cta} <IArrow size={15} stroke={2.4} />
-            </Link>
+            {p.id === 'studio' ? (
+              <button type="button" className="lp-price-cta" onClick={() => setStudioOpen(true)}>
+                {p.cta} <IArrow size={15} stroke={2.4} />
+              </button>
+            ) : (
+              <Link to="/auth?mode=signup" className="lp-price-cta">
+                {p.cta} <IArrow size={15} stroke={2.4} />
+              </Link>
+            )}
           </div>
         ))}
       </div>
       <p className="lp-price-note">
         <IShield size={14} /> סליקה מאובטחת PCI-DSS Level 1 ע״י Tranzila · קבלות אוטומטיות · אין מע״מ (עוסק פטור)
       </p>
+      {studioOpen && <StudioDetailsModal onClose={() => setStudioOpen(false)} />}
     </section>
+  );
+}
+
+// ── Studio plan — full details modal ────────────────────────────────────
+function StudioDetailsModal({ onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', onKey); };
+  }, [onClose]);
+  return (
+    <div className="lp-modal-overlay" onClick={onClose} role="presentation">
+      <div
+        className="lp-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="studio-modal-title"
+      >
+        <button type="button" className="lp-modal-close" onClick={onClose} aria-label="סגור">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div className="lp-modal-head">
+          <span className="lp-price-tag"><ICrown size={12} /> הכי משתלם · 24 חודשים</span>
+          <h2 id="studio-modal-title" className="lp-modal-title">Studio + טאבלט</h2>
+          <div className="lp-modal-price">
+            <span className="lp-price-num">50</span>
+            <span className="lp-price-cur">₪</span>
+            <span className="lp-price-per">/ חודש · + טאבלט 10″ במתנה</span>
+          </div>
+        </div>
+
+        <div className="lp-modal-section">
+          <h3 className="lp-modal-h3">מה מקבלים</h3>
+          <ul className="lp-modal-list">
+            {STUDIO_DETAILS.whatYouGet.map(([t, d]) => (
+              <li key={t}>
+                <span className="lp-modal-check"><ICheck size={12} stroke={3} /></span>
+                <div><strong>{t}</strong><span>{d}</span></div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="lp-modal-section lp-modal-commit">
+          <h3 className="lp-modal-h3"><IShield size={15} /> ההתחייבות — חשוב לדעת</h3>
+          <ul className="lp-modal-commit-list">
+            {STUDIO_DETAILS.commitment.map((c, i) => <li key={i}>{c}</li>)}
+          </ul>
+          <p className="lp-modal-fineprint">
+            התנאים המלאים מופיעים ב<Link to="/terms" onClick={onClose}>תקנון השירות</Link> ו<Link to="/refund" onClick={onClose}>מדיניות הביטולים</Link>.
+            בהמשך תתבקש/י לחתום על הסכם ההתחייבות.
+          </p>
+        </div>
+
+        <Link to="/auth?mode=signup&plan=studio" className="lp-btn lp-btn-primary lp-modal-cta" onClick={onClose}>
+          <ISparkles size={18} /> התחל הרשמה למסלול Studio
+        </Link>
+        <button type="button" className="lp-modal-back" onClick={onClose}>חזרה למסלולים</button>
+      </div>
+    </div>
   );
 }
 
@@ -759,6 +851,84 @@ function LandingStyles() {
 }
 .lp-faq-item[open] .lp-faq-plus { transform: rotate(45deg); background: var(--rainbow); color: #fff; }
 .lp-faq-item p { padding: 0 20px 20px; margin: 0; font-size: 14px; line-height: 1.7; color: var(--ink-soft); }
+
+/* ─── Studio details modal ─── */
+.lp-modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(11, 21, 48, 0.62);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0;
+  animation: lp-fade .2s var(--ease);
+}
+@media (min-width: 640px) { .lp-modal-overlay { align-items: center; padding: 24px; } }
+@keyframes lp-fade { from { opacity: 0; } to { opacity: 1; } }
+.lp-modal {
+  position: relative;
+  width: 100%; max-width: 540px;
+  max-height: 92vh; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 28px 22px calc(env(safe-area-inset-bottom, 0px) + 22px);
+  box-shadow: 0 -10px 50px rgba(11, 21, 48, 0.35);
+  animation: lp-slide .28s var(--ease-back);
+}
+@media (min-width: 640px) {
+  .lp-modal { border-radius: 24px; padding: 32px 30px; box-shadow: 0 30px 80px rgba(11, 21, 48, 0.4); }
+}
+@keyframes lp-slide { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.lp-modal-close {
+  position: absolute; top: 14px; inset-inline-start: 14px;
+  width: 36px; height: 36px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--rule-2); background: #fff; color: var(--ink-soft);
+  cursor: pointer;
+}
+.lp-modal-close:active { transform: scale(.92); }
+.lp-modal-head { text-align: center; margin-bottom: 24px; }
+.lp-modal-title { font-size: 28px; font-weight: 900; letter-spacing: -0.035em; margin: 12px 0 8px; }
+.lp-modal-price { display: flex; align-items: baseline; justify-content: center; gap: 5px; flex-wrap: wrap; }
+.lp-modal-price .lp-price-num {
+  font-size: 46px;
+  background: var(--rainbow); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.lp-modal-section { margin-bottom: 22px; }
+.lp-modal-h3 {
+  font-size: 16px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 12px;
+  display: flex; align-items: center; gap: 7px;
+}
+.lp-modal-h3 svg { color: var(--mag); }
+.lp-modal-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.lp-modal-list li { display: flex; align-items: flex-start; gap: 11px; }
+.lp-modal-check {
+  flex: none; width: 22px; height: 22px; border-radius: 50%; margin-top: 1px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--rainbow); color: #fff;
+}
+.lp-modal-list li div { display: flex; flex-direction: column; gap: 2px; }
+.lp-modal-list li strong { font-size: 14.5px; font-weight: 800; letter-spacing: -0.02em; }
+.lp-modal-list li span { font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+.lp-modal-commit {
+  background: linear-gradient(135deg, rgba(212,51,150,0.06), rgba(20,184,254,0.06));
+  border: 1px solid rgba(212,51,150,0.18);
+  border-radius: 16px; padding: 18px;
+}
+.lp-modal-commit-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+.lp-modal-commit-list li {
+  font-size: 13px; line-height: 1.55; color: var(--ink); padding-inline-start: 18px; position: relative;
+}
+.lp-modal-commit-list li::before {
+  content: '•'; position: absolute; inset-inline-start: 4px; color: var(--mag); font-weight: 900;
+}
+.lp-modal-fineprint { font-size: 11.5px; color: var(--ink-mute); line-height: 1.6; margin: 14px 0 0; }
+.lp-modal-fineprint a { color: var(--mag); font-weight: 700; text-decoration: none; }
+.lp-modal-cta { width: 100%; margin-top: 8px; }
+.lp-modal-back {
+  display: block; width: 100%; margin-top: 10px; padding: 12px;
+  background: none; border: none; color: var(--ink-mute);
+  font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
 
 /* ─── Final CTA ─── */
 .lp-final {

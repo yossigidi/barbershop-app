@@ -14,7 +14,7 @@ import {
 import { handleRedeemPromo } from './promo.js';
 import { handleAiCompose } from './ai.js';
 import { handleAiBriefing } from './briefing.js';
-import { handleSendConfirmationEmail } from './email.js';
+import { handleSendConfirmationEmail, handleNotifyNewSignup } from './email.js';
 import { handleBrevoStatus, handleAuthDomainsStatus } from './admin.js';
 import { handleCronBilling } from './cron.js';
 import { handleCronFacebookPost, postToFacebookNow } from './fb-cron.js';
@@ -32,6 +32,7 @@ const apiHandlers = {
   '/api/ai-compose': handleAiCompose,
   '/api/ai-briefing': handleAiBriefing,
   '/api/send-confirmation-email': handleSendConfirmationEmail,
+  '/api/notify-new-signup': handleNotifyNewSignup,
   '/api/admin/brevo-status': handleBrevoStatus,
   '/api/admin/auth-domains': handleAuthDomainsStatus,
   // Manual trigger — POST with header `x-admin-key: <ADMIN_KEY>` to test
