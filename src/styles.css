@@ -840,7 +840,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   background:
     radial-gradient(ellipse 70% 60% at 50% 0%, rgba(234, 96, 181, 0.30), transparent 70%),
     radial-gradient(ellipse 40% 30% at 20% 100%, rgba(212, 51, 150, 0.18), transparent 70%),
-    linear-gradient(180deg, #6541C1 0%, #4C1D95 60%, #3F1486 100%);
+    linear-gradient(180deg, #6541C1 0%, #4A2D8E 60%, #361F6E 100%);
   color: #ffffff;
   position: relative;
   overflow: hidden;
@@ -1543,7 +1543,7 @@ h1 { font-family: var(--font-display); font-weight: 700; }
   top: env(safe-area-inset-top);
   background:
     radial-gradient(ellipse 60% 100% at 50% 0%, rgba(234, 96, 181, 0.22), transparent 70%),
-    linear-gradient(180deg, #6541C1 0%, #4C1D95 100%);
+    linear-gradient(180deg, #6541C1 0%, #4A2D8E 100%);
   color: var(--surface);
   z-index: 10;
   padding: 14px 16px 13px;
@@ -2188,7 +2188,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
   inset: 0;
   background:
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(234, 96, 181, 0.30), transparent 70%),
-    linear-gradient(180deg, #6541C1 0%, #4C1D95 100%);
+    linear-gradient(180deg, #6541C1 0%, #4A2D8E 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4840,16 +4840,16 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 /* The hero itself — full-bleed image with dark gradient overlay */
 .booking-hero {
   position: relative;
-  min-height: 84vh;
-  background-color: #1A1530;
+  min-height: 60vh;
+  background-color: #150A33;
   display: flex;
   flex-direction: column;
-  padding: 16px 18px 28px;
+  padding: 16px 18px 24px;
   color: #ffffff;
   overflow: hidden;
 }
 @media (min-width: 768px) {
-  .booking-hero { min-height: 70vh; padding: 22px 32px 36px; }
+  .booking-hero { min-height: 54vh; padding: 22px 32px 32px; }
 }
 
 /* Hero image — real <img>, not CSS background. Lets the browser pick
@@ -6279,7 +6279,7 @@ h1 .icon-inline, h2 .icon-inline, h3 .icon-inline { color: var(--gold); }
 .app.dashboard .stat-num,
 .app.dashboard .morning-stat-num,
 .app.dashboard .msc-stat-num {
-  background: linear-gradient(135deg, #4C1D95 0%, #D43396 60%, #EA60B5 100%);
+  background: linear-gradient(135deg, #4A2D8E 0%, #D43396 60%, #EA60B5 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

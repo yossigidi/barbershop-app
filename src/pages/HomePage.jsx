@@ -304,46 +304,158 @@ function LivingLanding() {
 // ─────────────────────────────────────────────────────────────────────────
 function NavBar() {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+  // Lock body scroll while the mobile menu is open.
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+  const close = () => setMenuOpen(false);
   return (
-    <header style={{
-      position: 'sticky', top: 0, zIndex: 50,
-      padding: '14px 40px',
-      background: scrolled ? 'rgba(248, 252, 254, 0.72)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(18px) saturate(170%)' : 'none',
-      WebkitBackdropFilter: scrolled ? 'blur(18px) saturate(170%)' : 'none',
-      borderBottom: scrolled ? '1px solid rgba(14, 31, 61, 0.08)' : '1px solid transparent',
-      transition: 'background 0.3s var(--ease), backdrop-filter 0.3s, border-color 0.3s',
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    }}>
-      <Link to="/" aria-label="Toron" style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <img src="/toron-wordmark.png" alt="Toron" style={{ height: 32, width: 'auto', display: 'block' }} />
-      </Link>
-      <nav style={{ display: 'flex', alignItems: 'center', gap: 26, fontSize: 14, fontWeight: 500, color: 'var(--ink-soft)' }}>
-        <a href="#how">איך זה עובד</a>
-        <a href="#features">תכונות</a>
-        <a href="#pricing">מסלולים</a>
-        <a href="#faq">שאלות</a>
-        <span style={{ width: 1, height: 20, background: 'var(--rule-2)' }} />
-        <Link to="/auth?mode=login" style={{ color: 'var(--ink)' }}>כניסה</Link>
-        <Link to="/auth?mode=signup" className="gold-cta">
-          התחל חינם <IArrow size={14} stroke={2.4} />
+    <header className={scrolled ? 'lp-nav is-scrolled' : 'lp-nav'}>
+      <div className="lp-nav-inner">
+        <Link to="/" aria-label="Toron" className="lp-nav-brand" onClick={close}>
+          <img src="/toron-wordmark.png" alt="Toron" />
         </Link>
-      </nav>
-      <style>{`.gold-cta {
-        background: linear-gradient(180deg, var(--gold-2), var(--gold));
-        color: var(--ink); padding: 10px 18px; border-radius: 999px;
-        font-weight: 700; font-size: 13px;
-        display: inline-flex; align-items: center; gap: 8px;
-        box-shadow: 0 4px 14px rgba(212, 51, 150, 0.30);
-        transition: transform 0.2s var(--ease-back), box-shadow 0.3s;
-      }
-      .gold-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(212, 51, 150, 0.45); }`}</style>
+
+        {/* Desktop links */}
+        <nav className="lp-nav-links">
+          <a href="#how">איך זה עובד</a>
+          <a href="#features">תכונות</a>
+          <a href="#pricing">מסלולים</a>
+          <a href="#faq">שאלות</a>
+          <span className="lp-nav-sep" />
+          <Link to="/auth?mode=login" className="lp-nav-login">כניסה</Link>
+          <Link to="/auth?mode=signup" className="lp-nav-cta">
+            התחל חינם <IArrow size={14} stroke={2.4} />
+          </Link>
+        </nav>
+
+        {/* Mobile: compact login + hamburger */}
+        <div className="lp-nav-mobile">
+          <Link to="/auth?mode=login" className="lp-nav-login" onClick={close}>כניסה</Link>
+          <button
+            type="button"
+            className="lp-nav-burger"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label={menuOpen ? 'סגור תפריט' : 'פתח תפריט'}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile dropdown panel */}
+      <div className={menuOpen ? 'lp-nav-panel is-open' : 'lp-nav-panel'}>
+        <a href="#how" onClick={close}>איך זה עובד</a>
+        <a href="#features" onClick={close}>תכונות</a>
+        <a href="#pricing" onClick={close}>מסלולים</a>
+        <a href="#faq" onClick={close}>שאלות</a>
+        <Link to="/auth?mode=signup" className="lp-nav-cta lp-nav-cta-full" onClick={close}>
+          התחל 30 יום חינם <IArrow size={15} stroke={2.4} />
+        </Link>
+      </div>
+
+      <style>{`
+        .lp-nav {
+          position: sticky; top: 0; z-index: 50;
+          background: transparent;
+          border-bottom: 1px solid transparent;
+          transition: background 0.3s var(--ease), backdrop-filter 0.3s, border-color 0.3s;
+        }
+        .lp-nav.is-scrolled {
+          background: rgba(248, 252, 254, 0.78);
+          backdrop-filter: blur(18px) saturate(170%);
+          -webkit-backdrop-filter: blur(18px) saturate(170%);
+          border-bottom-color: rgba(14, 31, 61, 0.08);
+        }
+        .lp-nav-inner {
+          max-width: 1200px; margin: 0 auto;
+          padding: 12px 20px;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 16px;
+        }
+        @media (min-width: 600px) { .lp-nav-inner { padding: 14px 32px; } }
+        .lp-nav-brand { display: inline-flex; align-items: center; }
+        .lp-nav-brand img { height: 30px; width: auto; display: block; }
+        @media (min-width: 600px) { .lp-nav-brand img { height: 34px; } }
+
+        .lp-nav-links {
+          display: flex; align-items: center; gap: 24px;
+          font-size: 14px; font-weight: 500; color: var(--ink-soft);
+        }
+        .lp-nav-links a { color: inherit; text-decoration: none; transition: color 0.15s; }
+        .lp-nav-links a:hover { color: var(--gold); }
+        .lp-nav-sep { width: 1px; height: 20px; background: var(--rule-2); }
+        .lp-nav-login { color: var(--ink); text-decoration: none; font-weight: 600; }
+        .lp-nav-login:hover { color: var(--gold); }
+        .lp-nav-cta {
+          background: var(--rainbow);
+          color: #fff; padding: 10px 18px; border-radius: 999px;
+          font-weight: 700; font-size: 13px;
+          display: inline-flex; align-items: center; gap: 8px;
+          text-decoration: none;
+          box-shadow: 0 4px 14px rgba(212, 51, 150, 0.30);
+          transition: transform 0.2s var(--ease-back), box-shadow 0.3s;
+        }
+        .lp-nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(212, 51, 150, 0.42); }
+
+        .lp-nav-mobile { display: none; align-items: center; gap: 14px; }
+        .lp-nav-burger {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 40px; height: 40px; padding: 0;
+          border-radius: 10px; border: 1px solid var(--rule-2);
+          background: rgba(255, 255, 255, 0.6);
+          color: var(--ink); cursor: pointer;
+        }
+        .lp-nav-burger:active { transform: scale(0.94); }
+
+        .lp-nav-panel {
+          display: flex; flex-direction: column; gap: 4px;
+          max-height: 0; overflow: hidden;
+          background: rgba(248, 252, 254, 0.98);
+          backdrop-filter: blur(18px) saturate(170%);
+          -webkit-backdrop-filter: blur(18px) saturate(170%);
+          transition: max-height 0.32s var(--ease), padding 0.32s var(--ease), border-color 0.32s;
+          border-bottom: 1px solid transparent;
+        }
+        .lp-nav-panel.is-open {
+          max-height: 360px;
+          padding: 10px 20px 18px;
+          border-bottom-color: rgba(14, 31, 61, 0.10);
+        }
+        .lp-nav-panel a {
+          color: var(--ink); text-decoration: none;
+          font-size: 16px; font-weight: 600;
+          padding: 13px 10px; border-radius: 10px;
+        }
+        .lp-nav-panel a:active { background: rgba(212, 51, 150, 0.08); }
+        .lp-nav-cta-full {
+          justify-content: center; margin-top: 8px;
+          padding: 15px; font-size: 15px;
+        }
+
+        /* Mobile breakpoint — collapse desktop links into the hamburger */
+        @media (max-width: 820px) {
+          .lp-nav-links { display: none; }
+          .lp-nav-mobile { display: flex; }
+        }
+      `}</style>
     </header>
   );
 }
@@ -372,7 +484,8 @@ function Hero() {
   ], []);
   return (
     <section style={{
-      position: 'relative', padding: '36px 40px 80px',
+      position: 'relative',
+      padding: 'clamp(20px, 5vw, 36px) clamp(16px, 5vw, 40px) clamp(48px, 8vw, 80px)',
       overflow: 'hidden', isolation: 'isolate',
     }}>
       {/* Ambient gold/peach drifting blobs */}
@@ -425,16 +538,15 @@ function HeroCopy() {
         1,247 בעלי עסק כבר עם Toron · מעודכן עכשיו
       </span>
       <h1 style={{
-        fontFamily: 'var(--font-serif)', fontWeight: 700,
-        fontSize: 'clamp(24px, 5.6vw, 86px)', lineHeight: 0.96,
-        letterSpacing: '-0.025em', margin: '0 0 26px', color: 'var(--ink)',
+        fontFamily: 'var(--font-sans)', fontWeight: 900,
+        fontSize: 'clamp(34px, 6.4vw, 80px)', lineHeight: 1.02,
+        letterSpacing: '-0.04em', margin: '0 0 22px', color: 'var(--ink)',
       }}>
-        לוח התורים שלך,<br />
+        תפסיק לרשום תורים בנייר.<br />
         <span style={{
-          background: 'linear-gradient(120deg, var(--gold-deep) 0%, var(--gold) 50%, var(--peach) 100%)',
+          background: 'linear-gradient(120deg, #D43396 0%, #6541C1 50%, #14B8FE 100%)',
           WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
-          fontStyle: 'italic',
-        }}>חי, מעצמו.</span>
+        }}>תתחיל לנהל.</span>
       </h1>
       <p style={{
         fontSize: 19, lineHeight: 1.65, color: 'var(--ink-soft)',
