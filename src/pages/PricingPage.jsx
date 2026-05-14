@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { db } from '../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useSubscription } from '../hooks/useSubscription';
-import { PRICE_NIS, TRIAL_DAYS } from '../utils/subscription';
+import { PRICE_NIS, STUDIO_PRICE_NIS, TRIAL_DAYS } from '../utils/subscription';
 import AccessibleModal from '../components/AccessibleModal.jsx';
 import StudioAgreementModal from '../components/StudioAgreementModal.jsx';
 
@@ -274,7 +274,7 @@ export default function PricingPage() {
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
             <span style={{ fontSize: '2.6rem', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--gold)', lineHeight: 1 }}>
-              ₪{PRICE_NIS}
+              ₪{STUDIO_PRICE_NIS}
             </span>
             <span className="muted" style={{ fontSize: '1rem' }}>/חודש</span>
           </div>
@@ -482,11 +482,11 @@ export default function PricingPage() {
         </h2>
         <div style={{ fontSize: '0.92rem', lineHeight: 1.7 }}>
           <p style={{ margin: '0 0 12px' }}>
-            המסלול כולל טאבלט מקצועי במתנה (10/11 אינץ׳, סטנד והגדרה ראשונית).
-            התחייבות לתשלום של ₪50/חודש למשך 24 חודשים.
+            המסלול כולל טאבלט מקצועי במתנה (10/11 אינץ׳, סטנד והתקנה אישית).
+            התחייבות לתשלום של ₪{STUDIO_PRICE_NIS}/חודש למשך 24 חודשים.
           </p>
           <p style={{ margin: '0 0 12px' }}>
-            <strong>סך התחייבות:</strong> ₪1,200 (פטור ממע"מ).
+            <strong>סך התחייבות:</strong> ₪{STUDIO_PRICE_NIS * 24} (פטור ממע"מ).
           </p>
           <p style={{ margin: '0 0 12px' }}>
             <strong>ביטול:</strong> ניתן בכל זמן בתשלום דמי יציאה — ₪30 לכל

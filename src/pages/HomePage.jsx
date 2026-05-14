@@ -121,7 +121,7 @@ const PLANS = [
   },
   {
     id: 'studio',
-    featured: true, tag: 'הכי משתלם · 24 חודשים', title: 'Studio + טאבלט', price: '50',
+    featured: true, tag: 'הכי משתלם · 24 חודשים', title: 'Studio + טאבלט', price: '69',
     extra: '+ טאבלט 10″ במתנה', line: 'טאבלט מסובסד דרך התשלום החודשי.',
     items: ['כל הפיצ׳רים של Pro', 'טאבלט 10″ איכותי', 'התקנה והגדרה אישית — חינם', 'סטטיסטיקות בזמן אמת', 'עדיפות בתמיכה'],
     cta: 'ראה פרטים מלאים',
@@ -139,7 +139,7 @@ const STUDIO_DETAILS = {
     ['עדיפות בתמיכה', 'פנייה שלך עולה לראש התור. מענה מהיר יותר.'],
   ],
   commitment: [
-    'המסלול הוא בהתחייבות ל-24 חודשים — ₪50 לחודש, סה״כ 24 תשלומים דרך Tranzila.',
+    'המסלול הוא בהתחייבות ל-24 חודשים — ₪69 לחודש, סה״כ 24 תשלומים דרך Tranzila.',
     'הטאבלט מסובסד דרך התשלום החודשי — לכן יש התחייבות.',
     'יציאה מוקדמת: דמי יציאה של ₪30 לכל חודש שנותר עד תום ההתחייבות.',
     'אחרי 24 חודשים — המנוי ממשיך חודשי רגיל, ואפשר לבטל בלחיצה בלי דמי יציאה.',
@@ -379,7 +379,7 @@ function StudioDetailsModal({ onClose }) {
           <span className="lp-price-tag"><ICrown size={12} /> הכי משתלם · 24 חודשים</span>
           <h2 id="studio-modal-title" className="lp-modal-title">Studio + טאבלט</h2>
           <div className="lp-modal-price">
-            <span className="lp-price-num">50</span>
+            <span className="lp-price-num">69</span>
             <span className="lp-price-cur">₪</span>
             <span className="lp-price-per">/ חודש · + טאבלט 10″ במתנה</span>
           </div>

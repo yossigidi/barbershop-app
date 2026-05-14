@@ -18,7 +18,8 @@ import {
 
 const TRANZILA_BASE = 'https://direct.tranzila.com';
 // Single source of truth for plan price + cycle
-const PRICE_NIS = 50;
+const PRICE_NIS = 50;                 // Pro monthly
+const STUDIO_PRICE_NIS = 69;          // Studio (committed + tablet) monthly
 const RENEWAL_DAYS = 30;
 const STUDIO_INSTALLMENTS = 24;       // 2-year commitment
 const STUDIO_EXIT_FEE_PER_MONTH = 30; // ₪ per remaining month on early cancel
@@ -58,7 +59,7 @@ export async function handleCreatePaymentLink(request, env) {
   const reqUrl = new URL(request.url);
   const isTest = reqUrl.searchParams.get('test') === '1';
   const isStudio = reqUrl.searchParams.get('plan') === 'studio';
-  const chargeSum = isTest ? 1 : PRICE_NIS;
+  const chargeSum = isTest ? 1 : (isStudio ? STUDIO_PRICE_NIS : PRICE_NIS);
 
   // Build Tranzila iframe URL.
   // tranmode=VK   = verify + create token (no immediate charge yet, OR small charge)

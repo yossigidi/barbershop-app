@@ -133,14 +133,14 @@ export default function StudioAgreementModal({ open, onClose, user, onSigned }) 
         הסכם התחייבות — מסלול Studio
       </h2>
       <p className="muted" style={{ marginTop: -4 }}>
-        מסלול Studio הוא בהתחייבות ל-24 חודשים (₪50/חודש) הכולל טאבלט מסובסד.
+        מסלול Studio הוא בהתחייבות ל-24 חודשים (₪69/חודש) הכולל טאבלט מסובסד.
         כדי להמשיך לתשלום יש לחתום על ההסכם.
       </p>
 
       <div className="studio-commit-box">
         <strong><ShieldCheck size={15} className="icon-inline" />עיקרי ההתחייבות</strong>
         <ul>
-          <li>24 תשלומים חודשיים של ₪50 דרך Tranzila.</li>
+          <li>24 תשלומים חודשיים של ₪69 דרך Tranzila.</li>
           <li>הטאבלט מסובסד דרך התשלום החודשי — לכן יש התחייבות.</li>
           <li>יציאה מוקדמת: דמי יציאה של ₪30 לכל חודש שנותר עד תום ההתחייבות.</li>
           <li>בתום 24 החודשים — המנוי ממשיך חודשי רגיל, וניתן לבטל בלי דמי יציאה.</li>

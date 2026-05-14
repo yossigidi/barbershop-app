@@ -12,7 +12,8 @@
 // Anyone who signs up AT/AFTER this gets the 14-day trial → paid.
 // Set to the start of the launch day (Israel time).
 export const LAUNCH_DATE = new Date('2026-05-04T00:00:00+03:00');
-export const PRICE_NIS = 50;
+export const PRICE_NIS = 50;          // Pro monthly
+export const STUDIO_PRICE_NIS = 69;   // Studio (committed + tablet) monthly
 export const TRIAL_DAYS = 30;
 export const RENEWAL_DAYS = 30;
 
