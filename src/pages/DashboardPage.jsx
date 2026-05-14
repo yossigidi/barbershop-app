@@ -545,7 +545,9 @@ export default function DashboardPage() {
         <div className="dash-schedule-main">
           <div className="sched-topbar">
             <div className="sched-daynav">
-              <button type="button" onClick={() => goDay(1)} aria-label="יום הבא">‹</button>
+              {/* RTL: the right-hand button steps back a day, the
+                  left-hand button steps forward. */}
+              <button type="button" onClick={() => goDay(-1)} aria-label="יום קודם">›</button>
               <button
                 type="button"
                 className="sched-date"
@@ -554,7 +556,7 @@ export default function DashboardPage() {
                 <strong>{isToday ? 'היום' : DAY_LABELS_HE[dayKey]}</strong>
                 <span>{formatDateHe(selectedDate)}</span>
               </button>
-              <button type="button" onClick={() => goDay(-1)} aria-label="יום קודם">›</button>
+              <button type="button" onClick={() => goDay(1)} aria-label="יום הבא">‹</button>
             </div>
             <div className="sched-stats">
               <div className="sched-stat"><span className="n">{dayBookings.length}</span><span className="l">תורים</span></div>
