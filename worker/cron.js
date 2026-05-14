@@ -140,6 +140,125 @@ export async function handleCronBilling(env) {
   return { charged, failed, cancelled, skipped, total: candidates.length };
 }
 
+// ─── Trial-expiry reminder emails ────────────────────────────────────────
+// Runs daily alongside billing. For barbers still on the Pro trial, sends
+// a reminder email at the 3-days-left and 1-day-left marks so they don't
+// silently lapse. Dedup via subscription.trialReminderTier — once we email
+// a tier we never re-send it. Pro only; Studio has no trial.
+const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
+
+export async function handleCronTrialReminders(env) {
+  if (!env.BREVO_API_KEY) {
+    console.warn('TRIAL_REMINDERS skipping: no BREVO_API_KEY');
+    return { skipped: 'no-brevo' };
+  }
+  const svc = await loadServiceAccount(env);
+  const accessToken = await getAccessToken(svc);
+
+  const candidates = await firestoreQuery(svc, accessToken, {
+    from: [{ collectionId: 'barbers' }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: 'subscription.status' },
+        op: 'EQUAL',
+        value: { stringValue: 'trialing' },
+      },
+    },
+  });
+
+  const now = new Date();
+  let sent = 0, skipped = 0, errored = 0;
+
+  for (const row of candidates) {
+    const uid = row.name.split('/').pop();
+    const sub = fieldVal(row.fields.subscription) || {};
+    const email = fieldVal(row.fields.email) || '';
+    const businessName = fieldVal(row.fields.businessName) || 'העסק שלך';
+    try {
+      const end = sub.trialEndsAt instanceof Date ? sub.trialEndsAt : null;
+      if (!end || !email) { skipped++; continue; }
+      const daysLeft = Math.ceil((end - now) / 86_400_000);
+      const tier = Number.isFinite(sub.trialReminderTier) ? sub.trialReminderTier : 99;
+
+      let sendTier = null;
+      if (daysLeft <= 1 && tier > 1) sendTier = 1;
+      else if (daysLeft <= 3 && tier > 3) sendTier = 3;
+      if (sendTier === null) { skipped++; continue; }
+
+      const origin = env.PUBLIC_ORIGIN || 'https://toron.co.il';
+      const okSend = await sendTrialReminderEmail(env, {
+        to: email, businessName, daysLeft: Math.max(0, daysLeft),
+        pricingUrl: `${origin}/pricing`,
+      });
+      if (!okSend) { errored++; continue; }
+
+      await patchSubscription(svc, accessToken, uid, sub, { trialReminderTier: sendTier });
+      console.log(`[trial-reminder] sent tier=${sendTier} to ${uid} (${daysLeft}d left)`);
+      sent++;
+    } catch (e) {
+      console.error(`[trial-reminder] error ${uid}:`, e?.message);
+      errored++;
+    }
+  }
+  console.log(`[trial-reminder] done: sent=${sent} skipped=${skipped} errored=${errored} total=${candidates.length}`);
+  return { sent, skipped, errored, total: candidates.length };
+}
+
+async function sendTrialReminderEmail(env, { to, businessName, daysLeft, pricingUrl }) {
+  const when = daysLeft <= 1 ? 'מחר' : `בעוד ${daysLeft} ימים`;
+  const subject = daysLeft <= 1
+    ? '⏰ תקופת הניסיון שלך ב-Toron מסתיימת מחר'
+    : `תקופת הניסיון שלך ב-Toron מסתיימת ${when}`;
+  const html = `<!doctype html><html lang="he" dir="rtl"><body style="margin:0;background:#f4f4f7;font-family:Arial,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;padding:24px;">
+    <div style="background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e6e6ec;">
+      <div style="background:linear-gradient(135deg,#D43396,#6541C1 55%,#14B8FE);padding:24px;text-align:center;">
+        <div style="color:#fff;font-size:1.3rem;font-weight:800;">תקופת הניסיון מסתיימת ${escapeHtml(when)}</div>
+      </div>
+      <div style="padding:24px;text-align:center;">
+        <p style="font-size:1rem;color:#18181b;margin:0 0 8px;">שלום,</p>
+        <p style="font-size:0.95rem;color:#4a4a55;line-height:1.6;margin:0 0 20px;">
+          תקופת הניסיון של 30 הימים ל-<strong>${escapeHtml(businessName)}</strong> מסתיימת ${escapeHtml(when)}.
+          כדי להמשיך לנהל את היומן, הלקוחות וההכנסות בלי הפרעה — בחר/י מסלול עכשיו.
+        </p>
+        <a href="${escapeHtml(pricingUrl)}" style="display:inline-block;background:linear-gradient(135deg,#D43396,#6541C1 55%,#14B8FE);color:#fff;padding:14px 34px;border-radius:12px;text-decoration:none;font-weight:800;font-size:1rem;">
+          המשך עם Toron — ₪50/חודש
+        </a>
+        <p style="font-size:0.8rem;color:#8a8a92;margin:20px 0 0;line-height:1.6;">
+          לא עשית כלום? החשבון פשוט ייסגר בתום הניסיון — בלי חיוב, בלי התחייבות.
+        </p>
+      </div>
+    </div>
+    <p style="text-align:center;color:#a0a0a8;font-size:0.72rem;margin:14px 0 0;">Toron — ניהול תורים · toron.co.il</p>
+  </div>
+</body></html>`;
+  try {
+    const senderEmail = env.SENDER_EMAIL || 'noreply@toron.co.il';
+    const r = await fetch(BREVO_URL, {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { name: 'Toron', email: senderEmail },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        replyTo: { email: env.OWNER_EMAIL || 'support@toron.co.il', name: 'Toron' },
+      }),
+    });
+    if (!r.ok) { console.error('TRIAL_REMINDER brevo', r.status, await r.text()); return false; }
+    return true;
+  } catch (e) {
+    console.error('TRIAL_REMINDER fetch', e?.message);
+    return false;
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
 async function chargeToken(env, token, sum, email) {
   const params = new URLSearchParams({
     supplier: env.TRANZILA_TERMINAL,

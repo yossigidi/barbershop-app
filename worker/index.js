@@ -16,7 +16,7 @@ import { handleAiCompose } from './ai.js';
 import { handleAiBriefing } from './briefing.js';
 import { handleSendConfirmationEmail, handleNotifyNewSignup } from './email.js';
 import { handleBrevoStatus, handleAuthDomainsStatus } from './admin.js';
-import { handleCronBilling } from './cron.js';
+import { handleCronBilling, handleCronTrialReminders } from './cron.js';
 import { handleCronFacebookPost, postToFacebookNow } from './fb-cron.js';
 import { maybeRewriteOg } from './og.js';
 
@@ -87,10 +87,13 @@ export default {
   // cron pattern so we can dispatch to the right handler.
   async scheduled(event, env, ctx) {
     console.log('CRON_TRIGGER', event.cron, new Date().toISOString());
-    // Daily billing — runs at 06:00 UTC, every day.
+    // Daily billing + trial-expiry reminder emails — runs at 06:00 UTC.
     if (event.cron === '0 6 * * *') {
       ctx.waitUntil(
         handleCronBilling(env).catch((e) => console.error('CRON_FATAL', e?.message, e?.stack)),
+      );
+      ctx.waitUntil(
+        handleCronTrialReminders(env).catch((e) => console.error('TRIAL_REMINDER_FATAL', e?.message, e?.stack)),
       );
       return;
     }
