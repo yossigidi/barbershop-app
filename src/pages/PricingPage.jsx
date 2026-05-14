@@ -286,7 +286,7 @@ export default function PricingPage() {
             <li><Check size={16} />כל מה שיש ב-Pro</li>
             <li><Gift size={16} style={{ color: 'var(--gold)' }} />טאבלט 10/11 אינץ׳ + סטנד</li>
             <li><Gift size={16} style={{ color: 'var(--gold)' }} />משלוח חינם</li>
-            <li><Gift size={16} style={{ color: 'var(--gold)' }} />הגדרה מראש</li>
+            <li><Gift size={16} style={{ color: 'var(--gold)' }} />התקנה והגדרה אישית — חינם</li>
             <li><Calendar size={16} />התחייבות לשנתיים</li>
           </ul>
 
