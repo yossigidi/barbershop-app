@@ -30,7 +30,29 @@ function emptyEmployee() {
 const ADDON_DURATION_OPTIONS = [0, 10, 20, 30, 40, 50, 60];
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, setPasswordForCurrentUser } = useAuth();
+  const hasPasswordProvider = (user?.providerData || []).some((p) => p.providerId === 'password');
+  const [newPassword, setNewPassword] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwError, setPwError] = useState('');
+  const [pwSuccess, setPwSuccess] = useState(false);
+  async function handleSetPassword() {
+    if (newPassword.length < 6) { setPwError('הסיסמה חייבת להיות לפחות 6 תווים'); return; }
+    setPwBusy(true); setPwError(''); setPwSuccess(false);
+    try {
+      await setPasswordForCurrentUser(newPassword);
+      setPwSuccess(true);
+      setNewPassword('');
+    } catch (e) {
+      if (e.code === 'auth/provider-already-linked' || e.code === 'auth/credential-already-in-use') {
+        setPwError('כבר יש סיסמה לחשבון. אם שכחת — צא והכנס שוב דרך "שכחתי סיסמה" במסך הכניסה.');
+      } else {
+        setPwError(e.message || 'שגיאה בהגדרת הסיסמה');
+      }
+    } finally {
+      setPwBusy(false);
+    }
+  }
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
@@ -391,6 +413,50 @@ export default function SettingsPage() {
           <button className="btn-secondary" style={{ width: '100%' }} onClick={() => navigate('/pricing')}>
             <Sparkles size={14} className="icon-inline" />ניהול מנוי וחיוב →
           </button>
+        )}
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>🔐 סיסמה לכניסה מהאפליקציה</h3>
+        <p className="muted" style={{ marginTop: -6, fontSize: '0.86rem' }}>
+          באייפון, האפליקציה המותקנת על המסך לא שומרת חיבור עם Google (מגבלה של iOS).
+          הגדר/י סיסמה לחשבון שלך פעם אחת כאן — ואז באייפון תתחבר/י עם <strong dir="ltr">{user?.email || 'המייל שלך'}</strong> והסיסמה הזו, ותישאר/י מחובר/ת תמיד.
+        </p>
+        {hasPasswordProvider && !pwSuccess ? (
+          <p style={{ margin: '6px 0 0', fontSize: '0.9rem', color: '#16a34a' }}>
+            ✓ סיסמה כבר הוגדרה לחשבון — אפשר להשתמש בה לכניסה באפליקציה.
+          </p>
+        ) : (
+          <>
+            <div className="field" style={{ marginTop: 6 }}>
+              <label>סיסמה חדשה (6+ תווים)</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••"
+                autoComplete="new-password"
+                minLength={6}
+              />
+            </div>
+            {pwError && (
+              <p style={{ color: '#b91c1c', fontSize: '0.85rem', margin: '0 0 8px' }}>⚠️ {pwError}</p>
+            )}
+            {pwSuccess && (
+              <p style={{ color: '#16a34a', fontSize: '0.88rem', margin: '0 0 8px' }}>
+                ✓ הסיסמה הוגדרה! בפעם הבאה ב-PWA — היכנס/י עם <strong dir="ltr">{user?.email}</strong> והסיסמה החדשה, ותישאר/י מחובר/ת.
+              </p>
+            )}
+            <button
+              type="button"
+              className="btn-gold"
+              onClick={handleSetPassword}
+              disabled={pwBusy || newPassword.length < 6}
+              style={{ width: '100%' }}
+            >
+              {pwBusy ? 'שומר…' : 'הגדר סיסמה'}
+            </button>
+          </>
         )}
       </div>
 

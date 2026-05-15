@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   sendPasswordResetEmail, updateProfile,
   signInWithCredential, GoogleAuthProvider,
+  EmailAuthProvider, linkWithCredential,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
@@ -54,6 +55,21 @@ export function AuthProvider({ children }) {
     return signInWithCredential(auth, credential);
   }
 
+  // Link an email+password credential to the currently signed-in user.
+  // This is the practical workaround for the iOS PWA Google-sign-in
+  // limitation: the barber signs in once with Google (in a regular
+  // browser, where it works), sets a password from Settings, and then
+  // logs into the installed PWA with email+password — which DOES persist
+  // reliably in IndexedDB across PWA reopens.
+  async function setPasswordForCurrentUser(password) {
+    if (!auth.currentUser) throw new Error('Not signed in');
+    const email = auth.currentUser.email;
+    if (!email) throw new Error('No email on this account');
+    if (!password || password.length < 6) throw new Error('Password must be at least 6 characters');
+    const credential = EmailAuthProvider.credential(email, password);
+    return linkWithCredential(auth.currentUser, credential);
+  }
+
   const value = {
     user,
     loading,
@@ -61,6 +77,7 @@ export function AuthProvider({ children }) {
       ? signInWithRedirect(auth, googleProvider)
       : signInWithPopup(auth, googleProvider)),
     loginGoogleCredential,
+    setPasswordForCurrentUser,
     loginEmail: (email, password) => signInWithEmailAndPassword(auth, email, password),
     signupEmail,
     resetPassword: (email) => sendPasswordResetEmail(auth, email),
