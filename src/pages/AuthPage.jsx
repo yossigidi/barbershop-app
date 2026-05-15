@@ -409,9 +409,18 @@ export default function AuthPage() {
             <div className="auth-divider"><span>או</span></div>
             {/* GIS-rendered button takes over when Google Identity Services
                 is configured (the only flow that works inside an iOS PWA).
-                Until it's ready / when no client ID is set, fall back to the
-                legacy custom button + loginGoogle (signInWithRedirect). */}
-            <div ref={gisContainerRef} className="auth-gis" style={{ display: gisReady ? 'flex' : 'none', justifyContent: 'center' }} />
+                The container is always in the DOM with a real size so
+                Google's renderButton has something to measure; the legacy
+                fallback button is shown alongside it until renderButton
+                actually puts the GIS button inside the container. */}
+            <div
+              ref={gisContainerRef}
+              className="auth-gis"
+              style={{
+                display: 'flex', justifyContent: 'center', width: '100%',
+                minHeight: gisReady ? undefined : 0,
+              }}
+            />
             {!gisReady && (
               <button
                 type="button"
