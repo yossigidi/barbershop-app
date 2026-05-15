@@ -7944,3 +7944,27 @@ button.cs-lost.is-active {
   background: var(--rainbow, linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%));
   color: #fff;
 }
+
+/* ─── Error boundary shell ─────────────────────────────────────────────── */
+.error-shell {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: var(--bg);
+}
+.error-card {
+  width: min(440px, calc(100vw - 32px));
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px 24px 22px;
+  text-align: center; box-shadow: 0 18px 50px rgba(21, 10, 51, 0.16);
+}
+.error-emoji { font-size: 3rem; line-height: 1; margin-bottom: 10px; }
+.error-card h1 { margin: 0 0 8px; font-size: 1.25rem; color: var(--text); }
+.error-card p { margin: 0 0 18px; color: var(--text-dim); font-size: 0.94rem; line-height: 1.6; }
+.error-actions { display: flex; gap: 10px; margin-bottom: 14px; }
+.error-actions > button { flex: 1; }
+.error-details {
+  text-align: start; font-size: 0.78rem; color: var(--text-dim);
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 10px;
+}
+.error-details summary { cursor: pointer; font-weight: 600; }
+.error-details code { display: block; margin-top: 6px; word-break: break-word; font-family: monospace; }

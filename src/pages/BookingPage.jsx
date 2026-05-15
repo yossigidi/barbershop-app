@@ -210,22 +210,31 @@ export default function BookingPage() {
   useEffect(() => {
     if (!barberId) return;
     (async () => {
-      const iso = dateToISO(selectedDate);
-      const bq = query(
-        collection(db, 'barbers', barberId, 'bookings'),
-        where('date', '==', iso),
-        where('status', 'in', ['booked', 'pendingApproval']),
-      );
-      const blq = query(
-        collection(db, 'barbers', barberId, 'blocks'),
-        where('date', '==', iso),
-      );
-      const [bSnap, blSnap] = await Promise.all([getDocs(bq), getDocs(blq)]);
-      const list = [
-        ...bSnap.docs.map((d) => ({ time: d.data().time, duration: d.data().duration || 20 })),
-        ...blSnap.docs.map((d) => ({ time: d.data().time, duration: d.data().duration || 20 })),
-      ];
-      setOccupied(list);
+      try {
+        const iso = dateToISO(selectedDate);
+        const bq = query(
+          collection(db, 'barbers', barberId, 'bookings'),
+          where('date', '==', iso),
+          where('status', 'in', ['booked', 'pendingApproval']),
+        );
+        const blq = query(
+          collection(db, 'barbers', barberId, 'blocks'),
+          where('date', '==', iso),
+        );
+        const [bSnap, blSnap] = await Promise.all([getDocs(bq), getDocs(blq)]);
+        const list = [
+          ...bSnap.docs.map((d) => ({ time: d.data().time, duration: d.data().duration || 20 })),
+          ...blSnap.docs.map((d) => ({ time: d.data().time, duration: d.data().duration || 20 })),
+        ];
+        setOccupied(list);
+      } catch (e) {
+        // Missing composite index, transient network, etc. — surface a
+        // recoverable empty state instead of leaving stale `occupied` data
+        // (which would silently double-book).
+        console.error('booking slot load failed', e?.message);
+        setOccupied([]);
+        setError('לא הצלחנו לטעון את הזמנים — נסה לרענן את הדף.');
+      }
     })();
   }, [barberId, selectedDate, success]);
 

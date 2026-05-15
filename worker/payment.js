@@ -83,7 +83,7 @@ export async function handleCreatePaymentLink(request, env) {
         email: claims.email || '',
         firebaseUid: claims.uid,
         plan: 'studio-24',
-        notify_url_address: `${origin}/api/tranzila-webhook`,
+        notify_url_address: `${origin}/api/tranzila-webhook?s=${encodeURIComponent(env.TRANZILA_WEBHOOK_SECRET || '')}`,
         success_url_address: `${origin}/api/tranzila-success`,
         fail_url_address: `${origin}/api/tranzila-fail`,
       })
@@ -97,7 +97,7 @@ export async function handleCreatePaymentLink(request, env) {
         email: claims.email || '',
         firebaseUid: claims.uid,
         plan: 'pro-monthly',
-        notify_url_address: `${origin}/api/tranzila-webhook`,
+        notify_url_address: `${origin}/api/tranzila-webhook?s=${encodeURIComponent(env.TRANZILA_WEBHOOK_SECRET || '')}`,
         success_url_address: `${origin}/api/tranzila-success`,
         fail_url_address: `${origin}/api/tranzila-fail`,
       });
@@ -109,12 +109,31 @@ export async function handleCreatePaymentLink(request, env) {
 }
 
 // ─── POST /api/tranzila-webhook ───────────────────────────────────────────
-// Tranzila POSTs form-encoded data here after a payment.
-// Mirrors Engleez's tranzila-webhook.js: trusts the form payload (no
-// out-of-band confirmation call to Tranzila — that broke us before).
-// Always returns 200 so Tranzila doesn't retry endlessly on our errors.
+// Tranzila POSTs form-encoded data here after a payment. We don't HMAC the
+// payload (Tranzila's TPS HMAC scheme is brittle), and the on-prem confirm
+// API call turned out flaky. Instead the webhook URL we hand Tranzila in
+// `create-payment-link` carries a `?s=<TRANZILA_WEBHOOK_SECRET>` query
+// param — a shared secret nobody outside our infra knows. Reject every
+// request that doesn't echo the secret back. Without this, anyone who
+// POSTs `firebaseUid=<any uid>&Response=000&...` can grant themselves a
+// free subscription.
+//
+// Always returns 200 once authorized so Tranzila doesn't retry endlessly
+// on our internal errors.
 export async function handleTranzilaWebhook(request, env) {
   if (request.method !== 'POST') return err('Method not allowed', 405);
+
+  // Shared-secret gate (see comment above).
+  if (env.TRANZILA_WEBHOOK_SECRET) {
+    const url = new URL(request.url);
+    if (url.searchParams.get('s') !== env.TRANZILA_WEBHOOK_SECRET) {
+      console.warn('TRANZILA_WEBHOOK rejected: bad/missing secret');
+      return new Response('forbidden', { status: 403 });
+    }
+  } else {
+    console.error('TRANZILA_WEBHOOK_SECRET not configured — refusing to process webhook');
+    return new Response('forbidden', { status: 403 });
+  }
 
   let body;
   try {

@@ -2,6 +2,19 @@
 // Body: { barberId, title, body }
 // Reads barber's fcmTokens from Firestore (REST + service account OAuth)
 // and sends a push to each via FCM HTTP v1 API.
+//
+// SECURITY: clients call this from the booking page right after creating
+// a booking — so we can't require a Firebase ID token (the booking client
+// is anonymous). Instead we accept the call ONLY if the (barberId,
+// bookingId) actually exist together in Firestore. That makes it
+// impossible to spam-push a random barber with attacker-controlled text:
+// you'd first have to create a real booking on that barber's page, which
+// is already throttled by the public booking flow + Firestore rules.
+
+import { ok, err } from './_lib.js';
+
+const MAX_TITLE = 80;
+const MAX_BODY = 200;
 
 export async function handleNotify(request, env) {
   let payload;
@@ -11,9 +24,30 @@ export async function handleNotify(request, env) {
     return new Response('Invalid JSON', { status: 400 });
   }
 
-  const { barberId, bookingId, title, body } = payload || {};
+  const barberId = String(payload?.barberId || '').slice(0, 64);
+  const bookingId = String(payload?.bookingId || '').slice(0, 64);
+  const rawTitle = String(payload?.title || '');
+  const rawBody = String(payload?.body || '');
+  const title = rawTitle.slice(0, MAX_TITLE);
+  const body = rawBody.slice(0, MAX_BODY);
   if (!barberId || !title) {
     return new Response('Missing fields', { status: 400 });
+  }
+  // The booking-existence check is what actually guards this endpoint —
+  // see the SECURITY note at the top of the file.
+  if (bookingId) {
+    try {
+      const bookingDocUrl = `https://firestore.googleapis.com/v1/projects/barbershop-app-2026/databases/(default)/documents/barbers/${encodeURIComponent(barberId)}/bookings/${encodeURIComponent(bookingId)}`;
+      const r = await fetch(bookingDocUrl);
+      if (r.status !== 200) {
+        return err('Booking not found for that barber', 403);
+      }
+    } catch (e) {
+      console.warn('NOTIFY booking-existence check failed', e?.message);
+      return err('Cannot verify booking', 500);
+    }
+  } else {
+    return err('Missing bookingId', 400);
   }
 
   if (!env.FIREBASE_SERVICE_ACCOUNT_JSON) {

@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext.jsx';
 import AccessibilityWidget from './components/AccessibilityWidget.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // Eager-load the two most common public landing surfaces — the homepage
 // and a booking link. Loading them eagerly avoids a lazy-chunk delay on
@@ -72,7 +73,7 @@ function Protected({ children }) {
 
 export default function App() {
   return (
-    <>
+    <ErrorBoundary>
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -99,6 +100,6 @@ export default function App() {
         </Routes>
       </Suspense>
       <AccessibilityWidget />
-    </>
+    </ErrorBoundary>
   );
 }

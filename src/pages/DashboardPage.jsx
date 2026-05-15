@@ -67,12 +67,16 @@ export default function DashboardPage() {
 
   // Keep the action-sheet's booking in sync with Firestore changes — when
   // the user completes/starts a booking the listener updates `bookings`,
-  // and we want the open sheet to re-render against the new status (e.g.
-  // "סיים תור" → "✓ Send review" appears) instead of closing or going stale.
+  // and we want the open sheet to re-render against the new status
+  // instead of going stale. If the booking drops out of the query (e.g.
+  // status flipped to 'completed' / 'cancelled' — both outside our
+  // active-statuses filter), close the sheet so the barber isn't left
+  // staring at a stale row.
   useEffect(() => {
     if (!actionFor) return;
     const fresh = bookings.find((b) => b.id === actionFor.id);
-    if (fresh && fresh !== actionFor) setActionFor(fresh);
+    if (!fresh) { setActionFor(null); return; }
+    if (fresh !== actionFor) setActionFor(fresh);
   }, [bookings, actionFor]);
   const [quickBook, setQuickBook] = useState(null);
 
@@ -340,10 +344,11 @@ export default function DashboardPage() {
   const [waitlistNotify, setWaitlistNotify] = useState(null);
   // shape: { date, time, clients: [{ clientName, clientPhone, ... }] }
 
-  // Approve a pending booking — moves the booking from pendingApproval to
-  // booked AND fires the WhatsApp confirmation template to the client via
-  // the worker. The cron / status change is purely server-side; we just
-  // call the endpoint and let it do both pieces.
+  // Approve a pending booking — the worker handles both the status flip
+  // AND firing the WhatsApp confirmation template. We just call it; the
+  // onSnapshot listener picks up the change. No client-side updateDoc
+  // afterwards — that previously caused a race that could clobber other
+  // fields the worker wrote (e.g. approvedAt).
   async function approveBooking(b) {
     try {
       const idToken = await user.getIdToken();
@@ -354,11 +359,6 @@ export default function DashboardPage() {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'אישור התור נכשל');
-      // Optimistic local update — the snapshot listener will catch up,
-      // but flipping status immediately avoids a flicker.
-      try {
-        await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'booked' });
-      } catch { /* worker already updated — non-fatal */ }
     } catch (e) {
       alert('שגיאה באישור התור: ' + e.message);
     }

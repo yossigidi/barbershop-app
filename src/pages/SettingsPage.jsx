@@ -610,7 +610,7 @@ export default function SettingsPage() {
       <div className="card">
         <h3 style={{ marginTop: 0 }}><Star size={18} className="icon-inline" />ביקורות בגוגל</h3>
         <p className="muted" style={{ marginTop: -6, fontSize: '0.85rem' }}>
-          הדבק את הקישור שגוגל נותן לך ב-"שתף את הביקורת". המערכת תשלב אותו אוטומטית בהודעת התודה ללקוחות יום אחרי התור — דרך מצוינת לקבל ביקורות חיוביות.
+          הדבק את הקישור שגוגל נותן לך ב-"שתף את הביקורת". המערכת תשלב אותו אוטומטית בהודעת התודה שנשלחת ללקוח חצי שעה אחרי שהתור נגמר — דרך מצוינת לקבל ביקורות חיוביות.
         </p>
         <div className="field">
           <label>לינק לביקורת</label>

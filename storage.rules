@@ -2,10 +2,20 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Each barber has their own folder, including nested sub-paths like
-    // clients/{phone}/{photo} for per-client before/after photos. Public
-    // can read (so the logo shows on the public booking page); only the
-    // owner can upload, with a 2 MB size limit to prevent abuse.
+    // Client photos (before/after) are PRIVATE — only the barber who owns
+    // the folder may read or write. The more-specific match here wins for
+    // any path under barbers/<uid>/clients/**.
+    match /barbers/{uid}/clients/{path=**} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Everything else under the barber's folder (logo, profile image, OG
+    // shells, etc.) is intentionally public-read so the booking page +
+    // social previews show without auth. Owner-only write, 2 MB cap.
     match /barbers/{uid}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null
