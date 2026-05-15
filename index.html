@@ -27,6 +27,11 @@
          for hydration. -->
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <title>Toron — ניהול תורים מקצועי</title>
+    <!-- Google Identity Services library. Used by AuthPage to sign in
+         with Google in iOS PWA without leaving the app (signInWithRedirect
+         doesn't come back to the PWA — iOS opens the callback in Safari).
+         The script is harmless when not used. -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Accessibility prefs FOUC bootstrap — applies persisted IS 5568 user prefs
          to <html> classes synchronously before React hydrates. Keep in sync
          with src/utils/a11yPrefs.js A11Y_BOOTSTRAP_SCRIPT. -->

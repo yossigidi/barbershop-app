@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import {
   Mail, Lock, User, Eye, EyeOff, ChevronLeft, AlertCircle, CheckCircle2,
@@ -35,8 +35,19 @@ function humaniseError(err) {
   return TRANSLATE_AUTH_ERROR[err?.code] || err?.message || 'שגיאה לא ידועה';
 }
 
+// Web OAuth client ID from Firebase Console → Authentication → Sign-in
+// method → Google → Web SDK config. Not secret (it's exposed in any
+// OAuth flow). When set, AuthPage swaps the legacy signInWithRedirect
+// path for Google Identity Services — the only thing that actually works
+// inside an iOS PWA, where the redirect callback never makes it back to
+// the home-screen app.
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  || '870082875000-cit55mof0ofjmg0h12c25pqk8d811iui.apps.googleusercontent.com';
+
 export default function AuthPage() {
-  const { user, loading, loginGoogle, loginEmail, signupEmail, resetPassword } = useAuth();
+  const { user, loading, loginGoogle, loginGoogleCredential, loginEmail, signupEmail, resetPassword } = useAuth();
+  const gisContainerRef = useRef(null);
+  const [gisReady, setGisReady] = useState(false);
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const initialMode = params.get('mode') || 'login';
@@ -178,6 +189,64 @@ export default function AuthPage() {
       setBusy(false);
     }
   }
+
+  // GIS (Google Identity Services) sign-in — the in-PWA Google flow that
+  // actually works on iOS home-screen apps. We keep the credentials
+  // callback in a ref so the context-recreated function doesn't trigger
+  // a re-init loop.
+  const loginCredRef = useRef(loginGoogleCredential);
+  loginCredRef.current = loginGoogleCredential;
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return undefined;
+    if (mode === 'forgot') return undefined;
+    if (loading || user) return undefined;
+
+    let cancelled = false;
+    let attempts = 0;
+    const tryInit = () => {
+      if (cancelled) return;
+      const gid = window.google?.accounts?.id;
+      if (!gid) {
+        if (attempts++ > 30) return; // ~3 s — give up, custom button stays
+        setTimeout(tryInit, 100);
+        return;
+      }
+      try {
+        gid.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          auto_select: false,
+          callback: async (response) => {
+            if (!response?.credential) return;
+            setBusy(true); setError('');
+            try {
+              await loginCredRef.current(response.credential);
+              // onAuthStateChanged → existing bootstrap useEffect → route.
+            } catch (e) {
+              setError(humaniseError(e));
+              setBusy(false);
+            }
+          },
+        });
+        if (gisContainerRef.current) {
+          gisContainerRef.current.innerHTML = '';
+          gid.renderButton(gisContainerRef.current, {
+            theme: 'outline',
+            size: 'large',
+            text: mode === 'signup' ? 'signup_with' : 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'center',
+            locale: 'he',
+            width: Math.min(gisContainerRef.current.offsetWidth || 320, 400),
+          });
+          setGisReady(true);
+        }
+      } catch (e) {
+        console.warn('GIS init failed', e?.message);
+      }
+    };
+    tryInit();
+    return () => { cancelled = true; };
+  }, [mode, loading, user]);
 
   if (loading || user) return <div className="loading">טוען…</div>;
 
@@ -338,14 +407,21 @@ export default function AuthPage() {
         {mode !== 'forgot' && (
           <>
             <div className="auth-divider"><span>או</span></div>
-            <button
-              type="button"
-              className="btn-secondary auth-google"
-              onClick={handleGoogle}
-              disabled={busy}
-            >
-              <GoogleG />המשך עם Google
-            </button>
+            {/* GIS-rendered button takes over when Google Identity Services
+                is configured (the only flow that works inside an iOS PWA).
+                Until it's ready / when no client ID is set, fall back to the
+                legacy custom button + loginGoogle (signInWithRedirect). */}
+            <div ref={gisContainerRef} className="auth-gis" style={{ display: gisReady ? 'flex' : 'none', justifyContent: 'center' }} />
+            {!gisReady && (
+              <button
+                type="button"
+                className="btn-secondary auth-google"
+                onClick={handleGoogle}
+                disabled={busy}
+              >
+                <GoogleG />המשך עם Google
+              </button>
+            )}
           </>
         )}
 

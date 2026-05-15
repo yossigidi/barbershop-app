@@ -3,6 +3,7 @@ import {
   onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut,
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
   sendPasswordResetEmail, updateProfile,
+  signInWithCredential, GoogleAuthProvider,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
@@ -42,12 +43,24 @@ export function AuthProvider({ children }) {
     return cred;
   }
 
+  // Sign in to Firebase using a Google ID token obtained directly via
+  // Google Identity Services (GIS). This is the path that actually works
+  // inside an iOS PWA — signInWithRedirect doesn't return to the PWA
+  // because iOS opens the OAuth callback in Safari, not in the home-screen
+  // app, leaving the PWA forever logged out.
+  async function loginGoogleCredential(idToken) {
+    if (!idToken) throw new Error('Missing Google ID token');
+    const credential = GoogleAuthProvider.credential(idToken);
+    return signInWithCredential(auth, credential);
+  }
+
   const value = {
     user,
     loading,
     loginGoogle: () => (isStandalonePWA()
       ? signInWithRedirect(auth, googleProvider)
       : signInWithPopup(auth, googleProvider)),
+    loginGoogleCredential,
     loginEmail: (email, password) => signInWithEmailAndPassword(auth, email, password),
     signupEmail,
     resetPassword: (email) => sendPasswordResetEmail(auth, email),
