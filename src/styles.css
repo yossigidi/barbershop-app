@@ -7968,3 +7968,30 @@ button.cs-lost.is-active {
 }
 .error-details summary { cursor: pointer; font-weight: 600; }
 .error-details code { display: block; margin-top: 6px; word-break: break-word; font-family: monospace; }
+
+/* In-modal WhatsApp group link setup (when missing or being edited) */
+.wa-link-setup {
+  margin-top: 12px; padding: 12px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.wa-link-label {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.85rem; font-weight: 700; color: var(--text);
+  margin-bottom: 6px;
+}
+.wa-link-input {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text);
+  font-family: inherit; font-size: 0.9rem;
+  direction: ltr; text-align: left;
+}
+.wa-link-input:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.wa-link-edit {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 0.82rem;
+  color: var(--text-dim); padding: 6px 4px; margin-top: 6px;
+}
+.wa-link-edit:hover { color: var(--text); }

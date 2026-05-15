@@ -884,6 +884,7 @@ export default function DashboardPage() {
       )}
       {showBroadcast && (
         <WhatsAppBroadcastModal
+          barberId={user.uid}
           businessName={barber.businessName || 'העסק שלי'}
           shortLink={shortLink}
           waGroupLink={barber.waGroupLink || ''}
