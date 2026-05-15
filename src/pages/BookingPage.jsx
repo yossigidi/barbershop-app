@@ -104,6 +104,7 @@ export default function BookingPage() {
   // Group booking — extra people booked back-to-back after the main client.
   // Cap of 2 extras (3 total) keeps the slot pressure reasonable and the UI simple.
   const [extraPeople, setExtraPeople] = useState([]); // [{ id, name, serviceId }]
+  const [clientNote, setClientNote] = useState('');
   const [client, setClient] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
@@ -213,7 +214,7 @@ export default function BookingPage() {
       const bq = query(
         collection(db, 'barbers', barberId, 'bookings'),
         where('date', '==', iso),
-        where('status', '==', 'booked'),
+        where('status', 'in', ['booked', 'pendingApproval']),
       );
       const blq = query(
         collection(db, 'barbers', barberId, 'blocks'),
@@ -491,7 +492,7 @@ export default function BookingPage() {
         const dayQ = query(
           collection(db, 'barbers', barberId, 'bookings'),
           where('date', '==', iso),
-          where('status', '==', 'booked'),
+          where('status', 'in', ['booked', 'pendingApproval']),
         );
         const daySnap = await getDocs(dayQ);
         for (const d of daySnap.docs) {
@@ -506,6 +507,13 @@ export default function BookingPage() {
         }
       }
 
+      // Approval mode — if the barber has bookingApprovalMode = 'manual',
+      // a new booking lands in 'pendingApproval' until the barber confirms
+      // it from the dashboard. Default ('auto') keeps the previous flow.
+      const needsApproval = barber?.bookingApprovalMode === 'manual';
+      const initialStatus = needsApproval ? 'pendingApproval' : 'booked';
+      const noteForBooking = (clientNote || '').trim().slice(0, 500);
+
       const baseDoc = {
         time,
         duration: totalDuration,
@@ -516,7 +524,8 @@ export default function BookingPage() {
         clientName: `${c.firstName} ${c.lastName}`,
         clientPhone: c.phone,
         clientEmail: c.email || '',
-        status: 'booked',
+        clientNote: noteForBooking,
+        status: initialStatus,
         employeeId: pickedEmployee?.id || '',
         employeeName: pickedEmployee?.name || '',
         chairNumber: pickedChair,
@@ -541,7 +550,7 @@ export default function BookingPage() {
         const conflictQ = query(
           collection(db, 'barbers', barberId, 'bookings'),
           where('date', '==', d),
-          where('status', '==', 'booked'),
+          where('status', 'in', ['booked', 'pendingApproval']),
         );
         const blockQ = query(
           collection(db, 'barbers', barberId, 'blocks'),
@@ -606,7 +615,8 @@ export default function BookingPage() {
             clientName: p.name.trim(),
             clientPhone: c.phone,
             clientEmail: c.email || '',
-            status: 'booked',
+            clientNote: noteForBooking,
+            status: initialStatus,
             date: d,
             recurringId: null,
             manageToken: exManage,
@@ -664,9 +674,11 @@ export default function BookingPage() {
         createdCount: created.length,
         skipped: skipped.length,
         emailSentTo: c.email || '',
+        pendingApproval: needsApproval,
       });
       setPickedTime(null);
       setPickedAddonIds([]);
+      setClientNote('');
       setExtraPeople([]);
       setRecurring(false);
     } catch (e) {
@@ -774,7 +786,16 @@ export default function BookingPage() {
           <div className="success-check">
             <CheckCircle2 size={56} color="#ffffff" strokeWidth={2} />
           </div>
-          <h2 className="success-headline">{success.createdCount > 1 ? `${success.createdCount} תורים נקבעו!` : 'התור נקבע!'}</h2>
+          <h2 className="success-headline">
+            {success.pendingApproval
+              ? (success.createdCount > 1 ? `${success.createdCount} תורים ממתינים לאישור` : 'התור נרשם — ממתין לאישור')
+              : (success.createdCount > 1 ? `${success.createdCount} תורים נקבעו!` : 'התור נקבע!')}
+          </h2>
+          {success.pendingApproval && (
+            <p className="muted" style={{ marginTop: -6 }}>
+              שלחנו את הבקשה לבעל המקצוע. תקבל/י הודעה ב-WhatsApp ברגע שהתור יאושר.
+            </p>
+          )}
           <p className="muted">
             {formatDateHe(selectedDate)} ({DAY_LABELS_HE[dayKeyFromDate(selectedDate)]}) בשעה <strong>{success.time}</strong>
             {totalDuration ? ` • ${totalDuration} דק׳` : ''}
@@ -1399,6 +1420,24 @@ export default function BookingPage() {
             </div>
           )}
 
+          {/* Optional free-text note from the client to the barber — shown on
+              the barber's booking action sheet. */}
+          <div className="booking-note">
+            <label htmlFor="booking-client-note" className="booking-note-label">
+              הוסף הערה לבעל המקצוע <span className="muted">(אופציונלי)</span>
+            </label>
+            <textarea
+              id="booking-client-note"
+              className="booking-note-textarea"
+              dir="rtl"
+              rows={3}
+              maxLength={500}
+              placeholder="לדוגמה: אלרגיה למוצר מסוים, העדפה, או כל פרט שתרצה לציין"
+              value={clientNote}
+              onChange={(e) => setClientNote(e.target.value)}
+            />
+          </div>
+
           {/* ── Group booking — extra people (kids / partner / etc.) ── */}
           {!recurring && (services.length > 0) && (
             <div className="extra-people">
@@ -1515,8 +1554,8 @@ export default function BookingPage() {
                 {busy
                   ? 'קובע…'
                   : groupTotalCount > 1
-                    ? `אשר וקבע ${groupTotalCount} תורים`
-                    : 'אשר וקבע תור'}
+                    ? `לסיום וקביעת ${groupTotalCount} תורים`
+                    : 'לסיום וקביעת התור'}
               </button>
             </>
           )}

@@ -7888,3 +7888,59 @@ button.cs-lost.is-active {
   cursor: pointer; padding: 6px; width: 100%;
 }
 .og-later:hover { color: var(--text); }
+
+/* ─── Booking approval flow ────────────────────────────────────────────── */
+/* Client note textarea on the booking summary step */
+.booking-note { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); }
+.booking-note-label {
+  display: block; font-weight: 700; font-size: 0.9rem;
+  margin-bottom: 8px; color: var(--text);
+}
+.booking-note-label .muted { font-weight: 400; font-size: 0.78rem; }
+.booking-note-textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text);
+  font-family: inherit; font-size: 0.94rem; line-height: 1.5; resize: vertical;
+}
+.booking-note-textarea:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 1px;
+}
+
+/* Barber-side: client note display + pending banner + approve/decline */
+.client-note {
+  background: rgba(212, 51, 150, 0.06);
+  border: 1px solid rgba(212, 51, 150, 0.22);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px; margin: 8px 0 10px;
+}
+.client-note-label {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.76rem; font-weight: 700;
+  color: var(--gold); margin-bottom: 4px;
+}
+.client-note-body {
+  font-size: 0.92rem; line-height: 1.5; color: var(--text);
+  white-space: pre-wrap;
+}
+.pending-banner {
+  display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, rgba(212, 51, 150, 0.10), rgba(101, 65, 193, 0.10));
+  border: 1px solid rgba(101, 65, 193, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px; margin: 6px 0 10px;
+  font-size: 0.86rem; color: var(--text);
+}
+.approval-actions {
+  display: flex; gap: 8px; margin-bottom: 8px;
+}
+
+/* ScheduleList — pending booking row */
+.sl-row.is-pending {
+  background: rgba(212, 51, 150, 0.05);
+  border-color: rgba(212, 51, 150, 0.28);
+}
+.sl-status-pendingApproval {
+  background: var(--rainbow, linear-gradient(135deg, #D43396 0%, #6541C1 50%, #14B8FE 100%));
+  color: #fff;
+}

@@ -78,6 +78,7 @@ export default function SettingsPage() {
   // to manage recurring booking creation themselves rather than letting
   // a one-time client lock 12 future slots.
   const [allowRecurring, setAllowRecurring] = useState(false);
+  const [requireApproval, setRequireApproval] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderMode, setReminderMode] = useState('batchDayBefore');
   const [reminderHoursBefore, setReminderHoursBefore] = useState(2);
@@ -125,6 +126,7 @@ export default function SettingsPage() {
         setAiGender(data.aiGender || 'neutral');
         setCustomSlug(data.customSlug || '');
         setAllowRecurring(data.allowRecurring === true);
+        setRequireApproval(data.bookingApprovalMode === 'manual');
         if (data.reminderSettings) {
           setReminderEnabled(data.reminderSettings.enabled === true);
           const m = data.reminderSettings.mode;
@@ -311,6 +313,7 @@ export default function SettingsPage() {
         aiGender,
         customSlug: slugToSave,
         allowRecurring: !!allowRecurring,
+        bookingApprovalMode: requireApproval ? 'manual' : 'auto',
         reminderSettings: {
           enabled: !!reminderEnabled,
           mode: ['batchDayBefore', 'batchSameDay', 'perClient'].includes(reminderMode) ? reminderMode : 'batchDayBefore',
@@ -1036,6 +1039,36 @@ export default function SettingsPage() {
           <p className="muted" style={{ fontSize: '0.82rem', marginTop: 10, marginBottom: 0, padding: 10, background: 'var(--gold-soft)', border: '1px solid rgba(184, 137, 58, 0.30)', borderRadius: 'var(--radius-sm)' }}>
             <Sparkles size={12} className="icon-inline" />
             <strong>{chairsCount} כסאות נבחרו.</strong> היומן ה-Day Timeline יציג {chairsCount} עמודות במקביל, וכל תור חדש יקבל מספר כסא (1-{chairsCount}) באופן אוטומטי.
+          </p>
+        )}
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}><Check size={18} className="icon-inline" />אישור תורים</h3>
+        <label className="row" style={{ alignItems: 'center', cursor: 'pointer', gap: 12 }}>
+          <div
+            className={`toggle ${requireApproval ? 'on' : ''}`}
+            onClick={() => setRequireApproval((v) => !v)}
+            role="switch"
+            aria-checked={requireApproval}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setRequireApproval((v) => !v); }
+            }}
+            style={{ flex: 'none' }}
+          />
+          <div style={{ flex: 1 }}>
+            <strong>דורש אישור שלי לכל תור חדש</strong>
+            <div className="muted" style={{ fontSize: '0.84rem', marginTop: 2, lineHeight: 1.5 }}>
+              כשדלוק — כל תור שלקוח קובע ממתין לאישור שלך לפני שנכנס ליומן.
+              כשמכובה (ברירת מחדל) — התור נקבע אוטומטית.
+            </div>
+          </div>
+        </label>
+        {requireApproval && (
+          <p className="muted" style={{ fontSize: '0.82rem', marginTop: 10, marginBottom: 0, padding: 10, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', lineHeight: 1.55 }}>
+            <Sparkles size={12} className="icon-inline" />
+            אחרי שתאשר/י תור — הלקוח יקבל אישור אוטומטי ב-WhatsApp עם פרטי התור (כשהשירות פעיל).
           </p>
         )}
       </div>

@@ -32,14 +32,15 @@
 // (Marketing).
 
 import {
-  loadServiceAccount, getAccessToken, firestorePatch, firestoreQuery,
-  fs, fieldVal,
+  loadServiceAccount, getAccessToken, firestoreGet, firestorePatch, firestoreQuery,
+  verifyIdToken, getBearerToken, fs, fieldVal, ok, err, corsHeaders,
 } from './_lib.js';
 
 const GRAPH_VERSION = 'v22.0';
 
-const TEMPLATE_REMINDER = 'appointment_reminder';  // Utility
-const TEMPLATE_THANKYOU = 'appointment_thankyou';  // Marketing
+const TEMPLATE_REMINDER = 'appointment_reminder';        // Utility
+const TEMPLATE_THANKYOU = 'appointment_thankyou';        // Marketing
+const TEMPLATE_CONFIRMATION = 'appointment_confirmation';// Utility — sent when the barber approves a pending booking
 
 const BATCH_DAY_BEFORE_HOUR = 18; // Israel hour for the "day before" batch
 const BATCH_SAME_DAY_HOUR = 8;    // Israel hour for the "same day" batch
@@ -306,4 +307,88 @@ async function markBooking(svc, accessToken, uid, bookingId, flag) {
   } catch (e) {
     console.warn('CRON_WHATSAPP mark failed', uid, bookingId, flag, e?.message);
   }
+}
+
+// ─── POST /api/approve-booking ────────────────────────────────────────────
+// The barber approves a pending booking from the dashboard. We flip the
+// status to 'booked' and, if WhatsApp is configured, fire the confirmation
+// template to the client. Idempotent — if the booking is already booked,
+// returns success without resending. Body: { bookingId, link? }
+export async function handleApproveBooking(request, env) {
+  if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+  if (request.method !== 'POST') return err('Method not allowed', 405);
+
+  let svc, claims, accessToken;
+  try {
+    const token = getBearerToken(request);
+    svc = await loadServiceAccount(env);
+    claims = await verifyIdToken(token, svc.project_id);
+    accessToken = await getAccessToken(svc);
+  } catch (e) {
+    return err('Unauthorized: ' + e.message, 401);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { body = {}; }
+  const bookingId = String(body?.bookingId || '');
+  const linkOverride = String(body?.link || '').trim().slice(0, 200);
+  if (!bookingId) return err('Missing bookingId', 400);
+
+  const uid = claims.uid;
+  const bookingPath = `barbers/${uid}/bookings/${bookingId}`;
+
+  let booking;
+  try {
+    booking = await firestoreGet(svc, accessToken, bookingPath);
+  } catch (e) {
+    return err('Failed to read booking: ' + e.message, 500);
+  }
+  if (!booking) return err('Booking not found', 404);
+
+  const bf = booking.fields || {};
+  const currentStatus = fieldVal(bf.status);
+  // Idempotent — only flip if still pending.
+  if (currentStatus && currentStatus !== 'pendingApproval') {
+    return ok({ approved: true, alreadyHandled: true, status: currentStatus });
+  }
+
+  try {
+    await firestorePatch(svc, accessToken, bookingPath,
+      { status: fs.str('booked'), approvedAt: fs.ts(new Date()) },
+      ['status', 'approvedAt']);
+  } catch (e) {
+    return err('Failed to update booking: ' + e.message, 500);
+  }
+
+  // Fire the confirmation template. Failures here don't undo the approval —
+  // the booking is confirmed regardless. The cron-driven reminder and
+  // thank-you still apply normally.
+  let waSent = false;
+  let waError = null;
+  if (env.WHATSAPP_TOKEN && env.WHATSAPP_PHONE_ID) {
+    try {
+      const barberDoc = await firestoreGet(svc, accessToken, `barbers/${uid}`);
+      const barberFields = barberDoc?.fields || {};
+      const businessName = fieldVal(barberFields.businessName) || 'העסק';
+      const firstName = (fieldVal(bf.clientName) || '').trim().split(/\s+/)[0] || 'לקוח/ה';
+      const clientPhone = fieldVal(bf.clientPhone) || '';
+      const dateISO = fieldVal(bf.date) || '';
+      const dateLabel = dateISO ? hebDateLabel(dateISO) : '';
+      const time = fieldVal(bf.time) || '';
+      const finalLink = linkOverride || barberLink(env, barberFields) || 'הקישור בפרופיל';
+      if (clientPhone && dateISO && time) {
+        const res = await sendTemplate(env, {
+          to: clientPhone,
+          template: TEMPLATE_CONFIRMATION,
+          components: bodyParams(firstName, businessName, dateLabel, time, finalLink),
+        });
+        waSent = res.ok;
+        if (!res.ok) waError = res.error;
+      }
+    } catch (e) {
+      waError = e?.message || 'whatsapp-error';
+    }
+  }
+
+  return ok({ approved: true, waSent, waError });
 }

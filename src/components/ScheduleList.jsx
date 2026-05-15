@@ -19,6 +19,9 @@ function SwipeableBookingRow({ booking, offsetMin, chairsCount, onTap, onStart, 
   const b = booking;
   const inProgress = b.status === 'inProgress';
   const completed = b.status === 'completed';
+  const pending = b.status === 'pendingApproval';
+  // Pending bookings can't be swipe-started/completed — they need an
+  // approval decision first (tap to open the action sheet).
   const canStart = b.status === 'booked';
   const canComplete = b.status === 'booked' || b.status === 'inProgress';
   const shifted = offsetMin > 0 && b.status === 'booked' ? addMinToTime(b.time, offsetMin) : null;
@@ -69,7 +72,7 @@ function SwipeableBookingRow({ booking, offsetMin, chairsCount, onTap, onStart, 
         <Check size={18} /> סיים
       </div>
       <div
-        className={`sl-row ${inProgress ? 'is-now' : ''} ${completed ? 'is-done' : ''}`}
+        className={`sl-row ${inProgress ? 'is-now' : ''} ${completed ? 'is-done' : ''} ${pending ? 'is-pending' : ''}`}
         style={{ transform: `translateX(${dx}px)`, transition: dx === 0 ? 'transform 0.22s var(--ease-back)' : 'none' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -98,7 +101,7 @@ function SwipeableBookingRow({ booking, offsetMin, chairsCount, onTap, onStart, 
           <span className="sl-side">
             {b.price > 0 && <span className="sl-price">₪{b.price}</span>}
             <span className={`sl-status sl-status-${b.status}`}>
-              {completed ? 'הושלם' : inProgress ? 'עכשיו' : 'מתוכנן'}
+              {pending ? 'ממתין' : completed ? 'הושלם' : inProgress ? 'עכשיו' : 'מתוכנן'}
             </span>
           </span>
         </span>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Phone, Play, Check, Edit3, Star, Sparkles, Crown, AlertTriangle, MessageCircle, BellRing, Heart, Repeat } from 'lucide-react';
+import { Phone, Play, Check, Edit3, Star, Sparkles, Crown, AlertTriangle, MessageCircle, BellRing, Heart, Repeat, MessageSquareText, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { addMinToTime, dateToISO } from '../utils/slots';
 import { whatsappUrl } from '../utils/whatsapp';
 import { computeClientMemory } from '../utils/clientMemory';
@@ -9,10 +9,11 @@ import AIComposeModal from './AIComposeModal.jsx';
 
 export default function BookingActionSheet({
   booking, businessName, googleReviewUrl, aiGender, allBookings, barberId,
-  onClose, onStart, onComplete, onEdit, onCancel,
+  onClose, onStart, onComplete, onEdit, onCancel, onApprove,
 }) {
   const inProgress = booking.status === 'inProgress';
   const completed = booking.status === 'completed';
+  const pending = booking.status === 'pendingApproval';
   const [aiOpen, setAiOpen] = useState(false);
   const [aiScenario, setAiScenario] = useState('reminder');
   const [notes, setNotes] = useState('');
@@ -146,6 +147,20 @@ export default function BookingActionSheet({
             {booking.addons?.length > 0 && ` + ${booking.addons.map((a) => a.name).join(', ')}`}
           </p>
         )}
+        {pending && (
+          <div className="pending-banner" role="status">
+            <BellRing size={14} className="icon-inline" />
+            <span>ממתין לאישור שלך — אשר/י כדי שהתור ייכנס ליומן וישלח אישור ללקוח.</span>
+          </div>
+        )}
+        {booking.clientNote && (
+          <div className="client-note">
+            <div className="client-note-label">
+              <MessageSquareText size={14} className="icon-inline" />הערה מהלקוח
+            </div>
+            <div className="client-note-body">{booking.clientNote}</div>
+          </div>
+        )}
         <a href={`tel:${booking.clientPhone}`} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', textDecoration: 'none', padding: 12, marginBottom: 8 }}>
           <Phone size={16} />{booking.clientPhone}
         </a>
@@ -228,7 +243,25 @@ export default function BookingActionSheet({
           </div>
         )}
 
-        {!completed && !inProgress && (
+        {pending && (
+          <div className="approval-actions">
+            <button
+              className="btn-gold"
+              onClick={() => { onApprove?.(); onClose(); }}
+              style={{ flex: 1 }}
+            >
+              <ThumbsUp size={18} className="icon-inline" />אשר תור
+            </button>
+            <button
+              className="btn-danger"
+              onClick={() => { onCancel(); onClose(); }}
+              style={{ flex: 'none' }}
+            >
+              <ThumbsDown size={18} className="icon-inline" />דחה
+            </button>
+          </div>
+        )}
+        {!completed && !inProgress && !pending && (
           <button className="btn-primary" onClick={() => { onStart(); onClose(); }} style={{ width: '100%', marginBottom: 8 }}><Play size={18} className="icon-inline" />התחל תור</button>
         )}
         {inProgress && (

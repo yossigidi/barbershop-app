@@ -83,7 +83,7 @@ export default function DashboardPage() {
     });
     const bq = query(
       collection(db, 'barbers', user.uid, 'bookings'),
-      where('status', 'in', ['booked', 'inProgress']),
+      where('status', 'in', ['pendingApproval', 'booked', 'inProgress']),
     );
     const unsubBookings = onSnapshot(bq, (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -339,6 +339,30 @@ export default function DashboardPage() {
   // (recipient-less) wa.me and asked the barber to forward manually.
   const [waitlistNotify, setWaitlistNotify] = useState(null);
   // shape: { date, time, clients: [{ clientName, clientPhone, ... }] }
+
+  // Approve a pending booking — moves the booking from pendingApproval to
+  // booked AND fires the WhatsApp confirmation template to the client via
+  // the worker. The cron / status change is purely server-side; we just
+  // call the endpoint and let it do both pieces.
+  async function approveBooking(b) {
+    try {
+      const idToken = await user.getIdToken();
+      const r = await fetch('/api/approve-booking', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: b.id, link: shortLink || '' }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'אישור התור נכשל');
+      // Optimistic local update — the snapshot listener will catch up,
+      // but flipping status immediately avoids a flicker.
+      try {
+        await updateDoc(doc(db, 'barbers', user.uid, 'bookings', b.id), { status: 'booked' });
+      } catch { /* worker already updated — non-fatal */ }
+    } catch (e) {
+      alert('שגיאה באישור התור: ' + e.message);
+    }
+  }
 
   async function cancelBooking(b) {
     if (!confirm(`לבטל את התור של ${b.clientName} ב-${b.time}?`)) return;
@@ -964,6 +988,7 @@ export default function DashboardPage() {
           onComplete={() => completeBooking(actionFor)}
           onEdit={() => setRescheduling(actionFor)}
           onCancel={() => cancelBooking(actionFor)}
+          onApprove={() => approveBooking(actionFor)}
         />
       )}
       {quickBook && (
