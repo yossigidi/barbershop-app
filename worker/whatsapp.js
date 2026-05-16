@@ -392,3 +392,85 @@ export async function handleApproveBooking(request, env) {
 
   return ok({ approved: true, waSent, waError });
 }
+
+// ─── POST /api/wa-booking-confirmation ────────────────────────────────────
+// Fires from the booking page right after a public client creates a new
+// booking (auto-confirm mode). Sends the same appointment_confirmation
+// template the manual-approval flow uses — different trigger, same UX
+// for the client (they get the details + the manage link in WhatsApp).
+// Skipped silently when the booking is pendingApproval (the barber's
+// approval will trigger the send instead). Auth is by manage-token
+// match against the stored booking; nobody else knows that token.
+// Body: { uid, bookingId, manageToken }
+export async function handleWaBookingConfirmation(request, env) {
+  if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+  if (request.method !== 'POST') return err('Method not allowed', 405);
+
+  let body;
+  try { body = await request.json(); } catch { return err('Bad JSON', 400); }
+  const uid = String(body?.uid || '');
+  const bookingId = String(body?.bookingId || '');
+  const manageToken = String(body?.manageToken || '');
+  if (!uid || !bookingId || !manageToken) return err('Missing fields', 400);
+
+  if (!env.WHATSAPP_TOKEN || !env.WHATSAPP_PHONE_ID) {
+    return ok({ sent: false, skipped: 'no-whatsapp' });
+  }
+
+  const svc = await loadServiceAccount(env);
+  const accessToken = await getAccessToken(svc);
+
+  let booking;
+  try {
+    booking = await firestoreGet(svc, accessToken, `barbers/${uid}/bookings/${bookingId}`);
+  } catch (e) {
+    return err('Failed to read booking: ' + e.message, 500);
+  }
+  if (!booking) return err('Booking not found', 404);
+
+  const bf = booking.fields || {};
+  if (fieldVal(bf.manageToken) !== manageToken) {
+    return err('Invalid manage token', 403);
+  }
+  if (fieldVal(bf.confirmationSent) === true) {
+    return ok({ sent: false, skipped: 'already' });
+  }
+  if (fieldVal(bf.status) === 'pendingApproval') {
+    // Manual-approval mode — the barber's approve action will fire the
+    // confirmation later. Don't double-send.
+    return ok({ sent: false, skipped: 'pending-approval' });
+  }
+  const clientPhone = fieldVal(bf.clientPhone) || '';
+  if (!clientPhone) return ok({ sent: false, skipped: 'no-phone' });
+
+  let barberFields = {};
+  try {
+    const barberDoc = await firestoreGet(svc, accessToken, `barbers/${uid}`);
+    barberFields = barberDoc?.fields || {};
+  } catch (e) {
+    console.warn('booking-confirmation: barber read failed', e?.message);
+  }
+  const businessName = fieldVal(barberFields.businessName) || 'העסק';
+  const firstName = (fieldVal(bf.clientName) || '').trim().split(/\s+/)[0] || 'לקוח/ה';
+  const dateISO = fieldVal(bf.date) || '';
+  const dateLabel = dateISO ? hebDateLabel(dateISO) : '';
+  const time = fieldVal(bf.time) || '';
+  const finalLink = barberLink(env, barberFields) || 'הקישור בפרופיל';
+
+  const res = await sendTemplate(env, {
+    to: clientPhone,
+    template: TEMPLATE_CONFIRMATION,
+    components: bodyParams(firstName, businessName, dateLabel, time, finalLink),
+  });
+
+  if (res.ok) {
+    try {
+      await firestorePatch(svc, accessToken, `barbers/${uid}/bookings/${bookingId}`,
+        { confirmationSent: fs.bool(true) }, ['confirmationSent']);
+    } catch (e) {
+      console.warn('confirmation flag mark failed:', e?.message);
+    }
+    return ok({ sent: true });
+  }
+  return ok({ sent: false, error: res.error });
+}

@@ -11,7 +11,7 @@ import {
   handleCreatePaymentLink, handleTranzilaWebhook, handleCancelSubscription,
   handleCancelStudio, handleTranzilaSuccess, handleTranzilaFail,
 } from './payment.js';
-import { handleCronWhatsApp, handleApproveBooking } from './whatsapp.js';
+import { handleCronWhatsApp, handleApproveBooking, handleWaBookingConfirmation } from './whatsapp.js';
 import { handleRedeemPromo } from './promo.js';
 import { handleAiCompose } from './ai.js';
 import { handleAiBriefing } from './briefing.js';
@@ -30,6 +30,7 @@ const apiHandlers = {
   '/api/cancel-subscription': handleCancelSubscription,
   '/api/cancel-studio': handleCancelStudio,
   '/api/approve-booking': handleApproveBooking,
+  '/api/wa-booking-confirmation': handleWaBookingConfirmation,
   '/api/redeem-promo': handleRedeemPromo,
   '/api/ai-compose': handleAiCompose,
   '/api/ai-briefing': handleAiBriefing,

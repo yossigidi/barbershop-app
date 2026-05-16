@@ -653,6 +653,24 @@ export default function BookingPage() {
         }),
       }).catch(() => {});
 
+      // Fire-and-forget WhatsApp confirmation to the client. The worker
+      // silently skips when:
+      //   • barber is in manual-approval mode (the approve action fires it
+      //     instead, to avoid double-send)
+      //   • WhatsApp Cloud API isn't configured / template not approved
+      //   • the booking has no phone, or confirmation already sent
+      if (created[0]?.id && created[0]?.manageToken) {
+        fetch('/api/wa-booking-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: barberId,
+            bookingId: created[0].id,
+            manageToken: created[0].manageToken,
+          }),
+        }).catch(() => {});
+      }
+
       // Save first booking id for client revisit
       if (created.length > 0) {
         try { localStorage.setItem(`bs_lastBooking_${barberId}`, created[0].id); } catch {}
