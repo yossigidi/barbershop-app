@@ -4,11 +4,14 @@ import { useAuth } from './contexts/AuthContext.jsx';
 import AccessibilityWidget from './components/AccessibilityWidget.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 
-// Eager-load the two most common public landing surfaces — the homepage
-// and a booking link. Loading them eagerly avoids a lazy-chunk delay on
-// first paint for fresh visitors.
+// HomePage stays eager — it's the landing surface, must paint without
+// a chunk fetch delay. BookingPage was eager too but it ships ~200 KB
+// of JS that authenticated barbers never need (they go /auth →
+// /dashboard, never /:code). Lazy-loading it shrinks the initial JS
+// bundle by ~30% for barber visits without hurting client booking flows
+// (one tiny chunk fetch on /b/:code or /:code, hidden by the existing
+// <Loading /> Suspense fallback).
 import HomePage from './pages/HomePage.jsx';
-import BookingPage from './pages/BookingPage.jsx';
 
 // Stale-chunk recovery. When we deploy a new version, the old index.html
 // in a user's cache still references the previous JS chunk filenames.
@@ -45,6 +48,7 @@ function lazyRetry(loader) {
 // Everything behind auth is lazy so a client opening /b/<code> doesn't
 // download the full dashboard / settings / reports bundle they will never
 // use. Dropped ~50-60% off the booking-page initial JS.
+const BookingPage = lazyRetry(() => import('./pages/BookingPage.jsx'));
 const AuthPage = lazyRetry(() => import('./pages/AuthPage.jsx'));
 const DashboardPage = lazyRetry(() => import('./pages/DashboardPage.jsx'));
 const ClientsPage = lazyRetry(() => import('./pages/ClientsPage.jsx'));
