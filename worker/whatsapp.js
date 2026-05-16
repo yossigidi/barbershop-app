@@ -144,6 +144,16 @@ function barberLink(env, barberFields) {
   return slug ? `${origin}/${slug}` : '';
 }
 
+// Per-booking manage URL — lets the client cancel / reschedule the
+// specific appointment. This is what goes into the "לשינוי או ביטול"
+// slot on the reminder / confirmation templates (NOT the barber's
+// public page, which would just let them book yet another appointment).
+function manageLink(env, manageToken) {
+  if (!manageToken) return '';
+  const origin = env.PUBLIC_ORIGIN || 'https://toron.co.il';
+  return `${origin}/manage/${manageToken}`;
+}
+
 // Pull one day's bookings for a barber (decoded). cancelled rows excluded.
 async function dayBookings(svc, accessToken, uid, dateISO) {
   const rows = await firestoreQuery(svc, accessToken, {
@@ -166,6 +176,7 @@ async function dayBookings(svc, accessToken, uid, dateISO) {
       status: fieldVal(b.fields.status) || '',
       reminderSent: fieldVal(b.fields.reminderSent) === true,
       thankYouSent: fieldVal(b.fields.thankYouSent) === true,
+      manageToken: fieldVal(b.fields.manageToken) || '',
     }))
     .filter((b) => b.status !== 'cancelled' && b.clientPhone);
 }
@@ -278,8 +289,12 @@ export async function handleCronWhatsApp(env) {
   return { reminders, thankYous, barbers: barbers.length };
 }
 
-async function sendReminder(env, businessName, link, dateLabel, booking) {
+async function sendReminder(env, businessName, fallbackLink, dateLabel, booking) {
   const firstName = (booking.clientName || '').trim().split(/\s+/)[0] || 'לקוח/ה';
+  // Per-booking manage link → the client can cancel/reschedule THIS
+  // appointment from the message. Falls back to the barber's general
+  // page only for legacy bookings with no manageToken stored.
+  const link = manageLink(env, booking.manageToken) || fallbackLink;
   const res = await sendTemplate(env, {
     to: booking.clientPhone,
     template: TEMPLATE_REMINDER,
@@ -375,7 +390,10 @@ export async function handleApproveBooking(request, env) {
       const dateISO = fieldVal(bf.date) || '';
       const dateLabel = dateISO ? hebDateLabel(dateISO) : '';
       const time = fieldVal(bf.time) || '';
-      const finalLink = linkOverride || barberLink(env, barberFields) || 'הקישור בפרופיל';
+      // Per-booking manage link (cancel/reschedule THIS appointment) takes
+      // precedence over linkOverride / the barber's public page.
+      const bookingToken = fieldVal(bf.manageToken) || '';
+      const finalLink = manageLink(env, bookingToken) || linkOverride || barberLink(env, barberFields) || 'הקישור בפרופיל';
       if (clientPhone && dateISO && time) {
         const res = await sendTemplate(env, {
           to: clientPhone,
@@ -455,7 +473,10 @@ export async function handleWaBookingConfirmation(request, env) {
   const dateISO = fieldVal(bf.date) || '';
   const dateLabel = dateISO ? hebDateLabel(dateISO) : '';
   const time = fieldVal(bf.time) || '';
-  const finalLink = barberLink(env, barberFields) || 'הקישור בפרופיל';
+  // Per-booking manage link → client can cancel/change THIS booking
+  // straight from the WhatsApp message. Falls back to barber page only
+  // if the booking somehow has no token.
+  const finalLink = manageLink(env, manageToken) || barberLink(env, barberFields) || 'הקישור בפרופיל';
 
   const res = await sendTemplate(env, {
     to: clientPhone,
