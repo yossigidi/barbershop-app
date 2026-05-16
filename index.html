@@ -20,8 +20,19 @@
     <!-- Noto Sans Hebrew — the single app typeface. Four weights only
          (regular / bold / extrabold / black) — covers body, headings and
          the heavy display numerals. Heebo, Frank Ruhl Libre and JetBrains
-         Mono were dropped: 15 font files down to 4, a big mobile win. -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700;800;900&display=swap" rel="stylesheet" />
+         Mono were dropped: 15 font files down to 4, a big mobile win.
+         Loaded NON-blocking: preload as style + onload swap to stylesheet,
+         so the first paint isn't held back by the Google Fonts CSS round
+         trip. font-display:swap then handles the FOIT → FOUT swap. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700;800;900&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700;800;900&display=swap" />
+    </noscript>
     <!-- Preconnect to Unsplash so the booking-page hero image starts its
          TLS handshake in parallel with the JS download instead of waiting
          for hydration. -->
